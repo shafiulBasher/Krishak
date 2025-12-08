@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { login as loginService, register as registerService, logout as logoutService, getCurrentUser } from '../services/authService';
+import { login as loginService, register as registerService, logout as logoutService, getCurrentUser, googleAuth } from '../services/authService';
 import { toast } from 'react-toastify';
 
 const AuthContext = createContext();
@@ -62,6 +62,24 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(userData));
   };
 
+  const googleLogin = async (credential) => {
+    try {
+      const response = await googleAuth({ credential });
+      setUser(response.data);
+      
+      if (response.needsCompletion) {
+        toast.info('Please complete your profile');
+      } else {
+        toast.success('Login successful!');
+      }
+      
+      return response;
+    } catch (error) {
+      toast.error(error);
+      throw error;
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -69,6 +87,7 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     updateUser,
+    googleLogin,
     isAuthenticated: !!user,
   };
 

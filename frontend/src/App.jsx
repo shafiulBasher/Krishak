@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider } from './context/AuthContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -10,23 +11,39 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
 import { Profile } from './pages/Profile';
+import { CompleteProfile } from './pages/CompleteProfile';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagement from './pages/admin/UserManagement';
 import ListingModeration from './pages/admin/ListingModeration';
 import CreateListing from './pages/farmer/CreateListing';
 import MyListings from './pages/farmer/MyListings';
 import EditListing from './pages/farmer/EditListing';
+import { DeliveryAddresses } from './pages/buyer/DeliveryAddresses';
 
 function App() {
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+  
+  // Only enable Google OAuth if valid Client ID is configured
+  const isGoogleConfigured = googleClientId && googleClientId !== 'your-google-client-id-here.apps.googleusercontent.com';
+  
   return (
-    <AuthProvider>
-      <Router>
-        <div className="min-h-screen bg-gray-50">
-          <Navbar />
-          <Routes>
+    <GoogleOAuthProvider clientId={googleClientId}>
+      <AuthProvider>
+        <Router>
+          <div className="min-h-screen bg-gray-50">
+            <Navbar />
+            <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route
+              path="/complete-profile"
+              element={
+                <ProtectedRoute>
+                  <CompleteProfile />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/dashboard"
               element={
@@ -96,6 +113,16 @@ function App() {
               }
             />
 
+            {/* Buyer Routes */}
+            <Route
+              path="/buyer/addresses"
+              element={
+                <ProtectedRoute allowedRoles={['buyer']}>
+                  <DeliveryAddresses />
+                </ProtectedRoute>
+              }
+            />
+
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           <ToastContainer
@@ -112,6 +139,7 @@ function App() {
         </div>
       </Router>
     </AuthProvider>
+    </GoogleOAuthProvider>
   );
 }
 

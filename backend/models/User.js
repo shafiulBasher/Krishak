@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    required: [true, 'Phone number is required'],
+    required: false, // Optional for Google sign-in users initially
     match: [/^01[3-9]\d{8}$/, 'Please provide a valid 11-digit BD phone number (01XXXXXXXXX)']
   },
   password: {
@@ -39,7 +39,7 @@ const userSchema = new mongoose.Schema({
       values: ['farmer', 'buyer', 'transporter', 'admin'],
       message: 'Role must be one of: farmer, buyer, transporter, admin'
     },
-    required: [true, 'User role is required']
+    required: false // Optional initially for Google sign-in users
   },
   // Farmer-specific fields
   farmLocation: {
@@ -65,6 +65,60 @@ const userSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  // Buyer-specific fields
+  deliveryAddresses: [{
+    label: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 50
+    },
+    recipientName: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    recipientPhone: {
+      type: String,
+      required: true,
+      match: [/^01[3-9]\d{8}$/, 'Please provide a valid 11-digit BD phone number']
+    },
+    addressLine1: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    addressLine2: {
+      type: String,
+      trim: true
+    },
+    village: {
+      type: String,
+      trim: true
+    },
+    thana: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    district: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    postalCode: {
+      type: String,
+      trim: true
+    },
+    isDefault: {
+      type: Boolean,
+      default: false
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
   // Common fields
   avatar: {
     type: String, // URL to profile picture
