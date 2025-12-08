@@ -64,11 +64,11 @@ export default function CreateListing() {
     // Validate file types and sizes
     const validFiles = files.filter(file => {
       if (!file.type.startsWith('image/')) {
-        toast.error(${file.name} is not an image file);
+        toast.error(`${file.name} is not an image file`);
         return false;
       }
       if (file.size > 5 * 1024 * 1024) {
-        toast.error(${file.name} is too large (max 5MB));
+        toast.error(`${file.name} is too large (max 5MB)`);
         return false;
       }
       return true;
@@ -85,7 +85,7 @@ export default function CreateListing() {
       photoPreviews: [...prev.photoPreviews, ...newPreviews],
     }));
 
-    toast.success(${validFiles.length} photo(s) added!);
+    toast.success(`${validFiles.length} photo(s) added!`);
     e.target.value = ''; // Reset input
   };
 
@@ -174,7 +174,7 @@ export default function CreateListing() {
 
       await createProduct(formDataToSend);
       toast.success('Listing created successfully! Awaiting admin approval.');
-      navigate('/farmer/listings');
+      navigate('/farmer/my-listings');
     } catch (error) {
       console.error('Error creating listing:', error);
       toast.error(error.response?.data?.message || 'Failed to create listing');
@@ -371,7 +371,7 @@ export default function CreateListing() {
               <div key={index} className="relative group">
                 <img
                   src={preview}
-                  alt={Crop ${index + 1}}
+                  alt={`Crop ${index + 1}`}
                   className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
                 />
                 <button

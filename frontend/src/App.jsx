@@ -13,6 +13,9 @@ import { Profile } from './pages/Profile';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagement from './pages/admin/UserManagement';
 import ListingModeration from './pages/admin/ListingModeration';
+import CreateListing from './pages/farmer/CreateListing';
+import MyListings from './pages/farmer/MyListings';
+import EditListing from './pages/farmer/EditListing';
 
 function App() {
   return (
@@ -63,6 +66,32 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <ListingModeration />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Farmer Routes */}
+            <Route
+              path="/farmer/create-listing"
+              element={
+                <ProtectedRoute allowedRoles={['farmer']}>
+                  <CreateListing />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/farmer/my-listings"
+              element={
+                <ProtectedRoute allowedRoles={['farmer']}>
+                  <MyListings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/farmer/edit-listing/:id"
+              element={
+                <ProtectedRoute allowedRoles={['farmer']}>
+                  <EditListing />
                 </ProtectedRoute>
               }
             />
