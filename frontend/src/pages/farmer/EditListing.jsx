@@ -411,7 +411,7 @@ export default function EditListing() {
                     {formData.existingPhotos.map((photo, index) => (
                       <div key={`existing-${index}`} className="relative group">
                         <img
-                          src={`http://localhost:5000${photo}`}
+                          src={`http://localhost:5003${photo}`}
                           alt={`Crop ${index + 1}`}
                           className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
                           onError={(e) => {

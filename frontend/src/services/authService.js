@@ -3,9 +3,11 @@ import api from './api';
 // Register user
 export const register = async (userData) => {
   const response = await api.post('/auth/register', userData);
-  if (response.data && response.data.token) {
-    localStorage.setItem('token', response.data.token);
-    localStorage.setItem('user', JSON.stringify(response.data));
+  // API interceptor returns response.data, so response is already the full data object
+  const userData_obj = response.data || response;
+  if (userData_obj && userData_obj.token) {
+    localStorage.setItem('token', userData_obj.token);
+    localStorage.setItem('user', JSON.stringify(userData_obj));
   }
   return response;
 };
@@ -13,9 +15,11 @@ export const register = async (userData) => {
 // Login user
 export const login = async (credentials) => {
   const response = await api.post('/auth/login', credentials);
-  if (response.data && response.data.token) {
-    localStorage.setItem('token', response.data.token);
-    localStorage.setItem('user', JSON.stringify(response.data));
+  // API interceptor returns response.data, so response is already the full data object
+  const userData_obj = response.data || response;
+  if (userData_obj && userData_obj.token) {
+    localStorage.setItem('token', userData_obj.token);
+    localStorage.setItem('user', JSON.stringify(userData_obj));
   }
   return response;
 };
@@ -34,9 +38,11 @@ export const logout = () => {
 // Google OAuth
 export const googleAuth = async (googleData) => {
   const response = await api.post('/auth/google', googleData);
-  if (response.data && response.data.token) {
-    localStorage.setItem('token', response.data.token);
-    localStorage.setItem('user', JSON.stringify(response.data));
+  // API interceptor returns response.data, so response is already the full data object
+  const userData_obj = response.data || response;
+  if (userData_obj && userData_obj.token) {
+    localStorage.setItem('token', userData_obj.token);
+    localStorage.setItem('user', JSON.stringify(userData_obj));
   }
   return response;
 };

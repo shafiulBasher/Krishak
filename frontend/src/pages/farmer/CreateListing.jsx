@@ -154,10 +154,11 @@ export default function CreateListing() {
       formDataToSend.append('grade', formData.grade);
       formDataToSend.append('quantity', formData.quantity);
       formDataToSend.append('unit', formData.unit);
+      // Send location as JSON string
       formDataToSend.append('location', JSON.stringify({
         village: formData.village,
         thana: formData.thana,
-        district: formData.district,
+        district: formData.district
       }));
       formDataToSend.append('harvestDate', formData.harvestDate);
       formDataToSend.append('moq', formData.moq);

@@ -25,8 +25,9 @@ export const Login = () => {
 
     try {
       const response = await login(formData);
-      // Redirect based on role
-      if (response.data.role === 'admin') {
+      // API interceptor returns response.data, so response has success, data properties
+      const userData = response.data || response;
+      if (userData.role === 'admin') {
         navigate('/admin/dashboard');
       } else {
         navigate('/dashboard');

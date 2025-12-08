@@ -1,11 +1,19 @@
+const path = require('path');
 const express = require('express');
 const dotenv = require('dotenv');
-const path = require('path');
-const connectDB = require('./config/db');
 const cors = require('cors');
 
-// Load env vars
-dotenv.config();
+// FORCE the path to the .env file in the current directory
+dotenv.config({ path: path.join(__dirname, '.env') });
+
+// DEBUG: Check if variables are loaded now
+console.log("--- DEBUG START ---");
+console.log("JWT_SECRET is:", process.env.JWT_SECRET ? "Loaded" : "NOT LOADED");
+console.log("MONGO_URI is:", process.env.MONGO_URI ? "Loaded" : "NOT LOADED");
+console.log("--- DEBUG END ---");
+
+// Connect to database imports
+const connectDB = require('./config/db');
 
 // Connect to database
 connectDB();

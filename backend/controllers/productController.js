@@ -21,7 +21,7 @@ const createProduct = asyncHandler(async (req, res) => {
   } = req.body;
 
   // Handle uploaded photos
-  const photos = req.files ? req.files.map(file => /uploads/products/${file.filename}) : [];
+  const photos = req.files ? req.files.map(file => `/uploads/products/${file.filename}`) : [];
 
   // Parse location if it's a string (from FormData)
   const parsedLocation = typeof location === 'string' ? JSON.parse(location) : location;
@@ -132,7 +132,7 @@ const updateProduct = asyncHandler(async (req, res) => {
   
   // Add new uploaded photos
   if (req.files && req.files.length > 0) {
-    const newPhotos = req.files.map(file => /uploads/products/${file.filename});
+    const newPhotos = req.files.map(file => `/uploads/products/${file.filename}`);
     photos = [...photos, ...newPhotos];
   }
 

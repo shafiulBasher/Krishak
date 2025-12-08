@@ -17,6 +17,7 @@ export default function ListingModeration() {
   const [moderationNote, setModerationNote] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [modalAction, setModalAction] = useState(null); // 'approve' or 'reject'
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchProducts();
@@ -25,6 +26,8 @@ export default function ListingModeration() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
+      setError(null);
+      console.log('Fetching products with filter:', filter);
       const filters = {};
       if (filter !== 'all') filters.status = filter;
       if (searchQuery) filters.search = searchQuery;
@@ -32,9 +35,17 @@ export default function ListingModeration() {
       const response = filter === 'pending' 
         ? await getPendingProducts()
         : await getAllProducts(filters);
-      setProducts(response.data);
+      
+      console.log('Response received:', response);
+      // The API interceptor already unwraps response.data, so response is the full data object
+      const productsData = response.data || [];
+      console.log('Setting products:', productsData);
+      setProducts(productsData);
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to fetch products');
+      console.error('Error fetching products:', error);
+      const errorMsg = typeof error === 'string' ? error : error?.message || 'Failed to fetch products';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -86,6 +97,16 @@ export default function ListingModeration() {
 
   if (loading && products.length === 0) {
     return <Loading message="Loading listings..." />;
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-800">Error: {error}</p>
+        </div>
+      </div>
+    );
   }
 
   const statusColors = {
@@ -146,8 +167,8 @@ export default function ListingModeration() {
                 {/* Product Header */}
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900">{product.name}</h3>
-                    <p className="text-sm text-gray-600">{product.category}</p>
+                    <h3 className="text-lg font-semibold text-gray-900">{product.cropName}</h3>
+                    <p className="text-sm text-gray-600">Grade: {product.grade}</p>
                   </div>
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -158,6 +179,25 @@ export default function ListingModeration() {
                   </span>
                 </div>
 
+                {/* Product Photos */}
+                {product.photos && product.photos.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <img
+                      src={`http://localhost:5003${product.photos[0]}`}
+                      alt="Main crop"
+                      className="w-full h-32 object-cover rounded-lg border"
+                    />
+                    {product.photos.slice(1, 3).map((photo, idx) => (
+                      <img
+                        key={idx}
+                        src={`http://localhost:5003${photo}`}
+                        alt={`Detail ${idx + 1}`}
+                        className="w-full h-16 object-cover rounded-lg border"
+                      />
+                    ))}
+                  </div>
+                )}
+
                 {/* Product Details */}
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
@@ -165,20 +205,24 @@ export default function ListingModeration() {
                     <span className="font-medium">{product.quantity} {product.unit}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Price:</span>
+                    <span className="text-gray-600">Selling Price:</span>
                     <span className="font-medium text-primary-600">
-                      ৳{product.pricePerUnit}/{product.unit}
+                      ৳{product.sellingPrice}/{product.unit}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Suggested Price:</span>
-                    <span className="font-medium text-green-600">
-                      ৳{product.suggestedPrice}/{product.unit}
-                    </span>
+                    <span className="text-gray-600">MOQ:</span>
+                    <span className="font-medium">{product.moq} {product.unit}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Location:</span>
-                    <span className="font-medium">{product.location}</span>
+                    <span className="font-medium">
+                      {product.location?.village}, {product.location?.thana}, {product.location?.district}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Harvest Date:</span>
+                    <span className="font-medium">{new Date(product.harvestDate).toLocaleDateString()}</span>
                   </div>
                 </div>
 
@@ -189,16 +233,12 @@ export default function ListingModeration() {
                     <div className="text-sm">
                       <p className="font-medium text-gray-900">{product.farmer.name}</p>
                       <p className="text-gray-600">{product.farmer.phone}</p>
-                      <p className="text-gray-500">{product.farmer.farmLocation}</p>
+                      <p className="text-gray-500">
+                        {product.farmer.farmLocation && typeof product.farmer.farmLocation === 'object'
+                          ? `${product.farmer.farmLocation.village}, ${product.farmer.farmLocation.thana}, ${product.farmer.farmLocation.district}`
+                          : product.farmer.farmLocation || product.farmer.location}
+                      </p>
                     </div>
-                  </div>
-                )}
-
-                {/* Description */}
-                {product.description && (
-                  <div className="pt-3 border-t">
-                    <p className="text-xs text-gray-500 mb-1">Description</p>
-                    <p className="text-sm text-gray-700 line-clamp-3">{product.description}</p>
                   </div>
                 )}
 

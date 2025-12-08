@@ -28,7 +28,7 @@ export const getProduct = async (id) => {
 
 // Get farmer's own listings
 export const getMyListings = async () => {
-  const response = await api.get('/products/my/listings');
+  const response = await api.get('/products/my-listings');
   return response;
 };
 
