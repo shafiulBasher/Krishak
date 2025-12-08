@@ -28,11 +28,11 @@ export const Dashboard = () => {
             <Card>
               <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
               <div className="space-y-2">
-                <Link to="/listings/create" className="block p-4 bg-primary-50 hover:bg-primary-100 rounded-lg transition">
+                <Link to="/farmer/create-listing" className="block p-4 bg-primary-50 hover:bg-primary-100 rounded-lg transition">
                   <p className="font-medium text-primary-700">+ Create New Listing</p>
                   <p className="text-sm text-gray-600">Add a new product to sell</p>
                 </Link>
-                <Link to="/listings" className="block p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition">
+                <Link to="/farmer/my-listings" className="block p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition">
                   <p className="font-medium text-gray-700">View My Listings</p>
                   <p className="text-sm text-gray-600">Manage your products</p>
                 </Link>

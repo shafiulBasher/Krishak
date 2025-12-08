@@ -92,7 +92,7 @@ export default function MyListings() {
   };
 
   const handleDelete = async (id, cropName) => {
-    if (!window.confirm(Are you sure you want to delete "${cropName}" listing?)) {
+    if (!window.confirm(`Are you sure you want to delete "${cropName}" listing?`)) {
       return;
     }
 
@@ -115,8 +115,8 @@ export default function MyListings() {
     const Icon = config.icon;
 
     return (
-      <div className={inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium border ${config.color}}>
-        <Icon className={w-4 h-4 ${config.iconColor}} />
+      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium border ${config.color}`}>
+        <Icon className={`w-4 h-4 ${config.iconColor}`} />
         {config.label}
       </div>
     );
@@ -130,7 +130,7 @@ export default function MyListings() {
           <div className="relative h-48 bg-gradient-to-br from-primary-100 to-primary-50 rounded-t-lg overflow-hidden">
             {listing.photos && listing.photos.length > 0 ? (
               <img
-                src={http://localhost:5000${listing.photos[0]}}
+                src={`http://localhost:5000${listing.photos[0]}`}
                 alt={listing.cropName}
                 className="w-full h-full object-cover"
                 onError={(e) => {
@@ -186,7 +186,7 @@ export default function MyListings() {
             {/* Actions */}
             <div className="flex gap-2 pt-3 border-t">
               <Link
-                to={/farmer/listings/${listing._id}}
+                to={`/farmer/listings/${listing._id}`}
                 className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition text-sm font-medium"
               >
                 <Eye className="w-4 h-4" />
@@ -195,7 +195,7 @@ export default function MyListings() {
               {listing.status !== 'sold' && (
                 <>
                   <Link
-                    to={/farmer/listings/edit/${listing._id}}
+                    to={`/farmer/listings/edit/${listing._id}`}
                     className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-primary-100 hover:bg-primary-200 text-primary-700 rounded-lg transition text-sm font-medium"
                   >
                     <Edit className="w-4 h-4" />
@@ -225,7 +225,7 @@ export default function MyListings() {
             <div className="w-full md:w-48 h-32 bg-gradient-to-br from-primary-100 to-primary-50 rounded-lg overflow-hidden flex-shrink-0">
               {listing.photos && listing.photos.length > 0 ? (
                 <img
-                  src={http://localhost:5000${listing.photos[0]}}
+                  src={`http://localhost:5000${listing.photos[0]}`}
                   alt={listing.cropName}
                   className="w-full h-full object-cover"
                   onError={(e) => {
@@ -283,7 +283,7 @@ export default function MyListings() {
               {/* Actions */}
               <div className="flex gap-2 pt-2">
                 <Link
-                  to={/farmer/listings/${listing._id}}
+                  to={`/farmer/listings/${listing._id}`}
                   className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition text-sm font-medium"
                 >
                   <Eye className="w-4 h-4" />
@@ -292,7 +292,7 @@ export default function MyListings() {
                 {listing.status !== 'sold' && (
                   <>
                     <Link
-                      to={/farmer/listings/edit/${listing._id}}
+                      to={`/farmer/listings/edit/${listing._id}`}
                       className="flex items-center gap-2 px-4 py-2 bg-primary-100 hover:bg-primary-200 text-primary-700 rounded-lg transition text-sm font-medium"
                     >
                       <Edit className="w-4 h-4" />
@@ -326,7 +326,7 @@ export default function MyListings() {
               Manage your crop listings ({filteredListings.length} {filter === 'all' ? 'total' : filter})
             </p>
           </div>
-          <Link to="/farmer/listings/create">
+          <Link to="/farmer/create-listing">
             <Button className="flex items-center gap-2 shadow-lg">
               <Plus className="w-5 h-5" />
               Create New Listing
@@ -390,15 +390,15 @@ export default function MyListings() {
           <Card className="text-center py-16">
             <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              {filter === 'all' ? 'No listings yet' : No ${filter} listings}
+              {filter === 'all' ? 'No listings yet' : `No ${filter} listings`}
             </h3>
             <p className="text-gray-600 mb-6">
               {filter === 'all'
                 ? 'Start by creating your first crop listing'
-                : You don't have any ${filter} listings}
+                : `You don't have any ${filter} listings`}
             </p>
             {filter === 'all' && (
-              <Link to="/farmer/listings/create">
+              <Link to="/farmer/create-listing">
                 <Button className="inline-flex items-center gap-2">
                   <Plus className="w-5 h-5" />
                   Create Your First Listing

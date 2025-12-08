@@ -109,11 +109,11 @@ export default function EditListing() {
 
     const validFiles = files.filter(file => {
       if (!file.type.startsWith('image/')) {
-        toast.error(${file.name} is not an image file);
+        toast.error(`${file.name} is not an image file`);
         return false;
       }
       if (file.size > 5 * 1024 * 1024) {
-        toast.error(${file.name} is too large (max 5MB));
+        toast.error(`${file.name} is too large (max 5MB)`);
         return false;
       }
       return true;
@@ -129,7 +129,7 @@ export default function EditListing() {
       newPhotoPreviews: [...prev.newPhotoPreviews, ...newPreviews],
     }));
 
-    toast.success(${validFiles.length} photo(s) added!);
+    toast.success(`${validFiles.length} photo(s) added!`);
     e.target.value = '';
   };
 
@@ -409,10 +409,10 @@ export default function EditListing() {
                   <p className="text-sm font-medium text-gray-700 mb-2">Current Photos:</p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {formData.existingPhotos.map((photo, index) => (
-                      <div key={existing-${index}} className="relative group">
+                      <div key={`existing-${index}`} className="relative group">
                         <img
-                          src={http://localhost:5000${photo}}
-                          alt={Crop ${index + 1}}
+                          src={`http://localhost:5000${photo}`}
+                          alt={`Crop ${index + 1}`}
                           className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
                           onError={(e) => {
                             e.target.src = 'https://via.placeholder.com/150?text=Photo';
@@ -437,10 +437,10 @@ export default function EditListing() {
                   <p className="text-sm font-medium text-gray-700 mb-2">New Photos:</p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {formData.newPhotoPreviews.map((preview, index) => (
-                      <div key={new-${index}} className="relative group">
+                      <div key={`new-${index}`} className="relative group">
                         <img
                           src={preview}
-                          alt={New Crop ${index + 1}}
+                          alt={`New Crop ${index + 1}`}
                           className="w-full h-32 object-cover rounded-lg border-2 border-green-300"
                         />
                         <button
