@@ -13,7 +13,6 @@ const createProduct = asyncHandler(async (req, res) => {
     location,
     harvestDate,
     moq,
-    photos,
     costBreakdown,
     margin,
     sellingPrice,
@@ -21,22 +20,27 @@ const createProduct = asyncHandler(async (req, res) => {
     expectedHarvestDate
   } = req.body;
 
+  // Handle uploaded photos
+  const photos = req.files ? req.files.map(file => /uploads/products/${file.filename}) : [];
+
+  // Parse location if it's a string (from FormData)
+  const parsedLocation = typeof location === 'string' ? JSON.parse(location) : location;
+  const parsedCostBreakdown = costBreakdown && typeof costBreakdown === 'string' ? JSON.parse(costBreakdown) : costBreakdown;
+
   const product = await Product.create({
     farmer: req.user._id,
     cropName,
     grade,
     quantity,
     unit: unit || 'kg',
-    location,
+    location: parsedLocation,
     harvestDate,
     moq,
-    photos: photos || [],
-    costBreakdown,
-    calculatedPrice: {
-      margin: margin || 15
-    },
+    photos: photos,
+    ...(parsedCostBreakdown && { costBreakdown: parsedCostBreakdown }),
+    ...(margin && { calculatedPrice: { margin } }),
     sellingPrice,
-    isPreOrder: isPreOrder || false,
+    isPreOrder: isPreOrder === 'true' || isPreOrder === true,
     expectedHarvestDate,
     status: 'pending' // Awaiting admin approval
   });
@@ -117,12 +121,42 @@ const updateProduct = asyncHandler(async (req, res) => {
     throw new Error('Not authorized to update this product');
   }
 
-  // If product was approved and farmer edits, reset to pending
-  if (product.status === 'approved' && req.user.role === 'farmer') {
-    req.body.status = 'pending';
+  // Handle photos - combine existing and new
+  let photos = [];
+  if (req.body.existingPhotos) {
+    const existingPhotos = typeof req.body.existingPhotos === 'string' 
+      ? JSON.parse(req.body.existingPhotos) 
+      : req.body.existingPhotos;
+    photos = [...existingPhotos];
+  }
+  
+  // Add new uploaded photos
+  if (req.files && req.files.length > 0) {
+    const newPhotos = req.files.map(file => /uploads/products/${file.filename});
+    photos = [...photos, ...newPhotos];
   }
 
-  product = await Product.findByIdAndUpdate(req.params.id, req.body, {
+  // Parse location if it's a string (from FormData)
+  const parsedLocation = req.body.location && typeof req.body.location === 'string' 
+    ? JSON.parse(req.body.location) 
+    : req.body.location;
+
+  const updateData = {
+    ...req.body,
+    ...(parsedLocation && { location: parsedLocation }),
+    ...(photos.length > 0 && { photos }),
+    isPreOrder: req.body.isPreOrder === 'true' || req.body.isPreOrder === true,
+  };
+
+  // Remove existingPhotos from update data as it's not a schema field
+  delete updateData.existingPhotos;
+
+  // If product was approved and farmer edits, reset to pending
+  if (product.status === 'approved' && req.user.role === 'farmer') {
+    updateData.status = 'pending';
+  }
+
+  product = await Product.findByIdAndUpdate(req.params.id, updateData, {
     new: true,
     runValidators: true
   });

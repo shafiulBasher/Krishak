@@ -61,21 +61,21 @@ const productSchema = new mongoose.Schema({
     type: String, // URLs to uploaded images
     required: false
   }],
-  // Fair Price Calculator inputs
+  // Fair Price Calculator inputs (optional)
   costBreakdown: {
     seedCost: {
       type: Number,
-      required: [true, 'Seed cost is required'],
+      required: false,
       min: [0, 'Seed cost cannot be negative']
     },
     fertilizerCost: {
       type: Number,
-      required: [true, 'Fertilizer cost is required'],
+      required: false,
       min: [0, 'Fertilizer cost cannot be negative']
     },
     laborCost: {
       type: Number,
-      required: [true, 'Labor cost is required'],
+      required: false,
       min: [0, 'Labor cost cannot be negative']
     },
     transportCost: {
@@ -89,11 +89,11 @@ const productSchema = new mongoose.Schema({
       min: [0, 'Other cost cannot be negative']
     }
   },
-  // Fair Price Calculator: totalCost + margin
+  // Fair Price Calculator: totalCost + margin (optional)
   calculatedPrice: {
     totalCost: {
       type: Number,
-      required: true
+      required: false
     },
     margin: {
       type: Number,
@@ -103,7 +103,7 @@ const productSchema = new mongoose.Schema({
     },
     suggestedPrice: {
       type: Number,
-      required: true
+      required: false
     }
   },
   // Final price set by farmer (can override suggestion)
@@ -152,18 +152,5 @@ productSchema.index({ status: 1 });
 productSchema.index({ cropName: 1 });
 productSchema.index({ 'location.district': 1 });
 productSchema.index({ createdAt: -1 });
-
-// Calculate total cost and suggested price before saving
-productSchema.pre('save', function(next) {
-  if (this.isModified('costBreakdown') || this.isNew) {
-    const { seedCost, fertilizerCost, laborCost, transportCost, otherCost } = this.costBreakdown;
-    const totalCost = seedCost + fertilizerCost + laborCost + transportCost + otherCost;
-    
-    this.calculatedPrice.totalCost = totalCost;
-    // Suggested Price = Total Cost + (Total Cost * Margin%)
-    this.calculatedPrice.suggestedPrice = totalCost + (totalCost * (this.calculatedPrice.margin / 100));
-  }
-  next();
-});
 
 module.exports = mongoose.model('Product', productSchema);
