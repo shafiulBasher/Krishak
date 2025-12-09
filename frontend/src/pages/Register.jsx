@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
 import { Input } from '../components/Input';
 import { Select } from '../components/Select';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { UserPlus } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 export const Register = () => {
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { register, googleLogin } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -90,6 +92,30 @@ export const Register = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      setLoading(true);
+      const result = await googleLogin(credentialResponse.credential);
+      
+      if (result.needsCompletion) {
+        navigate('/complete-profile');
+      } else if (result.data.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (error) {
+      console.error('Google login error:', error);
+      toast.error(error || 'Failed to register with Google');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    toast.error('Google sign-in failed. Please try again.');
   };
 
   return (
@@ -232,6 +258,35 @@ export const Register = () => {
             <Button type="submit" disabled={loading} fullWidth>
               {loading ? 'Creating Account...' : 'Create Account'}
             </Button>
+          </div>
+
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              {import.meta.env.VITE_GOOGLE_CLIENT_ID && import.meta.env.VITE_GOOGLE_CLIENT_ID !== 'your-google-client-id-here.apps.googleusercontent.com' ? (
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  theme="outline"
+                  size="large"
+                  text="signup_with"
+                  shape="rectangular"
+                  width="100%"
+                />
+              ) : (
+                <div className="text-center text-sm text-gray-500 py-3 bg-gray-50 rounded-lg border border-gray-200">
+                  Google Sign-In requires configuration. See GOOGLE_OAUTH_SETUP.md
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="mt-4 text-center text-sm">

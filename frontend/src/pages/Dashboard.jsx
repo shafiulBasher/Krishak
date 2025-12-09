@@ -65,6 +65,10 @@ export const Dashboard = () => {
                   <p className="font-medium text-primary-700">Browse Products</p>
                   <p className="text-sm text-gray-600">Find fresh produce from farmers</p>
                 </Link>
+                <Link to="/buyer/addresses" className="block p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition">
+                  <p className="font-medium text-gray-700">Delivery Addresses</p>
+                  <p className="text-sm text-gray-600">Manage your delivery locations</p>
+                </Link>
                 <Link to="/orders" className="block p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition">
                   <p className="font-medium text-gray-700">My Orders</p>
                   <p className="text-sm text-gray-600">Track your purchases</p>
