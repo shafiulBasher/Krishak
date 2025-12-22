@@ -12,9 +12,11 @@ import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
 import { Profile } from './pages/Profile';
 import { CompleteProfile } from './pages/CompleteProfile';
+import MarketPrices from './pages/MarketPrices';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagement from './pages/admin/UserManagement';
 import ListingModeration from './pages/admin/ListingModeration';
+import MarketPriceManagement from './pages/admin/MarketPriceManagement';
 import CreateListing from './pages/farmer/CreateListing';
 import MyListings from './pages/farmer/MyListings';
 import EditListing from './pages/farmer/EditListing';
@@ -36,6 +38,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/market-prices" element={<MarketPrices />} />
             <Route
               path="/complete-profile"
               element={
@@ -83,6 +86,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <ListingModeration />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/market-prices"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <MarketPriceManagement />
                 </ProtectedRoute>
               }
             />
