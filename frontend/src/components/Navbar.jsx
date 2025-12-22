@@ -29,6 +29,9 @@ export const Navbar = () => {
                 <Link to="/dashboard" className="hover:bg-primary-700 px-3 py-2 rounded-md">
                   Dashboard
                 </Link>
+                <Link to="/market-prices" className="hover:bg-primary-700 px-3 py-2 rounded-md">
+                  Market
+                </Link>
                 <Link to="/profile" className="hover:bg-primary-700 px-3 py-2 rounded-md flex items-center">
                   <User className="w-4 h-4 mr-1" />
                   {user?.name}
@@ -43,6 +46,9 @@ export const Navbar = () => {
               </>
             ) : (
               <>
+                <Link to="/market-prices" className="hover:bg-primary-700 px-3 py-2 rounded-md">
+                  Market
+                </Link>
                 <Link to="/login" className="hover:bg-primary-700 px-4 py-2 rounded-md">
                   Login
                 </Link>
@@ -75,6 +81,13 @@ export const Navbar = () => {
                   Dashboard
                 </Link>
                 <Link
+                  to="/market-prices"
+                  className="block hover:bg-primary-700 px-3 py-2 rounded-md"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Market
+                </Link>
+                <Link
                   to="/profile"
                   className="block hover:bg-primary-700 px-3 py-2 rounded-md"
                   onClick={() => setMobileMenuOpen(false)}
@@ -93,6 +106,13 @@ export const Navbar = () => {
               </>
             ) : (
               <>
+                <Link
+                  to="/market-prices"
+                  className="block hover:bg-primary-700 px-3 py-2 rounded-md"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Market
+                </Link>
                 <Link
                   to="/login"
                   className="block hover:bg-primary-700 px-3 py-2 rounded-md"

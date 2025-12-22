@@ -40,6 +40,7 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/market-prices', require('./routes/marketPriceRoutes'));
 
 // Error handler middleware
 app.use((err, req, res, next) => {

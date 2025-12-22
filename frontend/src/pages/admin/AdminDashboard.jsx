@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Users, ShoppingBag, Package, TrendingUp } from 'lucide-react';
+import { Users, ShoppingBag, Package, TrendingUp, DollarSign } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { getDashboardStats } from '../../services/adminService';
+import { getMarketStats } from '../../services/marketPriceService';
 import StatsCard from '../../components/admin/StatsCard';
 import Loading from '../../components/Loading';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
+  const [marketStats, setMarketStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,8 +18,12 @@ export default function AdminDashboard() {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const response = await getDashboardStats();
-      setStats(response.data);
+      const [dashboardData, marketData] = await Promise.all([
+        getDashboardStats(),
+        getMarketStats().catch(() => null) // Don't fail if market stats unavailable
+      ]);
+      setStats(dashboardData.data);
+      setMarketStats(marketData);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to fetch statistics');
     } finally {
@@ -103,35 +109,10 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Orders Statistics */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Order Statistics</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <StatsCard
-            title="Total Orders"
-            value={stats.orders.total}
-            icon={ShoppingBag}
-            color="primary"
-          />
-          <StatsCard
-            title="Pending Orders"
-            value={stats.orders.pending}
-            icon={ShoppingBag}
-            color="yellow"
-          />
-          <StatsCard
-            title="Completed Orders"
-            value={stats.orders.completed}
-            icon={ShoppingBag}
-            color="green"
-          />
-        </div>
-      </div>
-
       {/* Quick Actions */}
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <a
             href="/admin/users"
             className="flex items-center justify-between p-4 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors"
@@ -151,6 +132,18 @@ export default function AdminDashboard() {
               <p className="text-sm text-gray-600">Review pending listings</p>
             </div>
             <Package className="w-6 h-6 text-primary-600" />
+          </a>
+          <a
+            href="/admin/market-prices"
+            className="flex items-center justify-between p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+          >
+            <div>
+              <h3 className="font-medium text-gray-900">Market Prices</h3>
+              <p className="text-sm text-gray-600">
+                {marketStats ? `${marketStats.totalCrops} crops tracked` : 'Update prices'}
+              </p>
+            </div>
+            <DollarSign className="w-6 h-6 text-green-600" />
           </a>
           <a
             href="/admin/reports"
