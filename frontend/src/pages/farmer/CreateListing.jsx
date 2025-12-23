@@ -8,6 +8,10 @@ import Card from '../../components/Card';
 import Input from '../../components/Input';
 import Select from '../../components/Select';
 import Button from '../../components/Button';
+<<<<<<< HEAD
+=======
+import FairPriceCalculator from '../../components/FairPriceCalculator';
+>>>>>>> b4da24f (New import of project files)
 
 export default function CreateListing() {
   const navigate = useNavigate();
@@ -29,6 +33,17 @@ export default function CreateListing() {
     sellingPrice: '',
     isPreOrder: false,
     expectedHarvestDate: '',
+<<<<<<< HEAD
+=======
+    costBreakdown: {
+      seedCost: 0,
+      fertilizerCost: 0,
+      laborCost: 0,
+      transportCost: 0,
+      otherCost: 0,
+    },
+    margin: 15,
+>>>>>>> b4da24f (New import of project files)
   });
 
   const gradeOptions = [
@@ -53,6 +68,26 @@ export default function CreateListing() {
     }));
   };
 
+<<<<<<< HEAD
+=======
+  const handleCostChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      costBreakdown: {
+        ...prev.costBreakdown,
+        [field]: parseFloat(value) || 0,
+      },
+    }));
+  };
+
+  const handleMarginChange = (value) => {
+    setFormData(prev => ({
+      ...prev,
+      margin: parseFloat(value) || 15,
+    }));
+  };
+
+>>>>>>> b4da24f (New import of project files)
   const handlePhotoUpload = (e) => {
     const files = Array.from(e.target.files);
     
@@ -111,6 +146,13 @@ export default function CreateListing() {
           toast.error('Quantity and MOQ must be greater than 0');
           return false;
         }
+<<<<<<< HEAD
+=======
+        if (formData.isPreOrder && !formData.expectedHarvestDate) {
+          toast.error('Please select expected harvest date for pre-order');
+          return false;
+        }
+>>>>>>> b4da24f (New import of project files)
         break;
       case 2:
         if (!formData.village || !formData.thana || !formData.district || !formData.harvestDate) {
@@ -168,6 +210,13 @@ export default function CreateListing() {
         formDataToSend.append('expectedHarvestDate', formData.expectedHarvestDate);
       }
 
+<<<<<<< HEAD
+=======
+      // Append cost breakdown and margin
+      formDataToSend.append('costBreakdown', JSON.stringify(formData.costBreakdown));
+      formDataToSend.append('margin', formData.margin);
+
+>>>>>>> b4da24f (New import of project files)
       // Append photo files
       formData.photoFiles.forEach(file => {
         formDataToSend.append('photos', file);
@@ -255,6 +304,35 @@ export default function CreateListing() {
         />
       </div>
 
+<<<<<<< HEAD
+=======
+      {/* Pre-order option */}
+      <div className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          id="isPreOrder"
+          name="isPreOrder"
+          checked={formData.isPreOrder}
+          onChange={handleChange}
+          className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500"
+        />
+        <label htmlFor="isPreOrder" className="text-sm font-medium text-gray-700">
+          This is a pre-order for seasonal crop
+        </label>
+      </div>
+
+      {formData.isPreOrder && (
+        <Input
+          label="Expected Harvest Date"
+          type="date"
+          name="expectedHarvestDate"
+          value={formData.expectedHarvestDate}
+          onChange={handleChange}
+          required
+        />
+      )}
+
+>>>>>>> b4da24f (New import of project files)
       <Input
         label="Minimum Order Quantity (MOQ) *"
         type="number"
@@ -397,9 +475,33 @@ export default function CreateListing() {
         <h3 className="text-xl font-semibold text-gray-900">Set Your Price</h3>
       </div>
 
+<<<<<<< HEAD
       <div className="bg-blue-50 p-4 rounded-lg mb-6">
         <p className="text-sm text-blue-800">
           💡 Set a competitive price for your crop. Consider market rates and quality when pricing.
+=======
+      {/* Fair Price Calculator */}
+      <div className="mb-8">
+        <FairPriceCalculator
+          initialData={{
+            ...formData.costBreakdown,
+            margin: formData.margin,
+            quantity: formData.quantity,
+          }}
+          onCalculate={(result) => {
+            // Optionally auto-set the selling price
+            setFormData(prev => ({
+              ...prev,
+              sellingPrice: result.suggestedPrice.toFixed(2),
+            }));
+          }}
+        />
+      </div>
+
+      <div className="bg-blue-50 p-4 rounded-lg mb-6">
+        <p className="text-sm text-blue-800">
+          💡 Use the calculator above to determine a fair price based on your costs, or set your own price below.
+>>>>>>> b4da24f (New import of project files)
         </p>
       </div>
 

@@ -8,8 +8,6 @@ import Card from '../../components/Card';
 import Input from '../../components/Input';
 import Select from '../../components/Select';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
-
 export default function ListingModeration() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -185,22 +183,16 @@ export default function ListingModeration() {
                 {product.photos && product.photos.length > 0 && (
                   <div className="grid grid-cols-2 gap-2">
                     <img
-                      src={`${API_BASE_URL}${product.photos[0]}`}
+                      src={`http://localhost:5000${product.photos[0]}`}
                       alt="Main crop"
                       className="w-full h-32 object-cover rounded-lg border"
-                      onError={(e) => {
-                        e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Crect fill="%23f0f0f0" width="100" height="100"/%3E%3Ctext x="50" y="50" dominant-baseline="middle" text-anchor="middle" fill="%23999"%3ENo Image%3C/text%3E%3C/svg%3E';
-                      }}
                     />
                     {product.photos.slice(1, 3).map((photo, idx) => (
                       <img
                         key={idx}
-                        src={`${API_BASE_URL}${photo}`}
+                        src={`http://localhost:5000${photo}`}
                         alt={`Detail ${idx + 1}`}
                         className="w-full h-16 object-cover rounded-lg border"
-                        onError={(e) => {
-                          e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Crect fill="%23f0f0f0" width="100" height="100"/%3E%3Ctext x="50" y="50" dominant-baseline="middle" text-anchor="middle" fill="%23999"%3ENo Image%3C/text%3E%3C/svg%3E';
-                        }}
                       />
                     ))}
                   </div>

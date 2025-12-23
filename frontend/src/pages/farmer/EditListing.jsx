@@ -8,8 +8,6 @@ import Card from '../../components/Card';
 import Input from '../../components/Input';
 import Select from '../../components/Select';
 import Button from '../../components/Button';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
 import Loading from '../../components/Loading';
 
 export default function EditListing() {
@@ -413,7 +411,7 @@ export default function EditListing() {
                     {formData.existingPhotos.map((photo, index) => (
                       <div key={`existing-${index}`} className="relative group">
                         <img
-                          src={`${API_BASE_URL}${photo}`}
+                          src={`http://localhost:5000${photo}`}
                           alt={`Crop ${index + 1}`}
                           className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
                           onError={(e) => {

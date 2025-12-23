@@ -1,12 +1,23 @@
 import { useState, useEffect } from 'react';
+<<<<<<< HEAD
+import { Users, ShoppingBag, Package, TrendingUp, DollarSign } from 'lucide-react';
+import { toast } from 'react-toastify';
+import { getDashboardStats } from '../../services/adminService';
+import { getMarketStats } from '../../services/marketPriceService';
+=======
 import { Users, ShoppingBag, Package, TrendingUp } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { getDashboardStats } from '../../services/adminService';
+>>>>>>> b4da24f (New import of project files)
 import StatsCard from '../../components/admin/StatsCard';
 import Loading from '../../components/Loading';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
+<<<<<<< HEAD
+  const [marketStats, setMarketStats] = useState(null);
+=======
+>>>>>>> b4da24f (New import of project files)
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,8 +27,17 @@ export default function AdminDashboard() {
   const fetchStats = async () => {
     try {
       setLoading(true);
+<<<<<<< HEAD
+      const [dashboardData, marketData] = await Promise.all([
+        getDashboardStats(),
+        getMarketStats().catch(() => null) // Don't fail if market stats unavailable
+      ]);
+      setStats(dashboardData.data);
+      setMarketStats(marketData);
+=======
       const response = await getDashboardStats();
       setStats(response.data);
+>>>>>>> b4da24f (New import of project files)
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to fetch statistics');
     } finally {
@@ -103,6 +123,12 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+<<<<<<< HEAD
+      {/* Quick Actions */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+=======
       {/* Orders Statistics */}
       <div className="mb-8">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Order Statistics</h2>
@@ -132,6 +158,7 @@ export default function AdminDashboard() {
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+>>>>>>> b4da24f (New import of project files)
           <a
             href="/admin/users"
             className="flex items-center justify-between p-4 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors"
@@ -153,6 +180,21 @@ export default function AdminDashboard() {
             <Package className="w-6 h-6 text-primary-600" />
           </a>
           <a
+<<<<<<< HEAD
+            href="/admin/market-prices"
+            className="flex items-center justify-between p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+          >
+            <div>
+              <h3 className="font-medium text-gray-900">Market Prices</h3>
+              <p className="text-sm text-gray-600">
+                {marketStats ? `${marketStats.totalCrops} crops tracked` : 'Update prices'}
+              </p>
+            </div>
+            <DollarSign className="w-6 h-6 text-green-600" />
+          </a>
+          <a
+=======
+>>>>>>> b4da24f (New import of project files)
             href="/admin/reports"
             className="flex items-center justify-between p-4 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors"
           >

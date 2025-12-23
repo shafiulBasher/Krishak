@@ -1,6 +1,10 @@
 import axios from 'axios';
 
+<<<<<<< HEAD
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+=======
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5003/api';
+>>>>>>> b4da24f (New import of project files)
 
 // Create axios instance
 const api = axios.create({
@@ -29,14 +33,14 @@ api.interceptors.response.use(
   (response) => response.data,
   (error) => {
     const message = error.response?.data?.message || error.message || 'Something went wrong';
-
+    
     // Auto logout on 401
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
-
+    
     return Promise.reject(message);
   }
 );

@@ -206,11 +206,62 @@ const getMyListings = asyncHandler(async (req, res) => {
   });
 });
 
+<<<<<<< HEAD
+=======
+// @desc    Calculate fair price for product
+// @route   POST /api/products/calculate-fair-price
+// @access  Public
+const calculateFairPrice = asyncHandler(async (req, res) => {
+  const { costBreakdown, margin = 15, quantity } = req.body;
+
+  if (!costBreakdown) {
+    res.status(400);
+    throw new Error('Cost breakdown is required');
+  }
+
+  const { seedCost = 0, fertilizerCost = 0, laborCost = 0, transportCost = 0, otherCost = 0 } = costBreakdown;
+
+  // Calculate total cost per unit
+  const totalCost = seedCost + fertilizerCost + laborCost + transportCost + otherCost;
+  const costPerUnit = quantity ? totalCost / quantity : totalCost;
+
+  // Calculate suggested price with margin
+  const suggestedPrice = costPerUnit * (1 + margin / 100);
+
+  res.json({
+    success: true,
+    data: {
+      costBreakdown: {
+        seedCost,
+        fertilizerCost,
+        laborCost,
+        transportCost,
+        otherCost,
+        totalCost
+      },
+      costPerUnit,
+      margin,
+      suggestedPrice,
+      breakdown: {
+        wholesale: suggestedPrice * 0.8, // Example: wholesale is 80% of suggested
+        retail: suggestedPrice * 1.2,    // Retail is 120% of suggested
+        farmerEarnings: suggestedPrice - costPerUnit
+      }
+    }
+  });
+});
+
+>>>>>>> b4da24f (New import of project files)
 module.exports = {
   createProduct,
   getProducts,
   getProduct,
   updateProduct,
   deleteProduct,
+<<<<<<< HEAD
   getMyListings
+=======
+  getMyListings,
+  calculateFairPrice
+>>>>>>> b4da24f (New import of project files)
 };

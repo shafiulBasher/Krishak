@@ -18,8 +18,6 @@ import {
 } from 'lucide-react';
 import { getMyListings, deleteProduct } from '../../services/productService';
 import Loading from '../../components/Loading';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import Select from '../../components/Select';
@@ -132,7 +130,7 @@ export default function MyListings() {
           <div className="relative h-48 bg-gradient-to-br from-primary-100 to-primary-50 rounded-t-lg overflow-hidden">
             {listing.photos && listing.photos.length > 0 ? (
               <img
-                src={`${API_BASE_URL}${listing.photos[0]}`}
+                src={`http://localhost:5000${listing.photos[0]}`}
                 alt={listing.cropName}
                 className="w-full h-full object-cover"
                 onError={(e) => {

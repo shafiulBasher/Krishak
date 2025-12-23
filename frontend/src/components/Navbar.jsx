@@ -1,15 +1,12 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { CartContext } from '../context/CartContext';
-import { LogOut, User, Menu, X, ShoppingCart, Package } from 'lucide-react';
-import { useState, useContext } from 'react';
+import { LogOut, User, Menu, X } from 'lucide-react';
+import { useState } from 'react';
 
 export const Navbar = () => {
   const { user, logout, isAuthenticated } = useAuth();
-  const { getCartItemCount } = useContext(CartContext) || { getCartItemCount: () => 0 };
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const cartCount = getCartItemCount();
 
   const handleLogout = () => {
     logout();
@@ -32,23 +29,14 @@ export const Navbar = () => {
                 <Link to="/dashboard" className="hover:bg-primary-700 px-3 py-2 rounded-md">
                   Dashboard
                 </Link>
-                {user?.role === 'buyer' && (
-                  <>
-                    <Link to="/cart" className="hover:bg-primary-700 px-3 py-2 rounded-md flex items-center relative">
-                      <ShoppingCart className="w-4 h-4 mr-1" />
-                      Cart
-                      {cartCount > 0 && (
-                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                          {cartCount}
-                        </span>
-                      )}
-                    </Link>
-                    <Link to="/orders" className="hover:bg-primary-700 px-3 py-2 rounded-md flex items-center">
-                      <Package className="w-4 h-4 mr-1" />
-                      Orders
-                    </Link>
-                  </>
-                )}
+<<<<<<< HEAD
+                <Link to="/market-prices" className="hover:bg-primary-700 px-3 py-2 rounded-md">
+                  Market
+=======
+                <Link to="/fair-price-calculator" className="hover:bg-primary-700 px-3 py-2 rounded-md">
+                  Fair Price Calculator
+>>>>>>> b4da24f (New import of project files)
+                </Link>
                 <Link to="/profile" className="hover:bg-primary-700 px-3 py-2 rounded-md flex items-center">
                   <User className="w-4 h-4 mr-1" />
                   {user?.name}
@@ -63,6 +51,12 @@ export const Navbar = () => {
               </>
             ) : (
               <>
+<<<<<<< HEAD
+                <Link to="/market-prices" className="hover:bg-primary-700 px-3 py-2 rounded-md">
+                  Market
+                </Link>
+=======
+>>>>>>> b4da24f (New import of project files)
                 <Link to="/login" className="hover:bg-primary-700 px-4 py-2 rounded-md">
                   Login
                 </Link>
@@ -94,24 +88,21 @@ export const Navbar = () => {
                 >
                   Dashboard
                 </Link>
-                {user?.role === 'buyer' && (
-                  <>
-                    <Link
-                      to="/cart"
-                      className="block hover:bg-primary-700 px-3 py-2 rounded-md"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      🛒 Cart {cartCount > 0 && `(${cartCount})`}
-                    </Link>
-                    <Link
-                      to="/orders"
-                      className="block hover:bg-primary-700 px-3 py-2 rounded-md"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      📦 Orders
-                    </Link>
-                  </>
-                )}
+                <Link
+<<<<<<< HEAD
+                  to="/market-prices"
+                  className="block hover:bg-primary-700 px-3 py-2 rounded-md"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Market
+=======
+                  to="/fair-price-calculator"
+                  className="block hover:bg-primary-700 px-3 py-2 rounded-md"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Fair Price Calculator
+>>>>>>> b4da24f (New import of project files)
+                </Link>
                 <Link
                   to="/profile"
                   className="block hover:bg-primary-700 px-3 py-2 rounded-md"
@@ -132,6 +123,16 @@ export const Navbar = () => {
             ) : (
               <>
                 <Link
+<<<<<<< HEAD
+                  to="/market-prices"
+                  className="block hover:bg-primary-700 px-3 py-2 rounded-md"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Market
+                </Link>
+                <Link
+=======
+>>>>>>> b4da24f (New import of project files)
                   to="/login"
                   className="block hover:bg-primary-700 px-3 py-2 rounded-md"
                   onClick={() => setMobileMenuOpen(false)}
