@@ -8,12 +8,7 @@ const {
   getProduct,
   updateProduct,
   deleteProduct,
-<<<<<<< HEAD
   getMyListings
-=======
-  getMyListings,
-  calculateFairPrice
->>>>>>> b4da24f (New import of project files)
 } = require('../controllers/productController');
 
 // Import Middleware
@@ -22,10 +17,6 @@ const upload = require('../middleware/uploadMiddleware');
 
 // Public routes
 router.get('/', getProducts);
-<<<<<<< HEAD
-=======
-router.post('/calculate-fair-price', calculateFairPrice);
->>>>>>> b4da24f (New import of project files)
 
 // Protected routes (require authentication)
 router.use(protect);

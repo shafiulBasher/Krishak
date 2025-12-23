@@ -12,7 +12,7 @@ export const useAuth = () => {
   return context;
 };
 
-export const AuthProvider = ({ children }) => {
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       const response = await loginService(credentials);
-      setUser(response.data);
+      setUser(response);
       toast.success('Login successful!');
       return response;
     } catch (error) {
@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const response = await registerService(userData);
-      setUser(response.data);
+      setUser(response);
       toast.success('Registration successful!');
       return response;
     } catch (error) {
@@ -65,7 +65,7 @@ export const AuthProvider = ({ children }) => {
   const googleLogin = async (credential) => {
     try {
       const response = await googleAuth({ credential });
-      setUser(response.data);
+      setUser(response);
       
       if (response.needsCompletion) {
         toast.info('Please complete your profile');
@@ -92,4 +92,6 @@ export const AuthProvider = ({ children }) => {
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
+}
+
+export default AuthProvider;
