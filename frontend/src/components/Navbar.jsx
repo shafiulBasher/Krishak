@@ -29,8 +29,13 @@ export const Navbar = () => {
                 <Link to="/dashboard" className="hover:bg-primary-700 px-3 py-2 rounded-md">
                   Dashboard
                 </Link>
+<<<<<<< HEAD
                 <Link to="/market-prices" className="hover:bg-primary-700 px-3 py-2 rounded-md">
                   Market
+=======
+                <Link to="/fair-price-calculator" className="hover:bg-primary-700 px-3 py-2 rounded-md">
+                  Fair Price Calculator
+>>>>>>> b4da24f (New import of project files)
                 </Link>
                 <Link to="/profile" className="hover:bg-primary-700 px-3 py-2 rounded-md flex items-center">
                   <User className="w-4 h-4 mr-1" />
@@ -46,9 +51,12 @@ export const Navbar = () => {
               </>
             ) : (
               <>
+<<<<<<< HEAD
                 <Link to="/market-prices" className="hover:bg-primary-700 px-3 py-2 rounded-md">
                   Market
                 </Link>
+=======
+>>>>>>> b4da24f (New import of project files)
                 <Link to="/login" className="hover:bg-primary-700 px-4 py-2 rounded-md">
                   Login
                 </Link>
@@ -81,11 +89,19 @@ export const Navbar = () => {
                   Dashboard
                 </Link>
                 <Link
+<<<<<<< HEAD
                   to="/market-prices"
                   className="block hover:bg-primary-700 px-3 py-2 rounded-md"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Market
+=======
+                  to="/fair-price-calculator"
+                  className="block hover:bg-primary-700 px-3 py-2 rounded-md"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Fair Price Calculator
+>>>>>>> b4da24f (New import of project files)
                 </Link>
                 <Link
                   to="/profile"
@@ -107,6 +123,7 @@ export const Navbar = () => {
             ) : (
               <>
                 <Link
+<<<<<<< HEAD
                   to="/market-prices"
                   className="block hover:bg-primary-700 px-3 py-2 rounded-md"
                   onClick={() => setMobileMenuOpen(false)}
@@ -114,6 +131,8 @@ export const Navbar = () => {
                   Market
                 </Link>
                 <Link
+=======
+>>>>>>> b4da24f (New import of project files)
                   to="/login"
                   className="block hover:bg-primary-700 px-3 py-2 rounded-md"
                   onClick={() => setMobileMenuOpen(false)}

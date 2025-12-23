@@ -12,15 +12,25 @@ import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
 import { Profile } from './pages/Profile';
 import { CompleteProfile } from './pages/CompleteProfile';
+<<<<<<< HEAD
 import MarketPrices from './pages/MarketPrices';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagement from './pages/admin/UserManagement';
 import ListingModeration from './pages/admin/ListingModeration';
 import MarketPriceManagement from './pages/admin/MarketPriceManagement';
+=======
+import AdminDashboard from './pages/admin/AdminDashboard';
+import UserManagement from './pages/admin/UserManagement';
+import ListingModeration from './pages/admin/ListingModeration';
+>>>>>>> b4da24f (New import of project files)
 import CreateListing from './pages/farmer/CreateListing';
 import MyListings from './pages/farmer/MyListings';
 import EditListing from './pages/farmer/EditListing';
 import { DeliveryAddresses } from './pages/buyer/DeliveryAddresses';
+<<<<<<< HEAD
+=======
+import FairPriceCalculator from './pages/FairPriceCalculator';
+>>>>>>> b4da24f (New import of project files)
 
 function App() {
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
@@ -38,7 +48,10 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+<<<<<<< HEAD
             <Route path="/market-prices" element={<MarketPrices />} />
+=======
+>>>>>>> b4da24f (New import of project files)
             <Route
               path="/complete-profile"
               element={
@@ -89,6 +102,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
+<<<<<<< HEAD
             <Route
               path="/admin/market-prices"
               element={
@@ -97,6 +111,8 @@ function App() {
                 </ProtectedRoute>
               }
             />
+=======
+>>>>>>> b4da24f (New import of project files)
 
             {/* Farmer Routes */}
             <Route
@@ -125,6 +141,10 @@ function App() {
             />
 
             {/* Buyer Routes */}
+<<<<<<< HEAD
+=======
+            <Route path="/fair-price-calculator" element={<FairPriceCalculator />} />
+>>>>>>> b4da24f (New import of project files)
             <Route
               path="/buyer/addresses"
               element={

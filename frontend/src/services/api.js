@@ -1,6 +1,10 @@
 import axios from 'axios';
 
+<<<<<<< HEAD
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+=======
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5003/api';
+>>>>>>> b4da24f (New import of project files)
 
 // Create axios instance
 const api = axios.create({

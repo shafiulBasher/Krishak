@@ -39,8 +39,13 @@ app.get('/', (req, res) => {
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
+<<<<<<< HEAD
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/market-prices', require('./routes/marketPriceRoutes'));
+=======
+app.use('/api/orders', require('./routes/orderRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
+>>>>>>> b4da24f (New import of project files)
 
 // Error handler middleware
 app.use((err, req, res, next) => {
