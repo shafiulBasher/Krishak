@@ -1,12 +1,19 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, User, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { LogOut, User, Menu, X, ShoppingCart } from 'lucide-react';
+import { useState, useContext } from 'react';
+import { CartContext } from '../context/CartContext';
 
 export const Navbar = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  // Get cart count - safely access context
+  const cartContext = useContext(CartContext);
+  const cartItemCount = (isAuthenticated && user?.role === 'buyer' && cartContext) 
+    ? cartContext.getCartItemCount() 
+    : 0;
 
   const handleLogout = () => {
     logout();
@@ -29,12 +36,31 @@ export const Navbar = () => {
                 <Link to="/dashboard" className="hover:bg-primary-700 px-3 py-2 rounded-md">
                   Dashboard
                 </Link>
+                <Link to="/browse-products" className="hover:bg-primary-700 px-3 py-2 rounded-md">
+                  Browse
+                </Link>
                 <Link to="/market-prices" className="hover:bg-primary-700 px-3 py-2 rounded-md">
                   Market
                 </Link>
                 <Link to="/fair-price-calculator" className="hover:bg-primary-700 px-3 py-2 rounded-md">
                   Fair Price
                 </Link>
+                {user?.role === 'buyer' && (
+                  <>
+                    <Link to="/buyer/orders" className="hover:bg-primary-700 px-3 py-2 rounded-md">
+                      My Orders
+                    </Link>
+                    <Link to="/buyer/cart" className="hover:bg-primary-700 px-3 py-2 rounded-md flex items-center relative">
+                      <ShoppingCart className="w-4 h-4 mr-1" />
+                      Cart
+                      {cartItemCount > 0 && (
+                        <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-0.5">
+                          {cartItemCount}
+                        </span>
+                      )}
+                    </Link>
+                  </>
+                )}
                 <Link to="/profile" className="hover:bg-primary-700 px-3 py-2 rounded-md flex items-center">
                   <User className="w-4 h-4 mr-1" />
                   {user?.name}
@@ -84,6 +110,13 @@ export const Navbar = () => {
                   Dashboard
                 </Link>
                 <Link
+                  to="/browse-products"
+                  className="block hover:bg-primary-700 px-3 py-2 rounded-md"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Browse
+                </Link>
+                <Link
                   to="/market-prices"
                   className="block hover:bg-primary-700 px-3 py-2 rounded-md"
                   onClick={() => setMobileMenuOpen(false)}
@@ -97,6 +130,29 @@ export const Navbar = () => {
                 >
                   Fair Price
                 </Link>
+                {user?.role === 'buyer' && (
+                  <>
+                    <Link
+                      to="/buyer/orders"
+                      className="block hover:bg-primary-700 px-3 py-2 rounded-md"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      My Orders
+                    </Link>
+                    <Link
+                      to="/buyer/cart"
+                      className="block hover:bg-primary-700 px-3 py-2 rounded-md flex items-center justify-between"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <span>Cart</span>
+                      {cartItemCount > 0 && (
+                        <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5">
+                          {cartItemCount}
+                        </span>
+                      )}
+                    </Link>
+                  </>
+                )}
                 <Link
                   to="/profile"
                   className="block hover:bg-primary-700 px-3 py-2 rounded-md"
@@ -116,6 +172,13 @@ export const Navbar = () => {
               </>
             ) : (
               <>
+                <Link
+                  to="/browse-products"
+                  className="block hover:bg-primary-700 px-3 py-2 rounded-md"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Browse
+                </Link>
                 <Link
                   to="/market-prices"
                   className="block hover:bg-primary-700 px-3 py-2 rounded-md"

@@ -6,7 +6,9 @@ const {
   createOrder,
   getMyOrders,
   getOrder,
-  updateOrderStatus
+  updateOrderStatus,
+  getBuyerStats,
+  getTransporterStats
 } = require('../controllers/orderController');
 
 // Import Middleware
@@ -17,6 +19,11 @@ router.use(protect);
 
 // Buyer routes
 router.post('/', authorize('buyer'), createOrder);
+
+// Stats routes (must be before /:id route to avoid route conflicts)
+// IMPORTANT: These routes must come before /:id to prevent Express from matching "stats" as an ID
+router.get('/stats/buyer', authorize('buyer'), getBuyerStats);
+router.get('/stats/transporter', authorize('transporter'), getTransporterStats);
 
 // Common routes
 router.get('/my-orders', getMyOrders);

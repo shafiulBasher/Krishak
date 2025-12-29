@@ -7,7 +7,7 @@ const User = require('../models/User');
 // @route   POST /api/orders
 // @access  Private (Buyer only)
 const createOrder = asyncHandler(async (req, res) => {
-  const { productId, quantity, pricePerUnit, deliveryAddress, paymentMethod, isPreOrder } = req.body;
+  const { productId, quantity, pricePerUnit, deliveryAddress, paymentMethod, isPreOrder, deliverySlot, notes } = req.body;
 
   // Find the product
   const product = await Product.findById(productId);
@@ -40,6 +40,16 @@ const createOrder = asyncHandler(async (req, res) => {
   // Generate order number
   const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
 
+  // Calculate estimated delivery date
+  let estimatedDeliveryDate;
+  if (deliverySlot?.estimatedDateTime) {
+    estimatedDeliveryDate = new Date(deliverySlot.estimatedDateTime);
+  } else if (deliverySlot?.date) {
+    estimatedDeliveryDate = new Date(deliverySlot.date);
+  } else {
+    estimatedDeliveryDate = product.expectedHarvestDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 1 week default
+  }
+
   // Create order
   const order = await Order.create({
     orderNumber,
@@ -57,7 +67,13 @@ const createOrder = asyncHandler(async (req, res) => {
     deliveryAddress,
     paymentMethod,
     isPreOrder: isPreOrder || false,
-    estimatedDeliveryDate: product.expectedHarvestDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 1 week default
+    estimatedDeliveryDate,
+    deliverySlot: deliverySlot ? {
+      date: deliverySlot.date ? new Date(deliverySlot.date) : undefined,
+      timeSlot: deliverySlot.timeSlot,
+      estimatedDateTime: deliverySlot.estimatedDateTime ? new Date(deliverySlot.estimatedDateTime) : undefined
+    } : undefined,
+    notes: notes || undefined
   });
 
   // Update product quantity (reserve for pre-order or reduce for regular)
@@ -85,7 +101,7 @@ const getMyOrders = asyncHandler(async (req, res) => {
   const orders = await Order.find({
     $or: [{ buyer: req.user._id }, { farmer: req.user._id }]
   })
-    .populate('product', 'cropName grade photos')
+    .populate('product', 'cropName grade photos unit')
     .populate('buyer', 'name email phone')
     .populate('farmer', 'name email phone')
     .sort({ createdAt: -1 });
@@ -94,6 +110,93 @@ const getMyOrders = asyncHandler(async (req, res) => {
     success: true,
     count: orders.length,
     data: orders
+  });
+});
+
+// @desc    Get buyer dashboard stats
+// @route   GET /api/orders/stats/buyer
+// @access  Private (Buyer only)
+const getBuyerStats = asyncHandler(async (req, res) => {
+  console.log('✅ getBuyerStats endpoint called for buyer:', req.user._id);
+  const buyerId = req.user._id;
+
+  // Get all buyer's orders
+  const allOrders = await Order.find({ buyer: buyerId });
+
+  // Calculate stats
+  const totalOrders = allOrders.length;
+  const pendingOrders = allOrders.filter(order => order.orderStatus === 'pending').length;
+  const confirmedOrders = allOrders.filter(order => order.orderStatus === 'confirmed').length;
+  const completedOrders = allOrders.filter(order => order.orderStatus === 'completed').length;
+  const cancelledOrders = allOrders.filter(order => order.orderStatus === 'cancelled').length;
+
+  // Calculate total spent (from all orders regardless of status)
+  const totalSpent = allOrders.reduce((sum, order) => {
+    return sum + (order.totalPrice || 0);
+  }, 0);
+
+  // Calculate total spent on completed orders only
+  const totalSpentCompleted = allOrders
+    .filter(order => order.orderStatus === 'completed')
+    .reduce((sum, order) => sum + (order.totalPrice || 0), 0);
+
+  res.json({
+    success: true,
+    data: {
+      totalOrders,
+      pendingOrders,
+      confirmedOrders,
+      completedOrders,
+      cancelledOrders,
+      totalSpent,
+      totalSpentCompleted
+    }
+  });
+});
+
+// @desc    Get transporter dashboard stats
+// @route   GET /api/orders/stats/transporter
+// @access  Private (Transporter only)
+const getTransporterStats = asyncHandler(async (req, res) => {
+  const transporterId = req.user._id;
+
+  // Get all orders assigned to this transporter
+  const allOrders = await Order.find({ transporter: transporterId });
+
+  // Calculate stats
+  const totalDeliveries = allOrders.length;
+  const activeDeliveries = allOrders.filter(order => 
+    order.deliveryStatus === 'assigned' || 
+    order.deliveryStatus === 'picked' || 
+    order.deliveryStatus === 'in_transit'
+  ).length;
+  const completedTrips = allOrders.filter(order => 
+    order.deliveryStatus === 'delivered' || 
+    order.orderStatus === 'completed'
+  ).length;
+  const pendingAssignments = allOrders.filter(order => 
+    order.deliveryStatus === 'not_assigned'
+  ).length;
+
+  // Calculate total earnings from completed deliveries
+  const completedDeliveries = allOrders.filter(order => 
+    order.deliveryStatus === 'delivered' || 
+    order.orderStatus === 'completed'
+  );
+  
+  const totalEarnings = completedDeliveries.reduce((sum, order) => {
+    return sum + (order.priceBreakdown?.transportFee || 0);
+  }, 0);
+
+  res.json({
+    success: true,
+    data: {
+      totalDeliveries,
+      activeDeliveries,
+      completedTrips,
+      pendingAssignments,
+      totalEarnings
+    }
   });
 });
 
@@ -162,5 +265,7 @@ module.exports = {
   createOrder,
   getMyOrders,
   getOrder,
-  updateOrderStatus
+  updateOrderStatus,
+  getBuyerStats,
+  getTransporterStats
 };

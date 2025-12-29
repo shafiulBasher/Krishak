@@ -480,7 +480,7 @@ export default function CreateListing() {
 
       <div className="bg-blue-50 p-4 rounded-lg mb-6">
         <p className="text-sm text-blue-800">
-          ?? Use the calculator above to determine a fair price based on your costs, or set your own price below.
+          💡 Use the calculator above to determine a fair price based on your costs, or set your own price below.
         </p>
       </div>
 

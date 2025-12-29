@@ -114,8 +114,13 @@ export const Register = () => {
     }
   };
 
-  const handleGoogleError = () => {
-    toast.error('Google sign-in failed. Please try again.');
+  const handleGoogleError = (error) => {
+    console.error('Google OAuth error:', error);
+    if (error?.error === 'popup_closed_by_user') {
+      // User closed the popup, don't show error
+      return;
+    }
+    toast.error('Google sign-in is not available. Please use email/password registration.');
   };
 
   return (
@@ -271,7 +276,9 @@ export const Register = () => {
             </div>
 
             <div className="mt-4">
-              {import.meta.env.VITE_GOOGLE_CLIENT_ID && import.meta.env.VITE_GOOGLE_CLIENT_ID !== 'your-google-client-id-here.apps.googleusercontent.com' ? (
+              {import.meta.env.VITE_GOOGLE_CLIENT_ID && 
+               import.meta.env.VITE_GOOGLE_CLIENT_ID !== 'your-google-client-id-here.apps.googleusercontent.com' &&
+               import.meta.env.VITE_GOOGLE_CLIENT_ID.includes('.apps.googleusercontent.com') ? (
                 <GoogleLogin
                   onSuccess={handleGoogleSuccess}
                   onError={handleGoogleError}
@@ -283,7 +290,7 @@ export const Register = () => {
                 />
               ) : (
                 <div className="text-center text-sm text-gray-500 py-3 bg-gray-50 rounded-lg border border-gray-200">
-                  Google Sign-In requires configuration. See GOOGLE_OAUTH_SETUP.md
+                  Google Sign-In is not configured. Please use email/password registration.
                 </div>
               )}
             </div>
