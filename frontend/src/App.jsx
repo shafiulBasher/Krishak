@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -10,6 +11,7 @@ import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
+import { BrowseProducts } from './pages/BrowseProducts';
 import { Profile } from './pages/Profile';
 import { CompleteProfile } from './pages/CompleteProfile';
 import MarketPrices from './pages/MarketPrices';
@@ -22,23 +24,30 @@ import CreateListing from './pages/farmer/CreateListing';
 import MyListings from './pages/farmer/MyListings';
 import EditListing from './pages/farmer/EditListing';
 import { DeliveryAddresses } from './pages/buyer/DeliveryAddresses';
+import { Cart } from './pages/buyer/Cart';
+import { Checkout } from './pages/buyer/Checkout';
+import { MyOrders } from './pages/buyer/MyOrders';
 
 function App() {
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
   
   // Only enable Google OAuth if valid Client ID is configured
-  const isGoogleConfigured = googleClientId && googleClientId !== 'your-google-client-id-here.apps.googleusercontent.com';
+  const isGoogleConfigured = googleClientId && 
+    googleClientId !== 'your-google-client-id-here.apps.googleusercontent.com' &&
+    googleClientId.includes('.apps.googleusercontent.com');
   
   return (
-    <GoogleOAuthProvider clientId={googleClientId}>
+    <GoogleOAuthProvider clientId={isGoogleConfigured ? googleClientId : ''}>
       <AuthProvider>
-        <Router>
+        <CartProvider>
+          <Router>
           <div className="min-h-screen bg-gray-50">
             <Navbar />
             <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/browse-products" element={<BrowseProducts />} />
             <Route path="/market-prices" element={<MarketPrices />} />
             <Route path="/fair-price-calculator" element={<FairPriceCalculator />} />
             <Route
@@ -135,6 +144,30 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/buyer/cart"
+              element={
+                <ProtectedRoute allowedRoles={['buyer']}>
+                  <Cart />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/buyer/checkout"
+              element={
+                <ProtectedRoute allowedRoles={['buyer']}>
+                  <Checkout />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/buyer/orders"
+              element={
+                <ProtectedRoute allowedRoles={['buyer']}>
+                  <MyOrders />
+                </ProtectedRoute>
+              }
+            />
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
@@ -151,6 +184,7 @@ function App() {
           />
         </div>
       </Router>
+        </CartProvider>
     </AuthProvider>
     </GoogleOAuthProvider>
   );

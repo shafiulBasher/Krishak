@@ -267,22 +267,22 @@ const getFarmerStats = asyncHandler(async (req, res) => {
     status: 'pending'
   });
 
-  // Get total orders from Order model (you'll need to import Order model)
+  // Get total orders from Order model
   const Order = require('../models/Order');
   const orders = await Order.find({
-    'product.farmer': farmerId
+    farmer: farmerId
   });
 
   const totalOrders = orders.length;
 
   // Calculate total earnings from completed orders
   const completedOrders = await Order.find({
-    'product.farmer': farmerId,
-    status: 'delivered'
+    farmer: farmerId,
+    orderStatus: 'completed'
   });
 
   const totalEarnings = completedOrders.reduce((sum, order) => {
-    return sum + (order.totalAmount || 0);
+    return sum + (order.priceBreakdown?.farmerEarnings || order.totalPrice || 0);
   }, 0);
 
   res.json({

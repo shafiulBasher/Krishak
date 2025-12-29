@@ -10,6 +10,17 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 console.log("--- DEBUG START ---");
 console.log("JWT_SECRET is:", process.env.JWT_SECRET ? "Loaded" : "NOT LOADED");
 console.log("MONGO_URI is:", process.env.MONGO_URI ? "Loaded" : "NOT LOADED");
+if (process.env.MONGO_URI) {
+  const mongoUri = process.env.MONGO_URI;
+  if (mongoUri.includes('mongodb+srv://') || mongoUri.includes('mongodb.net')) {
+    console.log("✅ Using MongoDB Atlas (Online)");
+    console.log("   Cluster:", mongoUri.match(/@([^.]+)/)?.[1] || "Unknown");
+  } else if (mongoUri.includes('localhost')) {
+    console.log("⚠️  WARNING: Using localhost MongoDB!");
+  } else {
+    console.log("📡 Using MongoDB:", mongoUri.substring(0, 30) + "...");
+  }
+}
 console.log("--- DEBUG END ---");
 
 // Connect to database imports
@@ -23,7 +34,24 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+
+// CORS configuration - Allow requests from frontend
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://localhost:5174',
+    // Add your production frontend URL here when deployed
+    // 'https://your-frontend.vercel.app'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range']
+}));
+
+// Handle preflight requests
+app.options('*', cors());
 
 // Serve static files (uploaded images)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -36,12 +64,16 @@ app.get('/', (req, res) => {
   });
 });
 
+// API Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/market-prices', require('./routes/marketPriceRoutes'));
+
+// Debug: Log registered routes on startup
+console.log('✅ Order routes registered: /api/orders/stats/buyer, /api/orders/stats/transporter');
 
 // Error handler middleware
 app.use((err, req, res, next) => {

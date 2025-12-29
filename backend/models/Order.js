@@ -127,6 +127,21 @@ const orderSchema = new mongoose.Schema({
   actualDeliveryDate: {
     type: Date
   },
+  // Delivery slot for buyer preference
+  deliverySlot: {
+    date: {
+      type: Date,
+      required: false
+    },
+    timeSlot: {
+      type: String,
+      required: false
+    },
+    estimatedDateTime: {
+      type: Date,
+      required: false
+    }
+  },
   // Pre-order specific
   isPreOrder: {
     type: Boolean,
