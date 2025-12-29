@@ -1,0 +1,83 @@
+### Krishak Backend API Tests
+
+### 1. Register a Farmer
+POST http://localhost:5000/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Karim Mia",
+  "email": "karim@example.com",
+  "phone": "01712345678",
+  "password": "farmer123",
+  "role": "farmer",
+  "farmLocation": {
+    "village": "Rampur",
+    "thana": "Savar",
+    "district": "Dhaka"
+  }
+}
+
+###
+
+### 2. Register a Buyer
+POST http://localhost:5000/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Rahman Ahmed",
+  "email": "rahman@example.com",
+  "phone": "01812345678",
+  "password": "buyer123",
+  "role": "buyer"
+}
+
+###
+
+### 3. Login
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "karim@example.com",
+  "password": "farmer123"
+}
+
+###
+
+### 4. Get Current User (Replace TOKEN with actual token from login)
+GET http://localhost:5000/api/auth/me
+Authorization: Bearer TOKEN
+
+###
+
+### 5. Get Profile
+GET http://localhost:5000/api/users/profile
+Authorization: Bearer TOKEN
+
+###
+
+### 6. Update Profile
+PUT http://localhost:5000/api/users/profile
+Authorization: Bearer TOKEN
+Content-Type: application/json
+
+{
+  "name": "Karim Mia Updated",
+  "phone": "01712345679",
+  "farmLocation": {
+    "village": "Rampur",
+    "thana": "Savar",
+    "district": "Dhaka",
+    "coordinates": {
+      "lat": 23.8103,
+      "lng": 90.4125
+    }
+  }
+}
+
+###
+
+### 7. Get User By ID (Replace USER_ID)
+GET http://localhost:5000/api/users/USER_ID
+
+###
