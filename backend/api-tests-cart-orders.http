@@ -1,0 +1,483 @@
+### Cart & Order Management - API Testing Guide
+
+## Prerequisites
+- Ensure backend is running on http://localhost:5000
+- Have a valid JWT token from login
+- User role should be "buyer"
+
+---
+
+## CART ENDPOINTS
+
+### 1. Get Cart
+```http
+GET http://localhost:5000/api/cart
+Authorization: Bearer <TOKEN>
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "...",
+    "buyer": "...",
+    "items": [
+      {
+        "product": { "_id": "...", "cropName": "Rice" },
+        "quantity": 5,
+        "pricePerUnit": 100,
+        "totalPrice": 500
+      }
+    ],
+    "cartSummary": {
+      "subtotal": 500,
+      "platformFee": 25,
+      "estimatedDeliveryFee": 0,
+      "total": 525
+    }
+  }
+}
+```
+
+---
+
+### 2. Add to Cart
+```http
+POST http://localhost:5000/api/cart
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+
+{
+  "productId": "product_id_here",
+  "quantity": 5
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Item added to cart",
+  "data": { ... }
+}
+```
+
+---
+
+### 3. Update Cart Item Quantity
+```http
+PUT http://localhost:5000/api/cart/product_id_here
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+
+{
+  "quantity": 10
+}
+```
+
+---
+
+### 4. Remove Item from Cart
+```http
+DELETE http://localhost:5000/api/cart/product_id_here
+Authorization: Bearer <TOKEN>
+```
+
+---
+
+### 5. Update Delivery Preferences
+```http
+PUT http://localhost:5000/api/cart/preferences/delivery
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+
+{
+  "selectedAddressId": "address_id_here",
+  "deliverySlot": "slot_id_here",
+  "preferredDeliveryDate": "2025-12-24"
+}
+```
+
+**OR for map-based delivery:**
+```json
+{
+  "mapLocation": {
+    "lat": 23.8103,
+    "lng": 90.4125,
+    "address": "123 Street, Mirpur",
+    "district": "Dhaka",
+    "thana": "Mirpur"
+  },
+  "deliverySlot": "slot_id_here"
+}
+```
+
+---
+
+### 6. Clear Cart
+```http
+DELETE http://localhost:5000/api/cart
+Authorization: Bearer <TOKEN>
+```
+
+---
+
+## ORDER ENDPOINTS
+
+### 1. Get Available Delivery Slots
+```http
+GET http://localhost:5000/api/orders/delivery-slots?district=Dhaka&thana=Mirpur
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "count": 2,
+  "data": [
+    {
+      "_id": "...",
+      "startTime": "09:00",
+      "endTime": "12:00",
+      "coverage": { "district": "Dhaka", "thana": "Mirpur" },
+      "deliveryFee": 100,
+      "availableDays": [1, 2, 3, 4, 5],
+      "maxOrders": 20,
+      "currentOrders": 5
+    }
+  ]
+}
+```
+
+---
+
+### 2. Create Order (Place Order)
+```http
+POST http://localhost:5000/api/orders
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+
+{
+  "deliveryAddressId": "address_id_here",
+  "deliverySlot": "slot_id_here",
+  "paymentMethod": "cash_on_delivery",
+  "notes": "Please ring bell twice"
+}
+```
+
+**OR with map-based delivery:**
+```json
+{
+  "mapLocation": {
+    "lat": 23.8103,
+    "lng": 90.4125,
+    "address": "123 Street, Mirpur",
+    "district": "Dhaka",
+    "thana": "Mirpur"
+  },
+  "deliverySlot": "slot_id_here",
+  "paymentMethod": "cash_on_delivery",
+  "notes": "Leave at gate"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "2 order(s) created successfully",
+  "data": [
+    {
+      "_id": "...",
+      "orderNumber": "KRK-20251222-12345",
+      "buyer": "...",
+      "farmer": "...",
+      "product": "...",
+      "quantity": 5,
+      "totalPrice": 525,
+      "orderStatus": "pending",
+      "deliveryStatus": "not_assigned",
+      "paymentStatus": "pending"
+    }
+  ]
+}
+```
+
+---
+
+### 3. Get Buyer's Orders
+```http
+GET http://localhost:5000/api/orders/buyer?status=pending
+Authorization: Bearer <TOKEN>
+```
+
+**Query Parameters:**
+- `status`: pending, confirmed, completed, cancelled
+- `deliveryStatus`: not_assigned, assigned, picked, in_transit, delivered
+- `sortBy`: createdAt (default) or oldest
+
+---
+
+### 4. Get Single Order
+```http
+GET http://localhost:5000/api/orders/order_id_here
+Authorization: Bearer <TOKEN>
+```
+
+---
+
+### 5. Update Order Status (Farmer Only)
+```http
+PUT http://localhost:5000/api/orders/order_id_here/status
+Authorization: Bearer <FARMER_TOKEN>
+Content-Type: application/json
+
+{
+  "status": "confirmed",
+  "note": "Order confirmed and ready for pickup",
+  "photo": "url_to_verification_photo"
+}
+```
+
+**Valid Status Values:**
+- pending
+- confirmed
+- cancelled
+- completed
+
+---
+
+### 6. Update Delivery Status (Transporter Only)
+```http
+PUT http://localhost:5000/api/orders/order_id_here/delivery-status
+Authorization: Bearer <TRANSPORTER_TOKEN>
+Content-Type: application/json
+
+{
+  "deliveryStatus": "in_transit",
+  "note": "Package picked up and on the way",
+  "photo": "url_to_tracking_photo"
+}
+```
+
+**Valid Status Values:**
+- not_assigned
+- assigned
+- picked
+- in_transit
+- delivered
+
+---
+
+### 7. Cancel Order
+```http
+PUT http://localhost:5000/api/orders/order_id_here/cancel
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+
+{
+  "reason": "Changed my mind about this product"
+}
+```
+
+**Note:** Cannot cancel if order is in 'in_transit', 'picked', or 'completed' status
+
+---
+
+### 8. Rate Order
+```http
+PUT http://localhost:5000/api/orders/order_id_here/rate
+Authorization: Bearer <BUYER_TOKEN>
+Content-Type: application/json
+
+{
+  "rating": 5,
+  "review": "Excellent quality and fast delivery!",
+  "rateType": "farmer"
+}
+```
+
+**Rate Types:**
+- farmer (by buyer)
+- transporter (by buyer)
+- buyer (by farmer)
+
+**Rating Range:** 1-5 stars
+
+---
+
+## Testing Workflow
+
+### Step 1: Get Available Products
+```http
+GET http://localhost:5000/api/products
+```
+
+### Step 2: Add Products to Cart
+```http
+POST http://localhost:5000/api/cart
+Content: { "productId": "...", "quantity": 5 }
+```
+
+### Step 3: Get Delivery Slots
+```http
+GET http://localhost:5000/api/orders/delivery-slots?district=Dhaka
+```
+
+### Step 4: Create Address (Optional)
+```http
+POST http://localhost:5000/api/users/addresses
+Content: { "label": "Home", "addressLine1": "...", ... }
+```
+
+### Step 5: Update Delivery Preferences
+```http
+PUT http://localhost:5000/api/cart/preferences/delivery
+Content: { "selectedAddressId": "...", "deliverySlot": "..." }
+```
+
+### Step 6: Place Order
+```http
+POST http://localhost:5000/api/orders
+Content: { "deliveryAddressId": "...", "deliverySlot": "...", ... }
+```
+
+### Step 7: Check Orders
+```http
+GET http://localhost:5000/api/orders/buyer
+```
+
+### Step 8: Rate Farmer (After Completion)
+```http
+PUT http://localhost:5000/api/orders/order_id/rate
+Content: { "rating": 5, "review": "...", "rateType": "farmer" }
+```
+
+---
+
+## Payment Methods Supported
+
+- cash_on_delivery (Default)
+- bkash
+- nagad
+- bank_transfer
+- card
+
+---
+
+## Status Values
+
+### Order Status
+- `pending`: Initial state, awaiting farmer confirmation
+- `confirmed`: Farmer confirmed the order
+- `cancelled`: Order cancelled
+- `completed`: Order delivered and completed
+
+### Delivery Status
+- `not_assigned`: No transporter assigned yet
+- `assigned`: Transporter assigned
+- `picked`: Package picked up from farmer
+- `in_transit`: On the way to buyer
+- `delivered`: Delivered to buyer
+
+### Payment Status
+- `pending`: Awaiting payment
+- `paid`: Payment received
+- `failed`: Payment failed
+- `refunded`: Payment refunded (after cancellation)
+
+---
+
+## Error Responses
+
+### Invalid Cart
+```json
+{
+  "success": false,
+  "message": "Cart is empty"
+}
+```
+
+### Insufficient Stock
+```json
+{
+  "success": false,
+  "message": "Only 10 kg available"
+}
+```
+
+### Unauthorized
+```json
+{
+  "success": false,
+  "message": "Not authorized to view this order"
+}
+```
+
+### Order Already Completed
+```json
+{
+  "success": false,
+  "message": "Cannot cancel order that is already in transit or completed"
+}
+```
+
+---
+
+## Tips for Testing
+
+1. **Use Postman or similar API client** for easier testing
+2. **Save tokens** from login response for subsequent requests
+3. **Create test addresses** first before placing orders
+4. **Check available slots** for your district before checkout
+5. **Monitor stock levels** - they reduce after order placement
+6. **Test with different roles** (buyer, farmer, transporter)
+7. **Verify rating system** only works for completed orders
+
+---
+
+## Database Seeding (Optional)
+
+To add sample delivery slots:
+
+```javascript
+// backend/seedDeliverySlots.js
+const mongoose = require('mongoose');
+const DeliverySlot = require('./models/DeliverySlot');
+require('dotenv').config();
+
+mongoose.connect(process.env.MONGO_URI);
+
+const slots = [
+  {
+    coverage: { district: 'Dhaka', thana: 'Mirpur' },
+    startTime: '09:00',
+    endTime: '12:00',
+    availableDays: [1, 2, 3, 4, 5],
+    maxOrders: 20,
+    deliveryFee: 100,
+    isActive: true,
+    description: 'Morning Delivery'
+  },
+  {
+    coverage: { district: 'Dhaka', thana: 'Mirpur' },
+    startTime: '14:00',
+    endTime: '17:00',
+    availableDays: [1, 2, 3, 4, 5],
+    maxOrders: 20,
+    deliveryFee: 100,
+    isActive: true,
+    description: 'Afternoon Delivery'
+  }
+];
+
+DeliverySlot.insertMany(slots).then(() => {
+  console.log('Slots seeded');
+  process.exit(0);
+});
+```
+
+Run: `node backend/seedDeliverySlots.js`
+
+---
