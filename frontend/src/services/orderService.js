@@ -23,3 +23,18 @@ export const updateOrderStatus = async (id, statusData) => {
   const response = await api.put(`/orders/${id}/status`, statusData);
   return response;
 };
+
+// Get buyer dashboard stats
+export const getBuyerStats = async () => {
+  // Add timestamp to prevent caching
+  const response = await api.get('/orders/stats/buyer', {
+    params: { _t: Date.now() }
+  });
+  return response;
+};
+
+// Get transporter dashboard stats
+export const getTransporterStats = async () => {
+  const response = await api.get('/orders/stats/transporter');
+  return response;
+};

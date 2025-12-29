@@ -1,14 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import { Card } from '../components/Card';
-import { User, ShoppingCart, Truck, Shield } from 'lucide-react';
+import { Button } from '../components/Button';
+import { User, ShoppingCart, Truck, Shield, RefreshCw } from 'lucide-react';
 import { getProducts, getFarmerStats } from '../services/productService';
+import { getBuyerStats, getTransporterStats } from '../services/orderService';
 import { toast } from 'react-toastify';
 import PreOrderModal from '../components/PreOrderModal';
 
 export const Dashboard = () => {
   const { user } = useAuth();
+  const { addToCart } = useCart();
+  const location = useLocation();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -19,6 +24,18 @@ export const Dashboard = () => {
     totalOrders: 0,
     totalEarnings: 0
   });
+  const [buyerStats, setBuyerStats] = useState({
+    totalOrders: 0,
+    totalSpent: 0,
+    pendingOrders: 0,
+    completedOrders: 0
+  });
+  const [transporterStats, setTransporterStats] = useState({
+    totalDeliveries: 0,
+    activeDeliveries: 0,
+    completedTrips: 0,
+    totalEarnings: 0
+  });
 
   // Redirect admin users to the proper admin dashboard
   if (user?.role === 'admin') {
@@ -26,24 +43,110 @@ export const Dashboard = () => {
   }
 
   useEffect(() => {
-    if (user?.role === 'buyer') {
+    if (!user) return;
+    
+    // Fetch stats based on user role
+    if (user.role === 'buyer') {
       fetchProducts();
-    } else if (user?.role === 'farmer') {
+      fetchBuyerStats();
+    } else if (user.role === 'farmer') {
       fetchFarmerStats();
+    } else if (user.role === 'transporter') {
+      fetchTransporterStats();
     }
-  }, [user]);
+  }, [user, location.pathname]); // Refresh when location changes (user navigates back)
 
   const fetchFarmerStats = async () => {
     try {
       const response = await getFarmerStats();
-      setFarmerStats(response.data || {
+      // API interceptor returns response.data, so response is already { success: true, data: {...} }
+      const stats = response?.data || response || {};
+      setFarmerStats({
+        activeListings: Number(stats.activeListings) || 0,
+        pendingListings: Number(stats.pendingListings) || 0,
+        totalOrders: Number(stats.totalOrders) || 0,
+        totalEarnings: Number(stats.totalEarnings) || 0
+      });
+    } catch (error) {
+      console.error('Error fetching farmer stats:', error);
+      setFarmerStats({
         activeListings: 0,
         pendingListings: 0,
         totalOrders: 0,
         totalEarnings: 0
       });
+    }
+  };
+
+  const fetchBuyerStats = async () => {
+    try {
+      console.log('🔄 Fetching buyer stats from:', import.meta.env.VITE_API_URL || 'http://localhost:5000/api');
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.warn('⚠️ No auth token found');
+        return;
+      }
+      
+      const response = await getBuyerStats();
+      console.log('✅ Buyer stats response:', response);
+      
+      // API interceptor returns response.data, so response is already { success: true, data: {...} }
+      // Extract the data object
+      const stats = response?.data || response || {};
+      console.log('📊 Extracted stats:', stats);
+      
+      if (stats.totalOrders !== undefined || stats.totalSpent !== undefined) {
+        setBuyerStats({
+          totalOrders: Number(stats.totalOrders) || 0,
+          totalSpent: Number(stats.totalSpent) || 0,
+          pendingOrders: Number(stats.pendingOrders) || 0,
+          completedOrders: Number(stats.completedOrders) || 0
+        });
+        console.log('✅ Stats updated successfully');
+      } else {
+        console.warn('⚠️ Stats data structure unexpected:', stats);
+      }
     } catch (error) {
-      console.error('Error fetching farmer stats:', error);
+      console.error('❌ Error fetching buyer stats:', error);
+      console.error('Error status:', error.status);
+      console.error('Error message:', error.message);
+      console.error('Error response:', error.response?.data);
+      
+      // If it's a 404, the route might not exist
+      if (error.status === 404 || error.message?.includes('404')) {
+        console.error('⚠️ Route not found (404). Backend might not be running or route not registered.');
+        console.error('💡 Try: 1) Hard refresh browser (Ctrl+Shift+R), 2) Check backend is running, 3) Restart backend server');
+      }
+      
+      // Set default values on error
+      setBuyerStats({
+        totalOrders: 0,
+        totalSpent: 0,
+        pendingOrders: 0,
+        completedOrders: 0
+      });
+    }
+  };
+
+  const fetchTransporterStats = async () => {
+    try {
+      const response = await getTransporterStats();
+      // API interceptor returns response.data, so response is already { success: true, data: {...} }
+      const stats = response?.data || response || {};
+      setTransporterStats({
+        totalDeliveries: Number(stats.totalDeliveries) || 0,
+        activeDeliveries: Number(stats.activeDeliveries) || 0,
+        completedTrips: Number(stats.completedTrips) || 0,
+        totalEarnings: Number(stats.totalEarnings) || 0
+      });
+    } catch (error) {
+      console.error('Error fetching transporter stats:', error);
+      setTransporterStats({
+        totalDeliveries: 0,
+        activeDeliveries: 0,
+        completedTrips: 0,
+        totalEarnings: 0
+      });
     }
   };
 
@@ -74,17 +177,21 @@ export const Dashboard = () => {
       case 'farmer':
         return (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <Card className="text-center">
                 <h3 className="text-4xl font-bold text-primary-600">{farmerStats.activeListings}</h3>
                 <p className="text-gray-600 mt-2">Active Listings</p>
               </Card>
               <Card className="text-center">
-                <h3 className="text-4xl font-bold text-primary-600">{farmerStats.totalOrders}</h3>
+                <h3 className="text-4xl font-bold text-yellow-600">{farmerStats.pendingListings}</h3>
+                <p className="text-gray-600 mt-2">Pending Listings</p>
+              </Card>
+              <Card className="text-center">
+                <h3 className="text-4xl font-bold text-blue-600">{farmerStats.totalOrders}</h3>
                 <p className="text-gray-600 mt-2">Total Orders</p>
               </Card>
               <Card className="text-center">
-                <h3 className="text-4xl font-bold text-primary-600">৳{farmerStats.totalEarnings.toFixed(0)}</h3>
+                <h3 className="text-4xl font-bold text-green-600">৳{farmerStats.totalEarnings.toLocaleString()}</h3>
                 <p className="text-gray-600 mt-2">Total Earnings</p>
               </Card>
             </div>
@@ -107,19 +214,47 @@ export const Dashboard = () => {
       case 'buyer':
         return (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Your Statistics</h2>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  fetchBuyerStats();
+                  fetchProducts();
+                  toast.info('Stats refreshed');
+                }}
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <Card className="text-center">
-                <h3 className="text-4xl font-bold text-primary-600">0</h3>
+                <h3 className="text-4xl font-bold text-primary-600">{buyerStats.totalOrders}</h3>
                 <p className="text-gray-600 mt-2">Total Orders</p>
               </Card>
               <Card className="text-center">
-                <h3 className="text-4xl font-bold text-primary-600">৳0</h3>
+                <h3 className="text-4xl font-bold text-primary-600">৳{buyerStats.totalSpent.toLocaleString()}</h3>
                 <p className="text-gray-600 mt-2">Total Spent</p>
               </Card>
               <Card className="text-center">
-                <h3 className="text-4xl font-bold text-primary-600">0</h3>
+                <h3 className="text-4xl font-bold text-yellow-600">{buyerStats.pendingOrders}</h3>
                 <p className="text-gray-600 mt-2">Pending Orders</p>
               </Card>
+              <Card className="text-center">
+                <h3 className="text-4xl font-bold text-green-600">{buyerStats.completedOrders}</h3>
+                <p className="text-gray-600 mt-2">Completed Orders</p>
+              </Card>
+            </div>
+
+            <div className="flex justify-end">
+              <Link to="/buyer/orders">
+                <Button variant="secondary">
+                  View All Orders →
+                </Button>
+              </Link>
             </div>
 
 
@@ -127,7 +262,7 @@ export const Dashboard = () => {
             <Card>
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Featured Products</h2>
-                <Link to="/browse" className="text-primary-600 hover:text-primary-700 text-sm font-medium">
+                <Link to="/browse-products" className="text-primary-600 hover:text-primary-700 text-sm font-medium">
                   View All →
                 </Link>
               </div>
@@ -204,12 +339,25 @@ export const Dashboard = () => {
                         </div>
                       )}
 
-                      <button
-                        onClick={() => product.isPreOrder ? handlePreOrder(product) : alert('Contact farmer functionality coming soon')}
-                        className="w-full mt-3 bg-primary-600 text-white py-2 px-4 rounded hover:bg-primary-700 transition"
-                      >
-                        {product.isPreOrder ? 'Pre-Order Now' : 'Contact Farmer'}
-                      </button>
+                      <div className="flex space-x-2 mt-3">
+                        <button
+                          onClick={() => {
+                            addToCart(product, 1);
+                            toast.success(`${product.cropName} added to cart!`);
+                          }}
+                          className="flex-1 bg-primary-600 text-white py-2 px-4 rounded hover:bg-primary-700 transition"
+                        >
+                          Add to Cart
+                        </button>
+                        {product.isPreOrder && (
+                          <button
+                            onClick={() => handlePreOrder(product)}
+                            className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 transition"
+                          >
+                            Pre-Order
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -223,7 +371,7 @@ export const Dashboard = () => {
             <Card>
               <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
               <div className="space-y-2">
-                <Link to="/browse" className="block p-4 bg-primary-50 hover:bg-primary-100 rounded-lg transition">
+                <Link to="/browse-products" className="block p-4 bg-primary-50 hover:bg-primary-100 rounded-lg transition">
                   <p className="font-medium text-primary-700">Browse Products</p>
                   <p className="text-sm text-gray-600">Find fresh produce from farmers</p>
                 </Link>
@@ -231,7 +379,7 @@ export const Dashboard = () => {
                   <p className="font-medium text-gray-700">Delivery Addresses</p>
                   <p className="text-sm text-gray-600">Manage your delivery locations</p>
                 </Link>
-                <Link to="/orders" className="block p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition">
+                <Link to="/buyer/orders" className="block p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition">
                   <p className="font-medium text-gray-700">My Orders</p>
                   <p className="text-sm text-gray-600">Track your purchases</p>
                 </Link>
@@ -243,17 +391,21 @@ export const Dashboard = () => {
       case 'transporter':
         return (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <Card className="text-center">
-                <h3 className="text-4xl font-bold text-primary-600">0</h3>
+                <h3 className="text-4xl font-bold text-primary-600">{transporterStats.totalDeliveries}</h3>
+                <p className="text-gray-600 mt-2">Total Deliveries</p>
+              </Card>
+              <Card className="text-center">
+                <h3 className="text-4xl font-bold text-yellow-600">{transporterStats.activeDeliveries}</h3>
                 <p className="text-gray-600 mt-2">Active Deliveries</p>
               </Card>
               <Card className="text-center">
-                <h3 className="text-4xl font-bold text-primary-600">0</h3>
+                <h3 className="text-4xl font-bold text-green-600">{transporterStats.completedTrips}</h3>
                 <p className="text-gray-600 mt-2">Completed Trips</p>
               </Card>
               <Card className="text-center">
-                <h3 className="text-4xl font-bold text-primary-600">৳0</h3>
+                <h3 className="text-4xl font-bold text-primary-600">৳{transporterStats.totalEarnings.toLocaleString()}</h3>
                 <p className="text-gray-600 mt-2">Total Earnings</p>
               </Card>
             </div>

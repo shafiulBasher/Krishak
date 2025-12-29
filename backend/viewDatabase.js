@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
+require('dotenv').config();
 
-// Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/krishak')
+// Connect to MongoDB using environment variable (MongoDB Atlas)
+mongoose.connect(process.env.MONGO_URI)
   .then(async () => {
     console.log('\n✅ Connected to MongoDB\n');
     console.log('═══════════════════════════════════════════════════════════');

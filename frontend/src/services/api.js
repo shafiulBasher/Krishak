@@ -18,6 +18,12 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // Prevent caching for GET requests
+    if (config.method === 'get') {
+      config.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+      config.headers['Pragma'] = 'no-cache';
+      config.headers['Expires'] = '0';
+    }
     return config;
   },
   (error) => {
@@ -38,7 +44,13 @@ api.interceptors.response.use(
       window.location.href = '/login';
     }
     
-    return Promise.reject(message);
+    // Preserve error object with status and response data
+    const enhancedError = new Error(message);
+    enhancedError.status = error.response?.status;
+    enhancedError.response = error.response;
+    enhancedError.originalError = error;
+    
+    return Promise.reject(enhancedError);
   }
 );
 
