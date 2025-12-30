@@ -42,6 +42,11 @@ export const Dashboard = () => {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
+  // Redirect transporter users to the proper transporter dashboard
+  if (user?.role === 'transporter') {
+    return <Navigate to="/transporter/dashboard" replace />;
+  }
+
   useEffect(() => {
     if (!user) return;
     
@@ -205,6 +210,10 @@ export const Dashboard = () => {
                 <Link to="/farmer/my-listings" className="block p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition">
                   <p className="font-medium text-gray-700">View My Listings</p>
                   <p className="text-sm text-gray-600">Manage your products</p>
+                </Link>
+                <Link to="/farmer/orders" className="block p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition">
+                  <p className="font-medium text-blue-700">View My Orders</p>
+                  <p className="text-sm text-gray-600">Track orders and shipments</p>
                 </Link>
               </div>
             </Card>

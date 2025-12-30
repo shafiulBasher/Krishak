@@ -1,19 +1,24 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { Loading } from '../../components/Loading';
-import { Package, Clock, CheckCircle, XCircle, ArrowRight, Calendar, MapPin } from 'lucide-react';
+import { Package, Clock, CheckCircle, XCircle, ArrowRight, Calendar, MapPin, Truck } from 'lucide-react';
 import { getMyOrders } from '../../services/orderService';
 import { toast } from 'react-toastify';
+import { getImageUrl } from '../../utils/imageHelper';
 
 export const MyOrders = () => {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // all, pending, confirmed, completed, cancelled
 
   useEffect(() => {
     fetchOrders();
+    // Auto-refresh every 10 seconds for real-time updates
+    const interval = setInterval(fetchOrders, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchOrders = async () => {
@@ -46,6 +51,28 @@ export const MyOrders = () => {
       default:
         return <Clock className="w-5 h-5 text-gray-600" />;
     }
+  };
+
+  const getDeliveryStatusColor = (status) => {
+    const colors = {
+      not_assigned: 'bg-gray-100 text-gray-700 border-gray-300',
+      assigned: 'bg-blue-100 text-blue-700 border-blue-300',
+      picked: 'bg-purple-100 text-purple-700 border-purple-300',
+      in_transit: 'bg-indigo-100 text-indigo-700 border-indigo-300',
+      delivered: 'bg-green-100 text-green-700 border-green-300'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-700 border-gray-300';
+  };
+
+  const getDeliveryStatusText = (status) => {
+    const texts = {
+      not_assigned: 'Awaiting Delivery Partner',
+      assigned: 'Delivery Partner Assigned',
+      picked: 'Picked Up',
+      in_transit: 'In Transit',
+      delivered: 'Delivered'
+    };
+    return texts[status] || status;
   };
 
   const getStatusColor = (status) => {
@@ -158,9 +185,23 @@ export const MyOrders = () => {
                             <span className="ml-1 capitalize">{order.orderStatus}</span>
                           </span>
                         </div>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-600 mb-2">
                           Placed on {formatDate(order.createdAt)}
                         </p>
+                        {/* Delivery Status Badge */}
+                        {order.deliveryInfo?.status && (
+                          <div className="flex items-center gap-2 mt-2">
+                            <Truck className="w-4 h-4 text-gray-500" />
+                            <span className={`inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium border ${getDeliveryStatusColor(order.deliveryInfo.status)}`}>
+                              {getDeliveryStatusText(order.deliveryInfo.status)}
+                            </span>
+                            {order.deliveryInfo.transporter && (
+                              <span className="text-xs text-gray-600">
+                                • {order.deliveryInfo.transporter.name}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -170,15 +211,18 @@ export const MyOrders = () => {
                         <div className="flex items-start space-x-4">
                           {order.product.photos && order.product.photos.length > 0 ? (
                             <img
-                              src={order.product.photos[0]}
+                              src={getImageUrl(order.product.photos[0])}
                               alt={order.product.cropName}
                               className="w-20 h-20 object-cover rounded-lg"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextElementSibling.style.display = 'flex';
+                              }}
                             />
-                          ) : (
-                            <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center">
-                              <span className="text-3xl">🌾</span>
-                            </div>
-                          )}
+                          ) : null}
+                          <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center" style={{ display: order.product.photos && order.product.photos.length > 0 ? 'none' : 'flex' }}>
+                            <span className="text-3xl">🌾</span>
+                          </div>
                           <div className="flex-1">
                             <h4 className="font-semibold text-gray-900">{order.product.cropName}</h4>
                             <p className="text-sm text-gray-600">Grade {order.product.grade}</p>
@@ -254,10 +298,7 @@ export const MyOrders = () => {
                     <Button
                       variant="secondary"
                       size="sm"
-                      onClick={() => {
-                        // Navigate to order details if needed
-                        console.log('View order details:', order._id);
-                      }}
+                      onClick={() => navigate(`/buyer/orders/${order._id}`)}
                     >
                       View Details
                       <ArrowRight className="w-4 h-4 ml-2" />

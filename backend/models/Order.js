@@ -105,6 +105,18 @@ const orderSchema = new mongoose.Schema({
     },
     default: 'not_assigned'
   },
+  // Pickup verification photo (mandatory when transporter picks up the order)
+  pickupPhoto: {
+    url: { type: String },
+    uploadedAt: { type: Date },
+    uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+  },
+  // Delivery proof photo (optional but recommended)
+  deliveryProofPhoto: {
+    url: { type: String },
+    uploadedAt: { type: Date },
+    uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+  },
   statusHistory: [{
     status: {
       type: String,

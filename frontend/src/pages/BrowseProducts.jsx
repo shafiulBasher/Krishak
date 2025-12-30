@@ -6,7 +6,7 @@ import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Select } from '../components/Select';
 import { Loading } from '../components/Loading';
-import { Search, Filter, ShoppingCart, MapPin, Package } from 'lucide-react';
+import { Search, Filter, ShoppingCart, MapPin, Package, Star, User } from 'lucide-react';
 import { getProducts } from '../services/productService';
 import { toast } from 'react-toastify';
 import { BANGLADESH_DISTRICTS } from '../utils/bangladeshData';
@@ -300,6 +300,25 @@ export const BrowseProducts = () => {
                       Grade {product.grade}
                     </span>
                   </div>
+
+                  {/* Farmer Info with Rating */}
+                  {product.farmer && (
+                    <div className="flex items-center gap-2 mb-2 text-sm">
+                      <User className="w-4 h-4 text-gray-500" />
+                      <span className="text-gray-700 font-medium">{product.farmer.name}</span>
+                      {product.farmer.rating?.count > 0 && (
+                        <div className="flex items-center gap-1">
+                          <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                          <span className="font-medium text-gray-700">
+                            {product.farmer.rating.average.toFixed(1)}
+                          </span>
+                          <span className="text-gray-500 text-xs">
+                            ({product.farmer.rating.count} {product.farmer.rating.count === 1 ? 'review' : 'reviews'})
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   <div className="flex items-center text-gray-600 text-sm mb-2">
                     <MapPin className="w-4 h-4 mr-1" />

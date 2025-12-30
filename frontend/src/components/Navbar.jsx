@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, User, Menu, X, ShoppingCart } from 'lucide-react';
+import { LogOut, User, Menu, X, ShoppingCart, Truck } from 'lucide-react';
 import { useState, useContext } from 'react';
 import { CartContext } from '../context/CartContext';
 
@@ -58,6 +58,17 @@ export const Navbar = () => {
                           {cartItemCount}
                         </span>
                       )}
+                    </Link>
+                  </>
+                )}
+                {user?.role === 'transporter' && (
+                  <>
+                    <Link to="/transporter/available-jobs" className="hover:bg-primary-700 px-3 py-2 rounded-md flex items-center">
+                      <Truck className="w-4 h-4 mr-1" />
+                      Find Jobs
+                    </Link>
+                    <Link to="/transporter/my-deliveries" className="hover:bg-primary-700 px-3 py-2 rounded-md">
+                      My Deliveries
                     </Link>
                   </>
                 )}
@@ -150,6 +161,25 @@ export const Navbar = () => {
                           {cartItemCount}
                         </span>
                       )}
+                    </Link>
+                  </>
+                )}
+                {user?.role === 'transporter' && (
+                  <>
+                    <Link
+                      to="/transporter/available-jobs"
+                      className="block hover:bg-primary-700 px-3 py-2 rounded-md flex items-center"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Truck className="w-4 h-4 mr-2" />
+                      Find Jobs
+                    </Link>
+                    <Link
+                      to="/transporter/my-deliveries"
+                      className="block hover:bg-primary-700 px-3 py-2 rounded-md"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      My Deliveries
                     </Link>
                   </>
                 )}

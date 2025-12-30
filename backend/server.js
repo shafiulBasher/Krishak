@@ -46,7 +46,7 @@ app.use(cors({
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cache-Control', 'Pragma', 'Expires'],
   exposedHeaders: ['Content-Range', 'X-Content-Range']
 }));
 
@@ -71,9 +71,11 @@ app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/orders', require('./routes/orderRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/market-prices', require('./routes/marketPriceRoutes'));
+app.use('/api/transporter', require('./routes/transporterRoutes'));
 
 // Debug: Log registered routes on startup
 console.log('✅ Order routes registered: /api/orders/stats/buyer, /api/orders/stats/transporter');
+console.log('✅ Transporter routes registered: /api/transporter/*');
 
 // Error handler middleware
 app.use((err, req, res, next) => {

@@ -23,10 +23,17 @@ import MarketPriceManagement from './pages/admin/MarketPriceManagement';
 import CreateListing from './pages/farmer/CreateListing';
 import MyListings from './pages/farmer/MyListings';
 import EditListing from './pages/farmer/EditListing';
+import FarmerOrders from './pages/farmer/FarmerOrders';
 import { DeliveryAddresses } from './pages/buyer/DeliveryAddresses';
 import { Cart } from './pages/buyer/Cart';
 import { Checkout } from './pages/buyer/Checkout';
 import { MyOrders } from './pages/buyer/MyOrders';
+import OrderDetails from './pages/buyer/OrderDetails';
+
+// Transporter pages
+import TransporterDashboard from './pages/transporter/TransporterDashboard';
+import AvailableJobs from './pages/transporter/AvailableJobs';
+import MyDeliveries from './pages/transporter/MyDeliveries';
 
 function App() {
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
@@ -134,6 +141,22 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/farmer/orders"
+              element={
+                <ProtectedRoute allowedRoles={['farmer']}>
+                  <FarmerOrders />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/farmer/orders/:orderId"
+              element={
+                <ProtectedRoute allowedRoles={['buyer', 'farmer', 'admin']}>
+                  <OrderDetails />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Buyer Routes */}
             <Route
@@ -165,6 +188,40 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['buyer']}>
                   <MyOrders />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/buyer/orders/:orderId"
+              element={
+                <ProtectedRoute allowedRoles={['buyer', 'farmer', 'admin']}>
+                  <OrderDetails />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Transporter Routes */}
+            <Route
+              path="/transporter/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['transporter']}>
+                  <TransporterDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/transporter/available-jobs"
+              element={
+                <ProtectedRoute allowedRoles={['transporter']}>
+                  <AvailableJobs />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/transporter/my-deliveries"
+              element={
+                <ProtectedRoute allowedRoles={['transporter']}>
+                  <MyDeliveries />
                 </ProtectedRoute>
               }
             />

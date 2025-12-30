@@ -18,6 +18,9 @@ export const getOrder = async (id) => {
   return response;
 };
 
+// Alias for getOrder
+export const getOrderById = getOrder;
+
 // Update order status (for farmers)
 export const updateOrderStatus = async (id, statusData) => {
   const response = await api.put(`/orders/${id}/status`, statusData);
@@ -38,3 +41,22 @@ export const getTransporterStats = async () => {
   const response = await api.get('/orders/stats/transporter');
   return response;
 };
+
+// Submit product review
+export const submitProductReview = async (orderId, reviewData) => {
+  const response = await api.post(`/orders/${orderId}/review`, reviewData);
+  return response;
+};
+
+export const orderService = {
+  createOrder,
+  getMyOrders,
+  getOrder,
+  getOrderById: getOrder,
+  updateOrderStatus,
+  getBuyerStats,
+  getTransporterStats,
+  submitProductReview
+};
+
+export default orderService;
