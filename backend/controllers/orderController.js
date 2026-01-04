@@ -8,7 +8,7 @@ const { notifyOrderPlaced, notifyOrderCancelled, notifyOrderCompleted } = requir
 // @route   POST /api/orders
 // @access  Private (Buyer only)
 const createOrder = asyncHandler(async (req, res) => {
-  const { productId, quantity, pricePerUnit, deliveryAddress, paymentMethod, isPreOrder, deliverySlot, notes } = req.body;
+  const { productId, quantity, pricePerUnit, deliveryAddress, paymentMethod, isPreOrder, deliverySlot, notes, vehicleType, deliveryFee } = req.body;
 
   // Validate required fields
   if (!productId || !quantity || !pricePerUnit || !deliveryAddress) {
@@ -64,6 +64,11 @@ const createOrder = asyncHandler(async (req, res) => {
       estimatedDeliveryDate = product.expectedHarvestDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 1 week default
     }
 
+    // Calculate actual delivery fee and platform fee
+    const actualDeliveryFee = deliveryFee || totalPrice * 0.05;
+    const platformFee = Math.round((totalPrice + actualDeliveryFee) * 0.05);
+    const farmerEarnings = totalPrice - platformFee;
+
     // Create order
     const order = await Order.create([{
       orderNumber,
@@ -74,15 +79,25 @@ const createOrder = asyncHandler(async (req, res) => {
       pricePerUnit,
       totalPrice,
       priceBreakdown: {
-        farmerEarnings: totalPrice * 0.9, // 90% to farmer
-        platformFee: totalPrice * 0.05,   // 5% platform
-        transportFee: totalPrice * 0.05    // 5% transport
+        farmerEarnings: farmerEarnings,
+        platformFee: platformFee,
+        transportFee: actualDeliveryFee
       },
       deliveryAddress,
       paymentMethod,
       orderStatus: 'confirmed', // Auto-confirm orders when placed
       isPreOrder: isPreOrder || false,
       estimatedDeliveryDate,
+      // Add vehicle type if provided
+      deliveryVehicle: vehicleType ? {
+        type: vehicleType,
+      } : undefined,
+      // Add delivery fee details
+      deliveryFeeDetails: vehicleType ? {
+        vehicleType: vehicleType,
+        totalFee: actualDeliveryFee,
+        calculatedAt: new Date(),
+      } : undefined,
       deliverySlot: deliverySlot ? {
         date: deliverySlot.date ? new Date(deliverySlot.date) : undefined,
         timeSlot: deliverySlot.timeSlot,

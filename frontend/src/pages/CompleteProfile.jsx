@@ -5,14 +5,17 @@ import { Input } from '../components/Input';
 import { Select } from '../components/Select';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
-import { UserCircle } from 'lucide-react';
+import { UserCircle, MapPin } from 'lucide-react';
 import api from '../services/api';
 import { toast } from 'react-toastify';
+import MapSelector from '../components/MapSelector';
 
 export const CompleteProfile = () => {
   const navigate = useNavigate();
   const { user, updateUser } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [showMap, setShowMap] = useState(false);
+  const [mapCoordinates, setMapCoordinates] = useState(null);
   const [formData, setFormData] = useState({
     phone: '',
     role: '',
@@ -44,7 +47,11 @@ export const CompleteProfile = () => {
         profileData.farmLocation = {
           village: formData.village,
           thana: formData.thana,
-          district: formData.district
+          district: formData.district,
+          coordinates: mapCoordinates ? {
+            lat: mapCoordinates.lat,
+            lng: mapCoordinates.lng
+          } : null
         };
       }
 
@@ -137,6 +144,41 @@ export const CompleteProfile = () => {
                 onChange={handleChange}
                 placeholder="Enter your district"
               />
+              
+              {/* Map Location Selector */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Farm Location on Map (for delivery distance calculation)
+                </label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowMap(!showMap)}
+                  className="w-full"
+                >
+                  <MapPin className="w-4 h-4 mr-2" />
+                  {mapCoordinates ? 'Update Map Location' : 'Set Location on Map'}
+                </Button>
+                
+                {mapCoordinates && (
+                  <p className="text-sm text-green-600 mt-2">
+                    📍 Location set: {mapCoordinates.lat.toFixed(4)}, {mapCoordinates.lng.toFixed(4)}
+                  </p>
+                )}
+                
+                {showMap && (
+                  <div className="mt-3">
+                    <MapSelector
+                      onSelect={(coords, address) => {
+                        setMapCoordinates(coords);
+                        setShowMap(false);
+                        toast.success('Farm location set on map');
+                      }}
+                      initialPosition={mapCoordinates}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

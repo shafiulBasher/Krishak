@@ -6,6 +6,7 @@ import { Button } from '../../components/Button';
 import { Loading } from '../../components/Loading';
 import { ShoppingCart, Trash2, Plus, Minus, ArrowRight } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { getImageUrl } from '../../utils/imageHelper';
 
 export const Cart = () => {
   const { cartItems, removeFromCart, updateQuantity, getCartTotal, clearCart, getCartTotalQuantity } = useCart();
@@ -17,6 +18,18 @@ export const Cart = () => {
       toast.error('Your cart is empty');
       return;
     }
+    
+    // Check if any item is below MOQ
+    const itemsBelowMOQ = cartItems.filter(item => 
+      item.product.moq && item.quantity < item.product.moq
+    );
+    
+    if (itemsBelowMOQ.length > 0) {
+      const firstItem = itemsBelowMOQ[0];
+      toast.error(`${firstItem.product.cropName} requires a minimum order of ${firstItem.product.moq} ${firstItem.product.unit}`);
+      return;
+    }
+    
     navigate('/buyer/checkout');
   };
 
@@ -28,11 +41,18 @@ export const Cart = () => {
   const handleQuantityChange = (productId, newQuantity) => {
     const item = cartItems.find((item) => item.product._id === productId);
     if (item) {
+      // Ensure minimum quantity is 1
+      if (newQuantity < 1) {
+        return;
+      }
+      
       // Check if quantity exceeds available stock
       if (newQuantity > item.product.quantity) {
         toast.error(`Only ${item.product.quantity} ${item.product.unit} available`);
         return;
       }
+      
+      // Allow the update
       updateQuantity(productId, newQuantity);
     }
   };
@@ -79,9 +99,13 @@ export const Cart = () => {
                   {/* Product Image */}
                   {item.product.photos && item.product.photos.length > 0 ? (
                     <img
-                      src={item.product.photos[0]}
+                      src={getImageUrl(item.product.photos[0])}
                       alt={item.product.cropName}
                       className="w-full sm:w-32 h-32 object-cover rounded-lg"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23f3f4f6" width="200" height="200"/%3E%3Ctext fill="%239ca3af" font-family="sans-serif" font-size="60" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3E🌾%3C/text%3E%3C/svg%3E';
+                      }}
                     />
                   ) : (
                     <div className="w-full sm:w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center">
@@ -97,8 +121,13 @@ export const Cart = () => {
                           {item.product.cropName}
                         </h3>
                         <p className="text-sm text-gray-600">
-                          Grade {item.product.grade} • {item.product.location.district}
+                          Grade {item.product.grade} • {item.product.location?.district || 'N/A'}
                         </p>
+                        {item.product.moq && (
+                          <p className="text-xs text-blue-600 mt-1">
+                            Min. Order: {item.product.moq} {item.product.unit}
+                          </p>
+                        )}
                       </div>
                       <button
                         onClick={() => handleRemove(item.product._id)}
@@ -143,6 +172,11 @@ export const Cart = () => {
                     {item.quantity >= item.product.quantity && (
                       <p className="text-sm text-amber-600 mt-2">
                         Maximum available quantity reached
+                      </p>
+                    )}
+                    {item.product.moq && item.quantity < item.product.moq && (
+                      <p className="text-sm text-orange-600 mt-2 font-medium">
+                        ⚠️ Below minimum order: {item.product.moq} {item.product.unit} required
                       </p>
                     )}
                   </div>

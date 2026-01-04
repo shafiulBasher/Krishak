@@ -2,6 +2,7 @@ const path = require('path');
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const { handleStripeWebhook } = require('./webhooks/stripeWebhook');
 
 // FORCE the path to the .env file in the current directory
 dotenv.config({ path: path.join(__dirname, '.env') });
@@ -30,6 +31,10 @@ const connectDB = require('./config/db');
 connectDB();
 
 const app = express();
+
+// Stripe webhook route - MUST be before express.json() middleware
+// because Stripe needs raw body for signature verification
+app.post('/api/webhook/stripe', express.raw({ type: 'application/json' }), handleStripeWebhook);
 
 // Middleware
 app.use(express.json());
@@ -82,6 +87,7 @@ app.use('/api/market-prices', require('./routes/marketPriceRoutes'));
 app.use('/api/transporter', require('./routes/transporterRoutes'));
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/reviews', require('./routes/reviewRoutes'));
+app.use('/api/payments', require('./routes/paymentRoutes'));
 
 // Verify notification routes are registered
 console.log('\n🔍 Verifying notification routes registration...');
@@ -107,8 +113,11 @@ console.log('   - /api/market-prices');
 console.log('   - /api/transporter');
 console.log('   - /api/notifications ✅ VERIFIED');
 console.log('   - /api/reviews ✅ VERIFIED');
+console.log('   - /api/payments ✅ NEW');
+console.log('   - /api/webhook/stripe ✅ WEBHOOK');
 console.log('');
 console.log('🔔 Notification system is ACTIVE and ready!');
+console.log('💳 Payment system is ACTIVE and ready!');
 
 // 404 handler for unmatched API routes (must be after all routes)
 app.use('/api/*', (req, res) => {
@@ -124,7 +133,9 @@ app.use('/api/*', (req, res) => {
       '/api/market-prices',
       '/api/transporter',
       '/api/notifications',
-      '/api/reviews'
+      '/api/reviews',
+      '/api/payments',
+      '/api/webhook/stripe'
     ]
   });
 });

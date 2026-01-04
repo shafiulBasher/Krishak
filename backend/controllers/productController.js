@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const Product = require('../models/Product');
+const User = require('../models/User');
 
 // @desc    Create new product listing
 // @route   POST /api/products
@@ -24,8 +25,23 @@ const createProduct = asyncHandler(async (req, res) => {
   const photos = req.files ? req.files.map(file => `/uploads/products/${file.filename}`) : [];
 
   // Parse location if it's a string (from FormData)
-  const parsedLocation = typeof location === 'string' ? JSON.parse(location) : location;
+  let parsedLocation = typeof location === 'string' ? JSON.parse(location) : location;
   const parsedCostBreakdown = costBreakdown && typeof costBreakdown === 'string' ? JSON.parse(costBreakdown) : costBreakdown;
+
+  // Auto-populate coordinates from farmer's profile if not provided
+  if (!parsedLocation.coordinates || !parsedLocation.coordinates.lat) {
+    const farmer = await User.findById(req.user._id).select('farmLocation');
+    if (farmer && farmer.farmLocation && farmer.farmLocation.coordinates) {
+      parsedLocation = {
+        ...parsedLocation,
+        coordinates: {
+          lat: farmer.farmLocation.coordinates.lat,
+          lng: farmer.farmLocation.coordinates.lng
+        }
+      };
+      console.log('📍 Auto-populated product coordinates from farmer profile:', parsedLocation.coordinates);
+    }
+  }
 
   const product = await Product.create({
     farmer: req.user._id,
@@ -72,13 +88,32 @@ const getProducts = asyncHandler(async (req, res) => {
   if (farmer) query.farmer = farmer;
 
   const products = await Product.find(query)
-    .populate('farmer', 'name phone location avatar rating')
+    .populate('farmer', 'name phone farmLocation avatar rating')
     .sort({ createdAt: -1 });
+
+  // Enhance products with farmer's coordinates if product doesn't have them
+  const enhancedProducts = products.map(product => {
+    const productObj = product.toObject();
+    
+    // If product doesn't have coordinates but farmer does, copy them
+    if ((!productObj.location?.coordinates || !productObj.location?.coordinates?.lat) && 
+        productObj.farmer?.farmLocation?.coordinates?.lat) {
+      productObj.location = {
+        ...productObj.location,
+        coordinates: {
+          lat: productObj.farmer.farmLocation.coordinates.lat,
+          lng: productObj.farmer.farmLocation.coordinates.lng
+        }
+      };
+    }
+    
+    return productObj;
+  });
 
   res.json({
     success: true,
-    count: products.length,
-    data: products
+    count: enhancedProducts.length,
+    data: enhancedProducts
   });
 });
 
@@ -98,9 +133,24 @@ const getProduct = asyncHandler(async (req, res) => {
   product.viewCount += 1;
   await product.save();
 
+  // Convert to object for modification
+  const productObj = product.toObject();
+  
+  // If product doesn't have coordinates but farmer does, copy them
+  if ((!productObj.location?.coordinates || !productObj.location?.coordinates?.lat) && 
+      productObj.farmer?.farmLocation?.coordinates?.lat) {
+    productObj.location = {
+      ...productObj.location,
+      coordinates: {
+        lat: productObj.farmer.farmLocation.coordinates.lat,
+        lng: productObj.farmer.farmLocation.coordinates.lng
+      }
+    };
+  }
+
   res.json({
     success: true,
-    data: product
+    data: productObj
   });
 });
 

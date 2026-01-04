@@ -6,14 +6,17 @@ import { Select } from '../components/Select';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Loading } from '../components/Loading';
-import { User, Edit2, Save, X } from 'lucide-react';
+import { User, Edit2, Save, X, MapPin } from 'lucide-react';
 import { toast } from 'react-toastify';
+import MapSelector from '../components/MapSelector';
 
 export const Profile = () => {
   const { user, updateUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [showMap, setShowMap] = useState(false);
+  const [mapCoordinates, setMapCoordinates] = useState(null);
   const [profile, setProfile] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -55,6 +58,10 @@ export const Profile = () => {
         vehicleNumber: response.data.vehicleNumber || '',
         licenseNumber: response.data.licenseNumber || '',
       });
+      // Set map coordinates if available
+      if (response.data.farmLocation?.coordinates?.lat) {
+        setMapCoordinates(response.data.farmLocation.coordinates);
+      }
     } catch (error) {
       toast.error('Failed to load profile');
     } finally {
@@ -87,6 +94,10 @@ export const Profile = () => {
           village: formData.village,
           thana: formData.thana,
           district: formData.district,
+          coordinates: mapCoordinates ? {
+            lat: mapCoordinates.lat,
+            lng: mapCoordinates.lng
+          } : profile.farmLocation?.coordinates || null
         };
       }
 
@@ -110,6 +121,7 @@ export const Profile = () => {
 
   const handleCancel = () => {
     setIsEditing(false);
+    setShowMap(false);
     // Reset form data
     setFormData({
       name: profile.name || '',
@@ -122,6 +134,12 @@ export const Profile = () => {
       vehicleNumber: profile.vehicleNumber || '',
       licenseNumber: profile.licenseNumber || '',
     });
+    // Reset map coordinates to saved value
+    if (profile.farmLocation?.coordinates?.lat) {
+      setMapCoordinates(profile.farmLocation.coordinates);
+    } else {
+      setMapCoordinates(null);
+    }
   };
 
   if (loading) return <Loading fullScreen />;
@@ -217,6 +235,51 @@ export const Profile = () => {
                   onChange={handleChange}
                   disabled={!isEditing}
                 />
+                
+                {/* Map Location for delivery distance */}
+                <div className="mt-4 pt-4 border-t border-primary-200">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <MapPin className="w-4 h-4 inline mr-1" />
+                    Farm GPS Location (for accurate delivery distance)
+                  </label>
+                  
+                  {mapCoordinates ? (
+                    <p className="text-sm text-green-600 mb-2">
+                      📍 Location: {mapCoordinates.lat.toFixed(4)}, {mapCoordinates.lng.toFixed(4)}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-orange-600 mb-2">
+                      ⚠️ No GPS location set - delivery distance will use default
+                    </p>
+                  )}
+                  
+                  {isEditing && (
+                    <>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setShowMap(!showMap)}
+                        size="sm"
+                      >
+                        <MapPin className="w-4 h-4 mr-2" />
+                        {mapCoordinates ? 'Update Location' : 'Set Location on Map'}
+                      </Button>
+                      
+                      {showMap && (
+                        <div className="mt-3">
+                          <MapSelector
+                            onSelect={(coords, address) => {
+                              setMapCoordinates(coords);
+                              setShowMap(false);
+                              toast.success('Farm location updated');
+                            }}
+                            initialPosition={mapCoordinates}
+                          />
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
             )}
 

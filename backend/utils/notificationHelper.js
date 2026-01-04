@@ -170,6 +170,7 @@ const notifyDeliveryInTransit = async (order) => {
 };
 
 const notifyOrderDelivered = async (order) => {
+  // Notify buyer
   await createNotification({
     userId: order.buyer,
     type: 'order_delivered',
@@ -181,6 +182,7 @@ const notifyOrderDelivered = async (order) => {
     }
   });
 
+  // Notify farmer
   await createNotification({
     userId: order.farmer,
     type: 'order_delivered',
@@ -191,6 +193,26 @@ const notifyOrderDelivered = async (order) => {
       orderNumber: order.orderNumber
     }
   });
+
+  // Notify transporter about delivery completion and payment
+  if (order.transporter) {
+    const deliveryFee = order.priceBreakdown?.transportFee || 
+                       order.deliveryFeeDetails?.totalFee || 
+                       0;
+    
+    await createNotification({
+      userId: order.transporter,
+      type: 'delivery_payment',
+      title: '🚚 Delivery Payment Received!',
+      message: `You have completed delivery for order #${order.orderNumber} and earned ৳${Number(deliveryFee).toLocaleString()}. Great job!`,
+      relatedOrder: order._id,
+      metadata: {
+        orderNumber: order.orderNumber,
+        deliveryFee: deliveryFee,
+        deliveryDate: order.actualDeliveryDate || new Date()
+      }
+    });
+  }
 };
 
 module.exports = {

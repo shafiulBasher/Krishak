@@ -79,18 +79,57 @@ const orderSchema = new mongoose.Schema({
   paymentStatus: {
     type: String,
     enum: {
-      values: ['pending', 'paid', 'failed', 'refunded'],
+      values: ['pending', 'paid', 'transferred', 'failed', 'refunded'],
       message: 'Invalid payment status'
     },
     default: 'pending'
   },
   paymentMethod: {
     type: String,
-    enum: ['cash_on_delivery', 'bkash', 'nagad', 'bank_transfer', 'card'],
+    enum: ['cash_on_delivery', 'bkash', 'nagad', 'bank_transfer', 'card', 'stripe'],
     default: 'cash_on_delivery'
+  },
+  // Stripe payment fields
+  paymentIntentId: {
+    type: String,
+  },
+  stripeTransactionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Transaction',
   },
   transactionId: {
     type: String
+  },
+  
+  // Delivery vehicle selection
+  deliveryVehicle: {
+    type: {
+      type: String,
+      enum: ['van', 'pickup', 'truck'],
+    },
+    baseRate: Number,
+    perKmRate: Number,
+    capacity: String,
+  },
+  
+  // Enhanced delivery fee breakdown
+  deliveryFeeDetails: {
+    vehicleType: String,
+    baseRate: Number,
+    perKmRate: Number,
+    distance: Number,
+    totalFee: Number,
+    calculatedAt: Date,
+  },
+  
+  // District validation
+  districtInfo: {
+    buyerDistrict: String,
+    farmerDistrict: String,
+    crossDistrict: {
+      type: Boolean,
+      default: false,
+    },
   },
   // Delivery/Transport tracking
   transporter: {

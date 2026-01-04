@@ -54,7 +54,7 @@ const userSchema = new mongoose.Schema({
   // Transporter-specific fields
   vehicleType: {
     type: String,
-    enum: ['truck', 'van', 'motorbike', 'other']
+    enum: ['truck', 'van', 'pickup', 'motorbike', 'other']
   },
   vehicleNumber: {
     type: String,
@@ -64,6 +64,49 @@ const userSchema = new mongoose.Schema({
   licenseNumber: {
     type: String,
     trim: true
+  },
+  // Enhanced transporter profile
+  transporterProfile: {
+    vehicleTypes: [{
+      type: String,
+      enum: ['van', 'pickup', 'truck'],
+    }],
+    vehicleCapacity: {
+      type: String,
+    },
+    vehiclePhotos: [{
+      type: String,
+    }],
+    isAvailable: {
+      type: Boolean,
+      default: true,
+    },
+    serviceDistricts: [{
+      type: String,
+    }],
+  },
+  
+  // Stripe Payment Integration
+  stripeCustomerId: {
+    type: String,
+    sparse: true,
+  },
+  stripeConnectAccountId: {
+    type: String,
+    sparse: true,
+  },
+  stripeOnboardingComplete: {
+    type: Boolean,
+    default: false,
+  },
+  
+  // Bank details for manual payouts (backup)
+  bankDetails: {
+    accountHolder: { type: String },
+    bankName: { type: String },
+    accountNumber: { type: String },
+    branchName: { type: String },
+    routingNumber: { type: String },
   },
   // Buyer-specific fields
   deliveryAddresses: [{
