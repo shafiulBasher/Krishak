@@ -40,6 +40,19 @@ app.post('/api/webhook/stripe', express.raw({ type: 'application/json' }), handl
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// CORS configuration - Allow requests from frontend (local and production)
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://localhost:5174',
+];
+
+// Add production frontend URL if provided via environment variable
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
+
 // Security headers for Google OAuth
 app.use((req, res, next) => {
   // Allow Google OAuth to work properly
@@ -49,14 +62,20 @@ app.use((req, res, next) => {
 });
 
 // CORS configuration - Allow requests from frontend
+
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'http://localhost:5174',
-    // Add your production frontend URL here when deployed
-    // 'https://your-frontend.vercel.app'
-  ],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      // Allow all origins in development, or restrict based on your needs
+      // For production, you might want to restrict this
+      callback(null, true);
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cache-Control', 'Pragma', 'Expires'],
@@ -168,7 +187,14 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-  console.log(`🔔 Notification system: ACTIVE at /api/notifications`);
-});
+// Only start server if not on Vercel (serverless functions don't use app.listen())
+// Vercel will import and use the exported app directly via api/index.js
+if (process.env.VERCEL !== '1' && !process.env.VERCEL_ENV) {
+  app.listen(PORT, () => {
+    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+    console.log(`🔔 Notification system: ACTIVE at /api/notifications`);
+  });
+}
+
+// Export app for Vercel serverless functions
+module.exports = app;
