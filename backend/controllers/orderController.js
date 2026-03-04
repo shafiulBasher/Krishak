@@ -198,41 +198,33 @@ const getMyOrders = asyncHandler(async (req, res) => {
 // @route   GET /api/orders/stats/buyer
 // @access  Private (Buyer only)
 const getBuyerStats = asyncHandler(async (req, res) => {
-  console.log('✅ getBuyerStats endpoint called for buyer:', req.user._id);
   const buyerId = req.user._id;
 
-  // Get all buyer's orders
-  const allOrders = await Order.find({ buyer: buyerId });
-
-  // Calculate stats
-  const totalOrders = allOrders.length;
-  const pendingOrders = allOrders.filter(order => order.orderStatus === 'pending').length;
-  const confirmedOrders = allOrders.filter(order => order.orderStatus === 'confirmed').length;
-  const completedOrders = allOrders.filter(order => order.orderStatus === 'completed').length;
-  const cancelledOrders = allOrders.filter(order => order.orderStatus === 'cancelled').length;
-
-  // Calculate total spent (from all orders regardless of status)
-  const totalSpent = allOrders.reduce((sum, order) => {
-    return sum + (order.totalPrice || 0);
-  }, 0);
-
-  // Calculate total spent on completed orders only
-  const totalSpentCompleted = allOrders
-    .filter(order => order.orderStatus === 'completed')
-    .reduce((sum, order) => sum + (order.totalPrice || 0), 0);
-
-  res.json({
-    success: true,
-    data: {
-      totalOrders,
-      pendingOrders,
-      confirmedOrders,
-      completedOrders,
-      cancelledOrders,
-      totalSpent,
-      totalSpentCompleted
+  const [stats] = await Order.aggregate([
+    { $match: { buyer: buyerId } },
+    {
+      $group: {
+        _id: null,
+        totalOrders:      { $sum: 1 },
+        totalSpent:       { $sum: '$totalPrice' },
+        pendingOrders:    { $sum: { $cond: [{ $eq: ['$orderStatus', 'pending'] },    1, 0] } },
+        confirmedOrders:  { $sum: { $cond: [{ $eq: ['$orderStatus', 'confirmed'] },  1, 0] } },
+        completedOrders:  { $sum: { $cond: [{ $eq: ['$orderStatus', 'completed'] },  1, 0] } },
+        cancelledOrders:  { $sum: { $cond: [{ $eq: ['$orderStatus', 'cancelled'] },  1, 0] } },
+        totalSpentCompleted: {
+          $sum: { $cond: [{ $eq: ['$orderStatus', 'completed'] }, '$totalPrice', 0] }
+        }
+      }
     }
-  });
+  ]);
+
+  const result = stats || {
+    totalOrders: 0, pendingOrders: 0, confirmedOrders: 0,
+    completedOrders: 0, cancelledOrders: 0, totalSpent: 0, totalSpentCompleted: 0
+  };
+  delete result._id;
+
+  res.json({ success: true, data: result });
 });
 
 // @desc    Get transporter dashboard stats
@@ -241,44 +233,34 @@ const getBuyerStats = asyncHandler(async (req, res) => {
 const getTransporterStats = asyncHandler(async (req, res) => {
   const transporterId = req.user._id;
 
-  // Get all orders assigned to this transporter
-  const allOrders = await Order.find({ transporter: transporterId });
-
-  // Calculate stats
-  const totalDeliveries = allOrders.length;
-  const activeDeliveries = allOrders.filter(order => 
-    order.deliveryStatus === 'assigned' || 
-    order.deliveryStatus === 'picked' || 
-    order.deliveryStatus === 'in_transit'
-  ).length;
-  const completedTrips = allOrders.filter(order => 
-    order.deliveryStatus === 'delivered' || 
-    order.orderStatus === 'completed'
-  ).length;
-  const pendingAssignments = allOrders.filter(order => 
-    order.deliveryStatus === 'not_assigned'
-  ).length;
-
-  // Calculate total earnings from completed deliveries
-  const completedDeliveries = allOrders.filter(order => 
-    order.deliveryStatus === 'delivered' || 
-    order.orderStatus === 'completed'
-  );
-  
-  const totalEarnings = completedDeliveries.reduce((sum, order) => {
-    return sum + (order.priceBreakdown?.transportFee || 0);
-  }, 0);
-
-  res.json({
-    success: true,
-    data: {
-      totalDeliveries,
-      activeDeliveries,
-      completedTrips,
-      pendingAssignments,
-      totalEarnings
+  const [stats] = await Order.aggregate([
+    { $match: { transporter: transporterId } },
+    {
+      $group: {
+        _id: null,
+        totalDeliveries:    { $sum: 1 },
+        activeDeliveries:   { $sum: { $cond: [{ $in: ['$deliveryStatus', ['assigned', 'picked', 'in_transit']] }, 1, 0] } },
+        completedTrips:     { $sum: { $cond: [{ $in: ['$deliveryStatus', ['delivered']] }, 1, 0] } },
+        pendingAssignments: { $sum: { $cond: [{ $eq: ['$deliveryStatus', 'not_assigned'] }, 1, 0] } },
+        totalEarnings: {
+          $sum: {
+            $cond: [
+              { $in: ['$deliveryStatus', ['delivered']] },
+              { $ifNull: ['$priceBreakdown.transportFee', 0] },
+              0
+            ]
+          }
+        }
+      }
     }
-  });
+  ]);
+
+  const result = stats || {
+    totalDeliveries: 0, activeDeliveries: 0, completedTrips: 0, pendingAssignments: 0, totalEarnings: 0
+  };
+  delete result._id;
+
+  res.json({ success: true, data: result });
 });
 
 // @desc    Get single order

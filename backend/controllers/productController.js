@@ -317,23 +317,29 @@ const getFarmerStats = asyncHandler(async (req, res) => {
     status: 'pending'
   });
 
-  // Get total orders from Order model
+  // Get total orders and earnings from Order model using aggregation
   const Order = require('../models/Order');
-  const orders = await Order.find({
-    farmer: farmerId
-  });
+  const [orderStats] = await Order.aggregate([
+    { $match: { farmer: farmerId } },
+    {
+      $group: {
+        _id: null,
+        totalOrders: { $sum: 1 },
+        totalEarnings: {
+          $sum: {
+            $cond: [
+              { $eq: ['$orderStatus', 'completed'] },
+              { $ifNull: ['$priceBreakdown.farmerEarnings', '$totalPrice'] },
+              0
+            ]
+          }
+        }
+      }
+    }
+  ]);
 
-  const totalOrders = orders.length;
-
-  // Calculate total earnings from completed orders
-  const completedOrders = await Order.find({
-    farmer: farmerId,
-    orderStatus: 'completed'
-  });
-
-  const totalEarnings = completedOrders.reduce((sum, order) => {
-    return sum + (order.priceBreakdown?.farmerEarnings || order.totalPrice || 0);
-  }, 0);
+  const totalOrders = orderStats?.totalOrders || 0;
+  const totalEarnings = orderStats?.totalEarnings || 0;
 
   res.json({
     success: true,

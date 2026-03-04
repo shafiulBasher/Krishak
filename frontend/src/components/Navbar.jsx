@@ -37,10 +37,12 @@ export const Navbar = () => {
                 <Link to="/dashboard" className="hover:bg-primary-700 px-3 py-2 rounded-md">
                   Dashboard
                 </Link>
-                <Link to="/browse-products" className="hover:bg-primary-700 px-3 py-2 rounded-md">
-                  Browse
-                </Link>
-                <Link to="/market-prices" className="hover:bg-primary-700 px-3 py-2 rounded-md">
+                {user?.role !== 'admin' && (
+                  <Link to="/browse-products" className="hover:bg-primary-700 px-3 py-2 rounded-md">
+                    Browse
+                  </Link>
+                )}
+                <Link to={user?.role === 'admin' ? '/admin/market-prices' : '/market-prices'} className="hover:bg-primary-700 px-3 py-2 rounded-md">
                   Market
                 </Link>
                 <Link to="/fair-price-calculator" className="hover:bg-primary-700 px-3 py-2 rounded-md">
@@ -122,15 +124,17 @@ export const Navbar = () => {
                 >
                   Dashboard
                 </Link>
+                {user?.role !== 'admin' && (
+                  <Link
+                    to="/browse-products"
+                    className="block hover:bg-primary-700 px-3 py-2 rounded-md"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Browse
+                  </Link>
+                )}
                 <Link
-                  to="/browse-products"
-                  className="block hover:bg-primary-700 px-3 py-2 rounded-md"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Browse
-                </Link>
-                <Link
-                  to="/market-prices"
+                  to={user?.role === 'admin' ? '/admin/market-prices' : '/market-prices'}
                   className="block hover:bg-primary-700 px-3 py-2 rounded-md"
                   onClick={() => setMobileMenuOpen(false)}
                 >

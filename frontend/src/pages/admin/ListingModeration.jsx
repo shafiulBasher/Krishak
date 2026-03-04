@@ -201,7 +201,7 @@ export default function ListingModeration() {
                 {/* Product Details */}
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Quantity:</span>
+                    <span className="text-gray-600">Available Quantity:</span>
                     <span className="font-medium">{product.quantity} {product.unit}</span>
                   </div>
                   <div className="flex justify-between">

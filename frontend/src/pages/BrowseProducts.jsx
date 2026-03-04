@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
@@ -13,6 +14,7 @@ import { BANGLADESH_DISTRICTS } from '../utils/bangladeshData';
 import ProductReviews from '../components/ProductReviews';
 
 export const BrowseProducts = () => {
+  const { user } = useAuth();
   const { addToCart } = useCart();
   const navigate = useNavigate();
   
@@ -402,14 +404,16 @@ export const BrowseProducts = () => {
                   {/* Actions */}
                   <div className="flex flex-col space-y-2 mt-2 pt-2 border-t border-gray-100">
                     <div className="flex space-x-2">
-                      <Button
-                        onClick={() => handleAddToCart(product)}
-                        className="flex-1"
-                      >
-                        <ShoppingCart className="w-4 h-4 mr-2" />
-                        <span>Add to Cart</span>
-                      </Button>
-                    {product.isPreOrder && (
+                      {user?.role === 'buyer' && (
+                        <Button
+                          onClick={() => handleAddToCart(product)}
+                          className="flex-1"
+                        >
+                          <ShoppingCart className="w-4 h-4 mr-2" />
+                          <span>Add to Cart</span>
+                        </Button>
+                      )}
+                    {product.isPreOrder && user?.role === 'buyer' && (
                       <Button
                         variant="secondary"
                         onClick={() => navigate(`/pre-order/${product._id}`)}

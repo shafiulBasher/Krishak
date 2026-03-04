@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, Navigate, useLocation } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { Card } from '../components/Card';
@@ -14,7 +14,6 @@ import PreOrderModal from '../components/PreOrderModal';
 export const Dashboard = () => {
   const { user } = useAuth();
   const { addToCart } = useCart();
-  const location = useLocation();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -60,7 +59,7 @@ export const Dashboard = () => {
     } else if (user.role === 'transporter') {
       fetchTransporterStats();
     }
-  }, [user?.role, location.pathname]); // Refresh when user role or location changes
+  }, [user?.role]); // Re-run only when the user's role changes
 
   const fetchFarmerStats = async () => {
     try {

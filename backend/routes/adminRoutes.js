@@ -12,7 +12,9 @@ const {
   approveProduct,
   rejectProduct,
   deleteProduct,
-  getStats
+  getStats,
+  getAnalytics,
+  getUserSummary
 } = require('../controllers/adminController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -25,10 +27,14 @@ router.get('/dashboard/stats', getDashboardStats);
 
 // User management routes
 router.get('/users', getAllUsers);
+router.get('/users/:id/summary', getUserSummary);
 router.get('/users/:id', getUserById);
 router.put('/users/:id/status', updateUserStatus);
 router.put('/users/:id/verify', verifyUser);
 router.delete('/users/:id', deleteUser);
+
+// Analytics route
+router.get('/analytics', getAnalytics);
 
 // Product management routes
 router.get('/products', getAllProducts);

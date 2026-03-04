@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter, Check, X, Eye, Trash2 } from 'lucide-react';
+import { Search, Filter, Check, X, Trash2, Info, ShieldCheck, ShieldOff } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { getAllUsers, updateUserStatus, verifyUser, deleteUser } from '../../services/adminService';
+import { getAllUsers, updateUserStatus, verifyUser, deleteUser, getUserSummary } from '../../services/adminService';
 // Fixed JSX syntax error - removed duplicate closing div
 import Loading from '../../components/Loading';
 import Button from '../../components/Button';
@@ -20,6 +20,9 @@ export default function UserManagement() {
   });
   const [selectedUser, setSelectedUser] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showSummaryModal, setShowSummaryModal] = useState(false);
+  const [summaryData, setSummaryData] = useState(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -70,6 +73,21 @@ export default function UserManagement() {
       fetchUsers();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to delete user');
+    }
+  };
+
+  const handleViewSummary = async (user) => {
+    setShowSummaryModal(true);
+    setSummaryData(null);
+    setSummaryLoading(true);
+    try {
+      const response = await getUserSummary(user._id);
+      setSummaryData(response.data);
+    } catch (error) {
+      toast.error('Failed to load user summary');
+      setShowSummaryModal(false);
+    } finally {
+      setSummaryLoading(false);
     }
   };
 
@@ -210,6 +228,15 @@ export default function UserManagement() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
+                        {/* View Summary */}
+                        <button
+                          onClick={() => handleViewSummary(user)}
+                          className="p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors"
+                          title="View Summary"
+                        >
+                          <Info className="w-4 h-4" />
+                        </button>
+                        {/* Activate / Deactivate */}
                         <button
                           onClick={() => handleStatusToggle(user._id, user.isActive)}
                           className={`p-2 rounded-lg transition-colors ${
@@ -221,6 +248,7 @@ export default function UserManagement() {
                         >
                           {user.isActive ? <X className="w-4 h-4" /> : <Check className="w-4 h-4" />}
                         </button>
+                        {/* Verify / Unverify */}
                         <button
                           onClick={() => handleVerifyToggle(user._id, user.isVerified)}
                           className={`p-2 rounded-lg transition-colors ${
@@ -230,8 +258,9 @@ export default function UserManagement() {
                           }`}
                           title={user.isVerified ? 'Unverify' : 'Verify'}
                         >
-                          <Eye className="w-4 h-4" />
+                          {user.isVerified ? <ShieldOff className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
                         </button>
+                        {/* Delete (non-admins only) */}
                         {user.role !== 'admin' && (
                           <button
                             onClick={() => {
@@ -253,6 +282,122 @@ export default function UserManagement() {
           </table>
         </div>
       </div>
+
+      {/* User Summary Modal */}
+      {showSummaryModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg font-semibold text-gray-900">User Summary</h3>
+              <button
+                onClick={() => { setShowSummaryModal(false); setSummaryData(null); }}
+                className="p-1 hover:bg-gray-100 rounded-lg text-gray-500"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {summaryLoading ? (
+              <div className="text-center py-8 text-gray-500">Loading...</div>
+            ) : summaryData ? (
+              <div className="space-y-4">
+                {/* Identity */}
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <div className="w-10 h-10 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-lg">
+                    {summaryData.name?.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">{summaryData.name}</p>
+                    <p className="text-sm text-gray-500 capitalize">{summaryData.role}</p>
+                  </div>
+                </div>
+
+                {/* Status flags */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 rounded-lg bg-gray-50 text-center">
+                    <p className="text-xs text-gray-500 mb-1">Account</p>
+                    <span className={`text-sm font-semibold ${ summaryData.isActive ? 'text-green-600' : 'text-red-600' }`}>
+                      {summaryData.isActive ? '✅ Active' : '🚫 Inactive'}
+                    </span>
+                  </div>
+                  <div className="p-3 rounded-lg bg-gray-50 text-center">
+                    <p className="text-xs text-gray-500 mb-1">Verification</p>
+                    <span className={`text-sm font-semibold ${ summaryData.isVerified ? 'text-blue-600' : 'text-gray-500' }`}>
+                      {summaryData.isVerified ? '🔵 Verified' : '⚪ Unverified'}
+                    </span>
+                  </div>
+                  <div className="p-3 rounded-lg bg-gray-50 text-center">
+                    <p className="text-xs text-gray-500 mb-1">Joined</p>
+                    <span className="text-sm font-medium text-gray-700">
+                      {new Date(summaryData.joinedAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  {summaryData.location && (
+                    <div className="p-3 rounded-lg bg-gray-50 text-center">
+                      <p className="text-xs text-gray-500 mb-1">District</p>
+                      <span className="text-sm font-medium text-gray-700">{summaryData.location}</span>
+                    </div>
+                  )}
+                  {summaryData.vehicleType && (
+                    <div className="p-3 rounded-lg bg-gray-50 text-center col-span-2">
+                      <p className="text-xs text-gray-500 mb-1">Vehicle</p>
+                      <span className="text-sm font-medium text-gray-700 capitalize">{summaryData.vehicleType}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Role-specific activity counts */}
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Activity (Counts Only)</p>
+                  <div className="space-y-1">
+                    {summaryData.role === 'farmer' && (
+                      <>
+                        {summaryData.activitySummary.listings?.map(l => (
+                          <div key={l._id} className="flex justify-between text-sm px-3 py-1.5 bg-gray-50 rounded">
+                            <span className="text-gray-600 capitalize">{l._id} listings</span>
+                            <span className="font-semibold text-gray-800">{l.count}</span>
+                          </div>
+                        ))}
+                        <div className="flex justify-between text-sm px-3 py-1.5 bg-gray-50 rounded">
+                          <span className="text-gray-600">Orders received</span>
+                          <span className="font-semibold text-gray-800">{summaryData.activitySummary.orderCount ?? 0}</span>
+                        </div>
+                      </>
+                    )}
+                    {summaryData.role === 'buyer' && (
+                      summaryData.activitySummary.orders?.length > 0
+                        ? summaryData.activitySummary.orders.map(o => (
+                            <div key={o._id} className="flex justify-between text-sm px-3 py-1.5 bg-gray-50 rounded">
+                              <span className="text-gray-600 capitalize">{o._id} orders</span>
+                              <span className="font-semibold text-gray-800">{o.count}</span>
+                            </div>
+                          ))
+                        : <p className="text-sm text-gray-400 px-3">No orders placed yet</p>
+                    )}
+                    {summaryData.role === 'transporter' && (
+                      summaryData.activitySummary.deliveries?.length > 0
+                        ? summaryData.activitySummary.deliveries.map(d => (
+                            <div key={d._id} className="flex justify-between text-sm px-3 py-1.5 bg-gray-50 rounded">
+                              <span className="text-gray-600 capitalize">{d._id.replace('_', ' ')} deliveries</span>
+                              <span className="font-semibold text-gray-800">{d.count}</span>
+                            </div>
+                          ))
+                        : <p className="text-sm text-gray-400 px-3">No deliveries yet</p>
+                    )}
+                    {summaryData.role === 'admin' && (
+                      <p className="text-sm text-gray-400 px-3">Admin account — no activity counts applicable</p>
+                    )}
+                  </div>
+                </div>
+
+                <p className="text-xs text-gray-400 text-center pt-2">
+                  Showing activity counts only — personal details are not exposed for privacy.
+                </p>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && selectedUser && (

@@ -20,6 +20,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagement from './pages/admin/UserManagement';
 import ListingModeration from './pages/admin/ListingModeration';
 import MarketPriceManagement from './pages/admin/MarketPriceManagement';
+import Analytics from './pages/admin/Analytics';
 import CreateListing from './pages/farmer/CreateListing';
 import MyListings from './pages/farmer/MyListings';
 import EditListing from './pages/farmer/EditListing';
@@ -112,6 +113,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <MarketPriceManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/analytics"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <Analytics />
                 </ProtectedRoute>
               }
             />

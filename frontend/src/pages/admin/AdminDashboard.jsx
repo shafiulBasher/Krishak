@@ -150,7 +150,7 @@ export default function AdminDashboard() {
             <DollarSign className="w-6 h-6 text-green-600" />
           </a>
           <a
-            href="/admin/reports"
+            href="/admin/analytics"
             className="flex items-center justify-between p-4 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors"
           >
             <div>
