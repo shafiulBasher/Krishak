@@ -1,11 +1,12 @@
 {
   "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "server.js",
-      "use": "@vercel/node"
+      "source": "/(.*)",
+      "destination": "/api/index"
     }
   ],
+  
   "routes": [
     {
       "src": "/uploads/(.*)",
@@ -14,8 +15,13 @@
     {
       "src": "/(.*)",
       "dest": "/server.js"
+
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 30
+
     }
-  ],
+  },
   "env": {
     "NODE_ENV": "production"
   }
