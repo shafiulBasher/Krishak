@@ -26,7 +26,7 @@ exports.getCurrentPrices = async (req, res) => {
     }
     
     const prices = await MarketPrice.find(query)
-      .select('cropName district category currentPrice priceHistory unit lastUpdated')
+      .select('cropName district category currentPrice trend unit lastUpdated')
       .sort({ cropName: 1 })
       .limit(parseInt(limit));
     
@@ -288,6 +288,7 @@ exports.getMarketStats = async (req, res) => {
   try {
     const totalCrops = await MarketPrice.countDocuments({ isActive: true });
     const totalDistricts = await MarketPrice.distinct('district', { isActive: true });
+    const totalCategories = await MarketPrice.distinct('category', { isActive: true });
     
     // Get most recent update
     const latestUpdate = await MarketPrice.findOne({ isActive: true })

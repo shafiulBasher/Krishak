@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, Minus, ChevronRight, Calendar, MapPin } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { getCurrentPrices, getActiveDistricts } from '../services/marketPriceService';
+import { getCurrentPrices, getActiveDistricts, getPriceHistory } from '../services/marketPriceService';
 import { BANGLADESH_DISTRICTS, CROP_CATEGORIES, formatPrice, formatDate, getDaysSinceUpdate } from '../utils/bangladeshData';
 import { Card } from '../components/Card';
 import { Select } from '../components/Select';
@@ -12,10 +12,12 @@ const MarketPrices = () => {
   const [prices, setPrices] = useState([]);
   const [activeDistricts, setActiveDistricts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDistrict, setSelectedDistrict] = useState('');
+  const [selectedDistrict, setSelectedDistrict] = useState(BANGLADESH_DISTRICTS[0] || '');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedCrop, setSelectedCrop] = useState(null);
   const [showChartModal, setShowChartModal] = useState(false);
+  const [chartHistory, setChartHistory] = useState([]);
+  const [chartLoading, setChartLoading] = useState(false);
 
   useEffect(() => {
     fetchActiveDistricts();
@@ -28,7 +30,7 @@ const MarketPrices = () => {
   const fetchActiveDistricts = async () => {
     try {
       const response = await getActiveDistricts();
-      const districts = response?.data || [];
+      const districts = response?.districts || [];
       
       // If API fails or returns empty, use all districts as fallback
       if (districts.length === 0) {
@@ -82,14 +84,27 @@ const MarketPrices = () => {
     return 'text-gray-600 bg-gray-50';
   };
 
-  const handleCardClick = (price) => {
+  const handleCardClick = async (price) => {
     setSelectedCrop(price);
     setShowChartModal(true);
+    setChartHistory([]);
+    setChartLoading(true);
+    try {
+      const cropName = encodeURIComponent(price.cropName);
+      const district = encodeURIComponent(price.district);
+      const response = await getPriceHistory(cropName, district, 30);
+      setChartHistory(response?.history || []);
+    } catch (err) {
+      console.error('Error fetching price history:', err);
+    } finally {
+      setChartLoading(false);
+    }
   };
 
   const closeModal = () => {
     setShowChartModal(false);
     setSelectedCrop(null);
+    setChartHistory([]);
   };
 
   if (loading && !prices.length) {
@@ -186,10 +201,10 @@ const MarketPrices = () => {
                         <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
                           {price.category}
                         </span>
-                        {price.weeklyTrend && (
-                          <span className={`text-xs font-medium px-2 py-1 rounded flex items-center gap-1 ${getTrendColor(price.weeklyTrend)}`}>
-                            {getTrendIcon(price.weeklyTrend)}
-                            {getTrendText(price.weeklyTrend)}
+                        {price.trend && (
+                          <span className={`text-xs font-medium px-2 py-1 rounded flex items-center gap-1 ${getTrendColor(price.trend)}`}>
+                            {getTrendIcon(price.trend)}
+                            {getTrendText(price.trend)}
                           </span>
                         )}
                       </div>
@@ -282,10 +297,16 @@ const MarketPrices = () => {
               {/* Price History Chart */}
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">30-Day Price History</h3>
-                <PriceHistoryChart 
-                  data={selectedCrop.priceHistory} 
-                  cropName={selectedCrop.cropName}
-                />
+                {chartLoading ? (
+                  <div className="flex items-center justify-center h-64 bg-gray-50 rounded-lg">
+                    <p className="text-gray-500">Loading chart...</p>
+                  </div>
+                ) : (
+                  <PriceHistoryChart 
+                    data={chartHistory} 
+                    cropName={selectedCrop.cropName}
+                  />
+                )}
               </div>
 
               {/* Additional Info */}

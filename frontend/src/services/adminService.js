@@ -65,3 +65,15 @@ export const getProductStats = async () => {
   const response = await api.get('/admin/stats');
   return response;
 };
+
+// Analytics
+export const getAnalytics = async () => {
+  const response = await api.get('/admin/analytics');
+  return response;
+};
+
+// User summary (non-sensitive counts only)
+export const getUserSummary = async (userId) => {
+  const response = await api.get(`/admin/users/${userId}/summary`);
+  return response;
+};

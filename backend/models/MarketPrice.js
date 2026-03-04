@@ -68,6 +68,11 @@ const marketPriceSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  trend: {
+    type: String,
+    enum: ['rising', 'falling', 'stable'],
+    default: 'stable'
+  },
   lastUpdated: {
     type: Date,
     default: Date.now
@@ -98,9 +103,22 @@ marketPriceSchema.pre('save', function(next) {
   next();
 });
 
-// Update lastUpdated timestamp
+// Update lastUpdated timestamp and compute stored trend
 marketPriceSchema.pre('save', function(next) {
   this.lastUpdated = Date.now();
+
+  // Compute and persist trend so getCurrentPrices never needs priceHistory
+  if (this.priceHistory && Array.isArray(this.priceHistory) && this.priceHistory.length >= 14) {
+    const recentPrices = this.priceHistory.slice(-7);
+    const previousPrices = this.priceHistory.slice(-14, -7);
+    const avgRecent = recentPrices.reduce((sum, p) => sum + p.wholesale, 0) / recentPrices.length;
+    const avgPrevious = previousPrices.reduce((sum, p) => sum + p.wholesale, 0) / previousPrices.length;
+    const change = ((avgRecent - avgPrevious) / avgPrevious) * 100;
+    if (change > 5) this.trend = 'rising';
+    else if (change < -5) this.trend = 'falling';
+    else this.trend = 'stable';
+  }
+
   next();
 });
 

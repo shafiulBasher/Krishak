@@ -2,6 +2,8 @@ const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
+const Transaction = require('../models/Transaction');
+const TransporterAssignment = require('../models/TransporterAssignment');
 
 // @desc    Get admin dashboard statistics
 // @route   GET /api/admin/stats
@@ -307,6 +309,220 @@ const getStats = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Get platform-wide analytics
+// @route   GET /api/admin/analytics
+// @access  Private/Admin
+const getAnalytics = asyncHandler(async (req, res) => {
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  // Run all aggregations in parallel for performance
+  const [
+    usersByRole,
+    ordersByStatus,
+    revenueStats,
+    ordersOverTime,
+    listingsByStatus,
+    topCrops,
+    districtActivity,
+    moderationActivity,
+    totalOrders,
+    completedOrders,
+    totalUsers,
+    activeListings,
+  ] = await Promise.all([
+    // Users grouped by role
+    User.aggregate([{ $group: { _id: '$role', count: { $sum: 1 } } }]),
+
+    // Orders grouped by status
+    Order.aggregate([{ $group: { _id: '$orderStatus', count: { $sum: 1 } } }]),
+
+    // Revenue from confirmed transactions
+    Transaction.aggregate([
+      { $match: { status: { $in: ['captured', 'transferred'] } } },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: '$amount.totalAmount' },
+          platformFees: { $sum: '$amount.platformFee' },
+          deliveryFees: { $sum: '$amount.deliveryFee' },
+          productRevenue: { $sum: '$amount.productAmount' },
+          count: { $sum: 1 },
+        },
+      },
+    ]),
+
+    // Orders per day over last 30 days
+    Order.aggregate([
+      { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          count: { $sum: 1 },
+          revenue: { $sum: '$totalPrice' },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]),
+
+    // Products grouped by status
+    Product.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
+
+    // Top 10 crops by quantity traded in confirmed/completed orders
+    Order.aggregate([
+      { $match: { orderStatus: { $in: ['confirmed', 'completed'] } } },
+      {
+        $lookup: {
+          from: 'products',
+          localField: 'product',
+          foreignField: '_id',
+          as: 'productInfo',
+        },
+      },
+      { $unwind: '$productInfo' },
+      {
+        $group: {
+          _id: '$productInfo.cropName',
+          totalQuantity: { $sum: '$quantity' },
+          totalOrders: { $sum: 1 },
+          totalRevenue: { $sum: '$totalPrice' },
+        },
+      },
+      { $sort: { totalQuantity: -1 } },
+      { $limit: 10 },
+    ]),
+
+    // Top 10 districts by number of product listings
+    Product.aggregate([
+      {
+        $group: {
+          _id: '$location.district',
+          listings: { $sum: 1 },
+          activeFarmers: { $addToSet: '$farmer' },
+        },
+      },
+      {
+        $project: {
+          district: '$_id',
+          listings: 1,
+          farmerCount: { $size: '$activeFarmers' },
+        },
+      },
+      { $sort: { listings: -1 } },
+      { $limit: 10 },
+    ]),
+
+    // Moderation actions (approve/reject) in last 30 days with avg response time
+    Product.aggregate([
+      {
+        $match: {
+          status: { $in: ['approved', 'rejected'] },
+          moderatedAt: { $gte: thirtyDaysAgo },
+        },
+      },
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 },
+          avgTime: { $avg: { $subtract: ['$moderatedAt', '$createdAt'] } },
+        },
+      },
+    ]),
+
+    Order.countDocuments(),
+    Order.countDocuments({ orderStatus: 'completed' }),
+    User.countDocuments(),
+    Product.countDocuments({ status: 'approved' }),
+  ]);
+
+  const completionRate =
+    totalOrders > 0 ? parseFloat(((completedOrders / totalOrders) * 100).toFixed(1)) : 0;
+
+  res.status(200).json({
+    success: true,
+    data: {
+      kpis: {
+        totalUsers,
+        totalOrders,
+        completionRate,
+        activeListings,
+        revenue: revenueStats[0] || {
+          totalRevenue: 0,
+          platformFees: 0,
+          deliveryFees: 0,
+          productRevenue: 0,
+          count: 0,
+        },
+      },
+      usersByRole,
+      ordersByStatus,
+      ordersOverTime,
+      listingsByStatus,
+      topCrops,
+      districtActivity,
+      moderationActivity,
+    },
+  });
+});
+
+// @desc    Get a non-sensitive summary of a single user (counts only)
+// @route   GET /api/admin/users/:id/summary
+// @access  Private/Admin
+const getUserSummary = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id).select(
+    'name role isActive isVerified createdAt farmLocation baseLocation vehicleType'
+  );
+
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  let activitySummary = {};
+
+  if (user.role === 'farmer') {
+    const [listings, orderCount] = await Promise.all([
+      Product.aggregate([
+        { $match: { farmer: user._id } },
+        { $group: { _id: '$status', count: { $sum: 1 } } },
+      ]),
+      Order.countDocuments({ farmer: user._id }),
+    ]);
+    activitySummary = { listings, orderCount };
+  } else if (user.role === 'buyer') {
+    const orders = await Order.aggregate([
+      { $match: { buyer: user._id } },
+      { $group: { _id: '$orderStatus', count: { $sum: 1 } } },
+    ]);
+    activitySummary = { orders };
+  } else if (user.role === 'transporter') {
+    const deliveries = await TransporterAssignment.aggregate([
+      { $match: { transporter: user._id } },
+      { $group: { _id: '$status', count: { $sum: 1 } } },
+    ]);
+    activitySummary = { deliveries };
+  }
+
+  res.status(200).json({
+    success: true,
+    data: {
+      name: user.name,
+      role: user.role,
+      isActive: user.isActive,
+      isVerified: user.isVerified,
+      joinedAt: user.createdAt,
+      location:
+        user.role === 'farmer'
+          ? user.farmLocation?.district || null
+          : user.role === 'transporter'
+          ? user.baseLocation?.district || null
+          : null,
+      vehicleType: user.role === 'transporter' ? user.vehicleType : undefined,
+      activitySummary,
+    },
+  });
+});
+
 module.exports = {
   getDashboardStats,
   getAllUsers,
@@ -319,5 +535,7 @@ module.exports = {
   approveProduct,
   rejectProduct,
   deleteProduct,
-  getStats
+  getStats,
+  getAnalytics,
+  getUserSummary
 };
