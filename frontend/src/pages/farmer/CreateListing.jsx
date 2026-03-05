@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Camera, MapPin, Calendar, Package, DollarSign } from 'lucide-react';
 import { createProduct } from '../../services/productService';
+import { getProfile } from '../../services/userService';
 import { useAuth } from '../../context/AuthContext';
 import Card from '../../components/Card';
 import Input from '../../components/Input';
@@ -12,7 +13,7 @@ import FairPriceCalculator from '../../components/FairPriceCalculator';
 
 export default function CreateListing() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -47,6 +48,29 @@ export default function CreateListing() {
     { value: 'B', label: 'Grade B (Good Quality)' },
     { value: 'C', label: 'Grade C (Standard Quality)' },
   ];
+
+  // Fetch fresh profile on mount to get farmLocation and autofill
+  useEffect(() => {
+    const loadFarmLocation = async () => {
+      try {
+        const response = await getProfile();
+        const profile = response.data;
+        // Update context so localStorage gets the full user with farmLocation
+        updateUser(profile);
+        if (profile?.farmLocation) {
+          setFormData(prev => ({
+            ...prev,
+            village: prev.village || profile.farmLocation.village || '',
+            thana: prev.thana || profile.farmLocation.thana || '',
+            district: prev.district || profile.farmLocation.district || '',
+          }));
+        }
+      } catch (err) {
+        // silently fail — fields stay empty, farmer can type manually
+      }
+    };
+    loadFarmLocation();
+  }, []);
 
   const unitOptions = [
     { value: 'kg', label: 'Kilograms (kg)' },
@@ -500,7 +524,7 @@ export default function CreateListing() {
         <div className="text-center">
           <p className="text-sm text-gray-600 mb-2">Your Selling Price</p>
           <p className="text-4xl font-bold text-green-600">
-            a��{formData.sellingPrice || '0.00'}
+            ৳{formData.sellingPrice || '0.00'}
           </p>
           <p className="text-sm text-gray-500 mt-1">per {formData.unit}</p>
         </div>

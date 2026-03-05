@@ -408,7 +408,13 @@ const OrderDetails = () => {
                   <div className="border-t pt-2 mt-2">
                     <div className="flex justify-between">
                       <span className="text-lg font-semibold">Total Amount</span>
-                      <span className="text-lg font-bold text-primary-600">৳{order.totalPrice?.toLocaleString()}</span>
+                      <span className="text-lg font-bold text-primary-600">
+                        ৳{(
+                          (order.totalPrice || 0) +
+                          (order.priceBreakdown.transportFee || 0) +
+                          (order.priceBreakdown.platformFee || 0)
+                        ).toLocaleString()}
+                      </span>
                     </div>
                   </div>
                 </div>

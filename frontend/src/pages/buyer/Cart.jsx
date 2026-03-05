@@ -195,15 +195,14 @@ export const Cart = () => {
                   <span>Subtotal ({getCartTotalQuantity()} items)</span>
                   <span>৳{total.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between text-gray-600">
-                  <span>Delivery Fee</span>
-                  <span>৳{(total * 0.05).toFixed(2)}</span>
+                <div className="flex justify-between text-xs text-gray-400 italic">
+                  <span>Delivery fee calculated at checkout</span>
                 </div>
                 <div className="border-t pt-3">
                   <div className="flex justify-between text-lg font-semibold">
                     <span>Total</span>
                     <span className="text-primary-600">
-                      ৳{(total + total * 0.05).toLocaleString()}
+                      ৳{total.toLocaleString()}
                     </span>
                   </div>
                 </div>

@@ -71,7 +71,7 @@ const createProduct = asyncHandler(async (req, res) => {
 // @route   GET /api/products
 // @access  Public
 const getProducts = asyncHandler(async (req, res) => {
-  const { status, cropName, district, grade, farmer } = req.query;
+  const { status, cropName, district, grade, farmer, lat, lng, radius } = req.query;
   
   const query = {};
   
@@ -110,6 +110,8 @@ const getProducts = asyncHandler(async (req, res) => {
     return productObj;
   });
 
+  // No proximity filtering — buyers can browse products from anywhere in Bangladesh.
+  // Delivery distance restriction lives on the transporter side only.
   res.json({
     success: true,
     count: enhancedProducts.length,

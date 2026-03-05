@@ -31,6 +31,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await loginService(credentials);
       setUser(response.data);
+      localStorage.setItem('user', JSON.stringify(response.data));
       toast.success('Login successful!');
       return response;
     } catch (error) {
@@ -43,6 +44,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await registerService(userData);
       setUser(response.data);
+      localStorage.setItem('user', JSON.stringify(response.data));
       toast.success('Registration successful!');
       return response;
     } catch (error) {

@@ -22,7 +22,7 @@ export const reviewService = {
   // Check if buyer can review an order
   checkCanReview: async (orderId) => {
     const response = await api.get(`/reviews/check/${orderId}`);
-    return response.data;
+    return response;  // api interceptor already returns response.data
   }
 };
 

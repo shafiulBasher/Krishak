@@ -1,32 +1,35 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Package, User, Phone, Calendar, ArrowRight, Search, Filter, AlertTriangle, Navigation } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { MapPin, Package, User, Phone, Calendar, ArrowRight, Search, AlertTriangle, Navigation } from 'lucide-react';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { getAvailableJobs, acceptJob } from '../../services/transporterService';
-import { BANGLADESH_DISTRICTS } from '../../utils/bangladeshData';
 import { toast } from 'react-toastify';
 
 const AvailableJobs = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isVan = user?.vehicleType === 'van';
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(null);
-  const [selectedDistrict, setSelectedDistrict] = useState('');
   const [maxServiceRadius, setMaxServiceRadius] = useState(50);
+  const [hasNoVehicleType, setHasNoVehicleType] = useState(false);
 
   useEffect(() => {
     fetchJobs();
-  }, [selectedDistrict]);
+  }, []);
 
   const fetchJobs = async () => {
     try {
       setLoading(true);
-      const response = await getAvailableJobs(selectedDistrict);
+      const response = await getAvailableJobs();
       setJobs(response.data || []);
       if (response.maxServiceRadius) {
         setMaxServiceRadius(response.maxServiceRadius);
       }
+      setHasNoVehicleType(response.hasNoVehicleType ?? false);
     } catch (error) {
       console.error('Error fetching jobs:', error);
       toast.error('Failed to load available jobs');
@@ -79,28 +82,32 @@ const AvailableJobs = () => {
           <p className="text-gray-600 mt-1">Find and accept delivery jobs in your area</p>
         </div>
 
-        {/* Filters */}
-        <Card className="mb-6">
-          <div className="flex flex-col md:flex-row gap-4 items-center">
-            <div className="flex items-center gap-2 flex-1">
-              <Filter className="w-5 h-5 text-gray-500" />
-              <select
-                value={selectedDistrict}
-                onChange={(e) => setSelectedDistrict(e.target.value)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              >
-                <option value="">All Districts</option>
-                {BANGLADESH_DISTRICTS.map(district => (
-                  <option key={district} value={district}>{district}</option>
-                ))}
-              </select>
+        {/* No Vehicle Type Banner */}
+        {hasNoVehicleType && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-red-800">Vehicle type not set — you are only seeing unspecified orders</p>
+              <p className="text-sm text-red-700 mt-1">
+                Set your vehicle type (Van / Pickup / Truck) in your{' '}
+                <a href="/profile" className="underline font-medium">profile</a>{' '}
+                to see jobs matching your vehicle.
+              </p>
             </div>
-            <Button onClick={fetchJobs} variant="outline" className="flex items-center gap-2">
-              <Search className="w-4 h-4" />
-              Refresh
-            </Button>
           </div>
-        </Card>
+        )}
+
+        {/* Refresh Bar */}
+        <div className="mb-6 flex justify-between items-center">
+          <p className="text-sm text-gray-600">
+            Showing jobs within <span className="font-semibold text-primary-700">{maxServiceRadius}km</span> of your base location,
+            for <span className="font-semibold text-primary-700">{user?.vehicleType ? user.vehicleType.charAt(0).toUpperCase() + user.vehicleType.slice(1) : 'all'}</span> vehicles
+          </p>
+          <Button onClick={fetchJobs} variant="outline" className="flex items-center gap-2">
+            <Search className="w-4 h-4" />
+            Refresh
+          </Button>
+        </div>
 
         {/* Jobs List */}
         {jobs.length === 0 ? (
@@ -111,8 +118,7 @@ const AvailableJobs = () => {
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">No Jobs Available</h3>
               <p className="text-gray-600 max-w-md">
-                There are no delivery jobs available in your selected area right now. 
-                Try changing the district filter or check back later.
+                There are no delivery jobs available for your vehicle type ({user?.vehicleType || 'unspecified'}) within {maxServiceRadius}km of your base location right now. Check back later.
               </p>
             </div>
           </Card>
@@ -127,7 +133,11 @@ const AvailableJobs = () => {
                     <div>
                       <p className="text-sm font-semibold text-orange-800">Outside Service Area</p>
                       <p className="text-xs text-orange-700">{job.distanceWarning}</p>
-                      <p className="text-xs text-orange-600 mt-1">You can only accept jobs within {maxServiceRadius}km of your base location</p>
+                      <p className="text-xs text-orange-600 mt-1">
+                        {isVan
+                          ? 'Van vehicles: max 30km pickup range AND max 30km delivery routes. Use a pickup or truck for longer routes.'
+                          : `You can only accept jobs within ${maxServiceRadius}km of your base location`}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -139,9 +149,9 @@ const AvailableJobs = () => {
                       <Navigation className="w-4 h-4 text-green-600" />
                       <span className="text-sm text-green-800 font-medium">Within Your Service Area</span>
                     </div>
-                    {job.distances.maxDistance > 0 && (
+                    {job.distances.pickupDistance > 0 && (
                       <span className="text-xs text-green-700 bg-green-100 px-2 py-1 rounded">
-                        ~{job.distances.maxDistance.toFixed(1)}km away
+                        Pickup ~{job.distances.pickupDistance.toFixed(1)}km away
                       </span>
                     )}
                   </div>
@@ -150,9 +160,16 @@ const AvailableJobs = () => {
                 {/* Job Header */}
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full mb-2">
-                      Order #{job.orderNumber}
-                    </span>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                        Order #{job.orderNumber}
+                      </span>
+                      {job.deliveryFeeDetails?.vehicleType && (
+                        <span className="inline-block px-2 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full capitalize">
+                          🚚 {job.deliveryFeeDetails.vehicleType}
+                        </span>
+                      )}
+                    </div>
                     <h3 className="text-lg font-semibold text-gray-900">
                       {job.product?.cropName || 'Product'} - {job.quantity} kg
                     </h3>
@@ -204,9 +221,9 @@ const AvailableJobs = () => {
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <p className="text-xs text-blue-600 font-medium uppercase">Deliver To</p>
-                        {job.distances?.toBuyer > 0 && (
+                        {job.distances?.deliveryDistance > 0 && (
                           <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
-                            {job.distances.toBuyer.toFixed(1)}km
+                            Route ~{job.distances.deliveryDistance.toFixed(1)}km
                           </span>
                         )}
                       </div>

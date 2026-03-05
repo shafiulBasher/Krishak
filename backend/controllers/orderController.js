@@ -1,7 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
-const User = require('../models/User');
 const { notifyOrderPlaced, notifyOrderCancelled, notifyOrderCompleted } = require('../utils/notificationHelper');
 
 // @desc    Create new order
@@ -31,6 +30,9 @@ const createOrder = asyncHandler(async (req, res) => {
     if (product.status !== 'approved') {
       throw new Error(`Product is not available for ordering. Current status: ${product.status}`);
     }
+
+    // Buyers can order from anywhere in Bangladesh — no delivery distance restriction on the buyer side.
+    // The transporter who accepts the job is responsible for covering the distance.
 
     // For pre-orders, check if it's a pre-order product
     if (isPreOrder && !product.isPreOrder) {

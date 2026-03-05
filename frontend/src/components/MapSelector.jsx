@@ -96,22 +96,8 @@ const MapSelector = ({ onSelect, onClose }) => {
   const reverseGeocode = async (lat, lng) => {
     try {
       setLoading(true);
-      // Using Nominatim (OpenStreetMap) for reverse geocoding with English language preference
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?` +
-        `format=json&` +
-        `lat=${lat}&` +
-        `lon=${lng}&` +
-        `accept-language=en,bn&` +
-        `zoom=18&` +
-        `addressdetails=1`,
-        {
-          headers: {
-            'User-Agent': 'Krishak-App',
-            'Accept-Language': 'en-US,en;q=0.9,bn;q=0.8'
-          }
-        }
-      );
+      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${API_BASE}/geocode/reverse?lat=${lat}&lng=${lng}`);
       const data = await response.json();
       
       if (data.display_name) {
@@ -153,107 +139,16 @@ const MapSelector = ({ onSelect, onClose }) => {
 
     try {
       setSearching(true);
-      console.log('🔍 Searching for:', query);
       const searchQuery = query.trim();
+      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+      const response = await fetch(`${API_BASE}/geocode/search?q=${encodeURIComponent(searchQuery)}`);
+      const data = await response.json();
       
-      // Bangladesh bounding box for more accurate results
-      // Format: left,top,right,bottom (min_lon, max_lat, max_lon, min_lat)
-      const bdViewbox = '88.0,26.6,92.7,20.7';
-      
-      // Build comprehensive search URL with all Nominatim options for precise search
-      // This enables finding specific roads, avenues, house numbers, etc.
-      const url1 = `https://nominatim.openstreetmap.org/search?` +
-        `format=json&` +
-        `q=${encodeURIComponent(searchQuery)}&` +
-        `countrycodes=bd&` +
-        `viewbox=${bdViewbox}&` +
-        `bounded=0&` + // Don't strictly bound, but prefer viewbox
-        `limit=15&` +
-        `addressdetails=1&` +
-        `namedetails=1&` + // Get alternative names
-        `extratags=1&` + // Get extra tags like website, phone
-        `dedupe=1&` + // Remove duplicates
-        `accept-language=en,bn`;
-      
-      console.log('🌐 API URL:', url1);
-      
-      const response = await fetch(url1, {
-        headers: {
-          'User-Agent': 'Krishak-App',
-          'Accept-Language': 'en-US,en;q=0.9,bn;q=0.8'
-        }
-      });
-      let data = await response.json();
-      console.log('✅ Search results (attempt 1):', data.length, 'results');
-      
-      // If limited results, try alternative searches
-      if (data.length < 3) {
-        console.log('🔄 Trying enhanced search...');
-        
-        // Try with "Dhaka" appended if not already present (most addresses are in Dhaka)
-        const dhakaQuery = searchQuery.toLowerCase().includes('dhaka') 
-          ? searchQuery 
-          : `${searchQuery}, Dhaka`;
-          
-        const url2 = `https://nominatim.openstreetmap.org/search?` +
-          `format=json&` +
-          `q=${encodeURIComponent(dhakaQuery)}&` +
-          `countrycodes=bd&` +
-          `limit=10&` +
-          `addressdetails=1&` +
-          `namedetails=1&` +
-          `accept-language=en,bn`;
-        
-        const response2 = await fetch(url2, {
-          headers: {
-            'User-Agent': 'Krishak-App',
-            'Accept-Language': 'en-US,en;q=0.9,bn;q=0.8'
-          }
-        });
-        const data2 = await response2.json();
-        console.log('✅ Enhanced search results:', data2.length, 'results');
-        
-        // Merge results, avoiding duplicates by place_id
-        const existingIds = new Set(data.map(d => d.place_id));
-        const newResults = data2.filter(d => !existingIds.has(d.place_id));
-        data = [...data, ...newResults];
-      }
-      
-      // If still no results, try with Bangladesh suffix
-      if (data.length === 0 && !searchQuery.toLowerCase().includes('bangladesh')) {
-        console.log('🔄 Trying fallback with Bangladesh suffix...');
-        const url3 = `https://nominatim.openstreetmap.org/search?` +
-          `format=json&` +
-          `q=${encodeURIComponent(searchQuery + ', Bangladesh')}&` +
-          `limit=15&` +
-          `addressdetails=1&` +
-          `namedetails=1&` +
-          `accept-language=en,bn`;
-        
-        const response3 = await fetch(url3, {
-          headers: {
-            'User-Agent': 'Krishak-App',
-            'Accept-Language': 'en-US,en;q=0.9,bn;q=0.8'
-          }
-        });
-        data = await response3.json();
-        console.log('✅ Fallback results:', data.length, 'results');
-      }
-      
-      // Sort results by importance/relevance
-      if (data && data.length > 0) {
-        data.sort((a, b) => {
-          // Prioritize results with higher importance
-          const impA = parseFloat(a.importance) || 0;
-          const impB = parseFloat(b.importance) || 0;
-          return impB - impA;
-        });
-        
-        console.log('✅ Setting search results and showing dropdown...');
-        setSearchResults(data.slice(0, 12)); // Limit to 12 best results
+      if (Array.isArray(data) && data.length > 0) {
+        setSearchResults(data);
         setShowSearchResults(true);
       } else {
-        console.log('❌ No results found');
         setSearchResults([]);
         setShowSearchResults(false);
       }
@@ -270,11 +165,30 @@ const MapSelector = ({ onSelect, onClose }) => {
     const value = e.target.value;
     setSearchQuery(value);
     
-    // Debounce search
+    // Debounce — 600ms to stay well within Photon's rate limits
     clearTimeout(window.searchTimeout);
     window.searchTimeout = setTimeout(() => {
       searchLocation(value);
-    }, 300);
+    }, 600);
+  };
+
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      clearTimeout(window.searchTimeout);
+      if (searchResults.length > 0) {
+        // Select the top result immediately
+        handleSelectSearchResult(searchResults[0]);
+      } else if (searchQuery.trim().length >= 2) {
+        // No results yet — trigger search now then auto-select first
+        searchLocation(searchQuery).then(() => {
+          // handleSelectSearchResult will be available after state update
+        });
+      }
+    }
+    if (e.key === 'Escape') {
+      setShowSearchResults(false);
+    }
   };
 
   const handleSelectSearchResult = (result) => {
@@ -407,6 +321,7 @@ const MapSelector = ({ onSelect, onClose }) => {
                   type="text"
                   value={searchQuery}
                   onChange={handleSearchInput}
+                  onKeyDown={handleSearchKeyDown}
                   onFocus={() => {
                     if (searchResults.length > 0) {
                       setShowSearchResults(true);
