@@ -25,6 +25,7 @@ import CreateListing from './pages/farmer/CreateListing';
 import MyListings from './pages/farmer/MyListings';
 import EditListing from './pages/farmer/EditListing';
 import FarmerOrders from './pages/farmer/FarmerOrders';
+import ProductDetail from './pages/ProductDetail';
 import { DeliveryAddresses } from './pages/buyer/DeliveryAddresses';
 import { Cart } from './pages/buyer/Cart';
 import { Checkout } from './pages/buyer/Checkout';
@@ -166,6 +167,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="/products/:id" element={<ProductDetail />} />
 
             {/* Buyer Routes */}
             <Route

@@ -69,6 +69,11 @@ const register = asyncHandler(async (req, res) => {
         email: user.email,
         phone: user.phone,
         role: user.role,
+        farmLocation: user.farmLocation,
+        baseLocation: user.baseLocation,
+        vehicleType: user.vehicleType,
+        vehicleNumber: user.vehicleNumber,
+        transporterProfile: user.transporterProfile,
         token: generateToken(user._id)
       }
     });
@@ -115,6 +120,11 @@ const login = asyncHandler(async (req, res) => {
       role: user.role,
       avatar: user.avatar,
       isVerified: user.isVerified,
+      farmLocation: user.farmLocation,
+      baseLocation: user.baseLocation,
+      vehicleType: user.vehicleType,
+      vehicleNumber: user.vehicleNumber,
+      transporterProfile: user.transporterProfile,
       token: generateToken(user._id)
     }
   });

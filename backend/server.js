@@ -123,6 +123,7 @@ app.use('/api/transporter', require('./routes/transporterRoutes'));
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/reviews', require('./routes/reviewRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
+app.use('/api/geocode', require('./routes/geocodeRoutes'));
 
 // Verify notification routes are registered
 console.log('\n🔍 Verifying notification routes registration...');

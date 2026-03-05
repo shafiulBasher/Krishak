@@ -7,11 +7,12 @@ import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Select } from '../components/Select';
 import { Loading } from '../components/Loading';
-import { Search, Filter, ShoppingCart, MapPin, Package, Star, User, MessageSquare } from 'lucide-react';
+import { Search, Filter, ShoppingCart, MapPin, Package, Star, User, MessageSquare, X } from 'lucide-react';
 import { getProducts } from '../services/productService';
 import { toast } from 'react-toastify';
 import { BANGLADESH_DISTRICTS } from '../utils/bangladeshData';
 import ProductReviews from '../components/ProductReviews';
+import MapSelector from '../components/MapSelector';
 
 export const BrowseProducts = () => {
   const { user } = useAuth();
@@ -30,10 +31,24 @@ export const BrowseProducts = () => {
   });
   const [sortBy, setSortBy] = useState('newest'); // newest, price-low, price-high
   const [selectedProductForReviews, setSelectedProductForReviews] = useState(null);
+  const [buyerLocation, setBuyerLocation] = useState(() => {
+    try {
+      const stored = localStorage.getItem('buyerDeliveryLocation');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [showLocationGate, setShowLocationGate] = useState(false);
+  const [showLocationMapSelector, setShowLocationMapSelector] = useState(false);
 
   useEffect(() => {
+    // Show location gate for buyers who haven't set a delivery location
+    if (user?.role === 'buyer' && !buyerLocation) {
+      setShowLocationGate(true);
+    }
     fetchProducts();
-  }, [filters, sortBy]);
+  }, [filters, sortBy, buyerLocation]);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -46,6 +61,13 @@ export const BrowseProducts = () => {
       if (filters.cropName) queryParams.cropName = filters.cropName;
       if (filters.district) queryParams.district = filters.district;
       if (filters.grade) queryParams.grade = filters.grade;
+
+      // Add proximity filter if buyer location is set
+      if (user?.role === 'buyer' && buyerLocation?.lat && buyerLocation?.lng) {
+        queryParams.lat = buyerLocation.lat;
+        queryParams.lng = buyerLocation.lng;
+        queryParams.radius = 50;
+      }
 
       const response = await getProducts(queryParams);
       let fetchedProducts = response.data || [];
@@ -118,6 +140,20 @@ export const BrowseProducts = () => {
     setSortBy('newest');
   };
 
+  const handleLocationSelect = (coords, address) => {
+    const location = { lat: coords.lat, lng: coords.lng, label: address || `${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}` };
+    setBuyerLocation(location);
+    localStorage.setItem('buyerDeliveryLocation', JSON.stringify(location));
+    setShowLocationGate(false);
+    setShowLocationMapSelector(false);
+    toast.success('Delivery location set! Showing nearby products.');
+  };
+
+  const handleClearLocation = () => {
+    setBuyerLocation(null);
+    localStorage.removeItem('buyerDeliveryLocation');
+  };
+
   const handleAddToCart = (product) => {
     addToCart(product, 1);
     toast.success(`${product.cropName} added to cart!`);
@@ -133,6 +169,37 @@ export const BrowseProducts = () => {
           <h1 className="text-3xl font-bold text-gray-900">Browse Products</h1>
           <p className="text-gray-600 mt-1">Find the best agricultural products from local farmers</p>
         </div>
+
+        {/* Buyer Location Banner */}
+        {user?.role === 'buyer' && (
+          <div className={`mb-4 p-3 rounded-lg flex items-center justify-between ${
+            buyerLocation ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'
+          }`}>
+            <div className="flex items-center gap-2 text-sm">
+              <MapPin className={`w-4 h-4 flex-shrink-0 ${buyerLocation ? 'text-green-600' : 'text-yellow-600'}`} />
+              {buyerLocation ? (
+                <span className="text-green-800">
+                  Showing products within 50km of <strong>{buyerLocation.label}</strong>
+                </span>
+              ) : (
+                <span className="text-yellow-800">
+                  Set your delivery location to see nearby products within 50km
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="secondary" onClick={() => setShowLocationMapSelector(true)}>
+                <MapPin className="w-3 h-3 mr-1" />
+                {buyerLocation ? 'Change' : 'Set Location'}
+              </Button>
+              {buyerLocation && (
+                <button onClick={handleClearLocation} className="text-gray-400 hover:text-gray-600" title="Clear location (show all)">
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Search and Filters */}
         <Card className="mb-6">
@@ -458,6 +525,40 @@ export const BrowseProducts = () => {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Location Gate Modal (shown when buyer has no location set) */}
+        {showLocationGate && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl">
+              <div className="text-center mb-5">
+                <MapPin className="w-12 h-12 text-primary-600 mx-auto mb-3" />
+                <h2 className="text-xl font-bold text-gray-900">Set Your Delivery Location</h2>
+                <p className="text-gray-600 mt-2 text-sm">
+                  KRISHAK shows you products within 50km of your delivery location.
+                  Pin your location to see relevant products.
+                </p>
+              </div>
+              <div className="space-y-3">
+                <Button fullWidth onClick={() => { setShowLocationGate(false); setShowLocationMapSelector(true); }}>
+                  <MapPin className="w-4 h-4 mr-2" />
+                  Pin My Location on Map
+                </Button>
+                <Button fullWidth variant="secondary" onClick={() => setShowLocationGate(false)}>
+                  Browse All Products
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Location MapSelector */}
+        {showLocationMapSelector && (
+          <MapSelector
+            onSelect={handleLocationSelect}
+            onClose={() => setShowLocationMapSelector(false)}
+            initialPosition={buyerLocation}
+          />
         )}
       </div>
     </div>

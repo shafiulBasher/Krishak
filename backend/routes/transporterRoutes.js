@@ -7,7 +7,8 @@ const {
   updateDeliveryStatus,
   getMyDeliveries,
   getTransporterStats,
-  getDeliveryDetails
+  getDeliveryDetails,
+  confirmCashCollected
 } = require('../controllers/transporterController');
 
 const { protect, authorize } = require('../middleware/authMiddleware');
@@ -25,6 +26,7 @@ router.get('/jobs', getAvailableJobs);
 router.get('/jobs/:orderId', getDeliveryDetails);
 router.post('/jobs/:orderId/accept', acceptJob);
 router.put('/jobs/:orderId/status', updateDeliveryStatus);
+router.put('/jobs/:orderId/collect-cash', confirmCashCollected);
 
 // My deliveries
 router.get('/my-deliveries', getMyDeliveries);

@@ -15,8 +15,10 @@ export const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [showMap, setShowMap] = useState(false);
-  const [mapCoordinates, setMapCoordinates] = useState(null);
+  const [showFarmerMap, setShowFarmerMap] = useState(false);
+  const [showTransporterMap, setShowTransporterMap] = useState(false);
+  const [farmerMapCoords, setFarmerMapCoords] = useState(null);
+  const [transporterMapCoords, setTransporterMapCoords] = useState(null);
   const [profile, setProfile] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -37,10 +39,9 @@ export const Profile = () => {
   });
 
   const vehicleTypeOptions = [
-    { value: 'truck', label: 'Truck' },
-    { value: 'van', label: 'Van' },
-    { value: 'motorbike', label: 'Motorbike' },
-    { value: 'other', label: 'Other' },
+    { value: 'van', label: 'Van (local deliveries, up to 30km route)' },
+    { value: 'pickup', label: 'Pickup (medium-distance deliveries)' },
+    { value: 'truck', label: 'Truck (long-distance, bulk deliveries)' },
   ];
 
   useEffect(() => {
@@ -65,12 +66,14 @@ export const Profile = () => {
         transporterThana: response.data.baseLocation?.thana || '',
         transporterDistrict: response.data.baseLocation?.district || '',
       });
-      // Set map coordinates if available (farmer or transporter)
+      // Set map coordinates separately per role
       if (response.data.farmLocation?.coordinates?.lat) {
-        setMapCoordinates(response.data.farmLocation.coordinates);
-      } else if (response.data.baseLocation?.coordinates?.lat) {
-        setMapCoordinates(response.data.baseLocation.coordinates);
+        setFarmerMapCoords(response.data.farmLocation.coordinates);
       }
+      if (response.data.baseLocation?.coordinates?.lat) {
+        setTransporterMapCoords(response.data.baseLocation.coordinates);
+      }
+
     } catch (error) {
       toast.error('Failed to load profile');
     } finally {
@@ -103,9 +106,9 @@ export const Profile = () => {
           village: formData.village,
           thana: formData.thana,
           district: formData.district,
-          coordinates: mapCoordinates ? {
-            lat: mapCoordinates.lat,
-            lng: mapCoordinates.lng
+          coordinates: farmerMapCoords ? {
+            lat: farmerMapCoords.lat,
+            lng: farmerMapCoords.lng
           } : profile.farmLocation?.coordinates || null
         };
       }
@@ -118,10 +121,13 @@ export const Profile = () => {
           village: formData.transporterVillage,
           thana: formData.transporterThana,
           district: formData.transporterDistrict,
-          coordinates: mapCoordinates ? {
-            lat: mapCoordinates.lat,
-            lng: mapCoordinates.lng
+          coordinates: transporterMapCoords ? {
+            lat: transporterMapCoords.lat,
+            lng: transporterMapCoords.lng
           } : profile.baseLocation?.coordinates || null
+        };
+        updateData.transporterProfile = {
+          ...profile.transporterProfile,
         };
       }
 
@@ -139,8 +145,8 @@ export const Profile = () => {
 
   const handleCancel = () => {
     setIsEditing(false);
-    setShowMap(false);
-    // Reset form data
+    setShowFarmerMap(false);
+    setShowTransporterMap(false);
     setFormData({
       name: profile.name || '',
       phone: profile.phone || '',
@@ -155,13 +161,16 @@ export const Profile = () => {
       transporterThana: profile.baseLocation?.thana || '',
       transporterDistrict: profile.baseLocation?.district || '',
     });
-    // Reset map coordinates to saved value (farmer or transporter)
+    // Reset map coordinates per role
     if (profile.farmLocation?.coordinates?.lat) {
-      setMapCoordinates(profile.farmLocation.coordinates);
-    } else if (profile.baseLocation?.coordinates?.lat) {
-      setMapCoordinates(profile.baseLocation.coordinates);
+      setFarmerMapCoords(profile.farmLocation.coordinates);
     } else {
-      setMapCoordinates(null);
+      setFarmerMapCoords(null);
+    }
+    if (profile.baseLocation?.coordinates?.lat) {
+      setTransporterMapCoords(profile.baseLocation.coordinates);
+    } else {
+      setTransporterMapCoords(null);
     }
   };
 
@@ -263,16 +272,16 @@ export const Profile = () => {
                 <div className="mt-4 pt-4 border-t border-primary-200">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <MapPin className="w-4 h-4 inline mr-1" />
-                    Farm GPS Location (for accurate delivery distance)
+                    Farm GPS Location <span className="text-red-500">*</span> (required for 50km delivery check)
                   </label>
                   
-                  {mapCoordinates ? (
+                  {farmerMapCoords ? (
                     <p className="text-sm text-green-600 mb-2">
-                      📍 Location: {mapCoordinates.lat.toFixed(4)}, {mapCoordinates.lng.toFixed(4)}
+                      ✓ Location: {farmerMapCoords.lat.toFixed(4)}, {farmerMapCoords.lng.toFixed(4)}
                     </p>
                   ) : (
-                    <p className="text-sm text-orange-600 mb-2">
-                      ⚠️ No GPS location set - delivery distance will use default
+                    <p className="text-sm text-red-500 mb-2">
+                      ✱ No GPS location set — buyers cannot order until you add your farm location
                     </p>
                   )}
                   
@@ -281,22 +290,22 @@ export const Profile = () => {
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => setShowMap(!showMap)}
+                        onClick={() => setShowFarmerMap(!showFarmerMap)}
                         size="sm"
                       >
                         <MapPin className="w-4 h-4 mr-2" />
-                        {mapCoordinates ? 'Update Location' : 'Set Location on Map'}
+                        {farmerMapCoords ? 'Update Location' : 'Set Location on Map'}
                       </Button>
                       
-                      {showMap && (
+                      {showFarmerMap && (
                         <div className="mt-3">
                           <MapSelector
                             onSelect={(coords, address) => {
-                              setMapCoordinates(coords);
-                              setShowMap(false);
+                              setFarmerMapCoords(coords);
+                              setShowFarmerMap(false);
                               toast.success('Farm location updated');
                             }}
-                            initialPosition={mapCoordinates}
+                            initialPosition={farmerMapCoords}
                           />
                         </div>
                       )}
@@ -373,9 +382,9 @@ export const Profile = () => {
                       GPS Location (for 50km service radius calculation)
                     </label>
                     
-                    {mapCoordinates ? (
+                    {transporterMapCoords ? (
                       <p className="text-sm text-green-600 mb-2">
-                        📍 Location: {mapCoordinates.lat.toFixed(4)}, {mapCoordinates.lng.toFixed(4)}
+                        ✓ Location: {transporterMapCoords.lat.toFixed(4)}, {transporterMapCoords.lng.toFixed(4)}
                       </p>
                     ) : (
                       <p className="text-sm text-orange-600 mb-2">
@@ -388,22 +397,22 @@ export const Profile = () => {
                         <Button
                           type="button"
                           variant="outline"
-                          onClick={() => setShowMap(!showMap)}
+                          onClick={() => setShowTransporterMap(!showTransporterMap)}
                           size="sm"
                         >
                           <MapPin className="w-4 h-4 mr-2" />
-                          {mapCoordinates ? 'Update Location' : 'Set Location on Map'}
+                          {transporterMapCoords ? 'Update Location' : 'Set Location on Map'}
                         </Button>
                         
-                        {showMap && (
+                        {showTransporterMap && (
                           <div className="mt-3">
                             <MapSelector
                               onSelect={(coords, address) => {
-                                setMapCoordinates(coords);
-                                setShowMap(false);
+                                setTransporterMapCoords(coords);
+                                setShowTransporterMap(false);
                                 toast.success('Base location updated');
                               }}
-                              initialPosition={mapCoordinates}
+                              initialPosition={transporterMapCoords}
                             />
                           </div>
                         )}
@@ -411,6 +420,7 @@ export const Profile = () => {
                     )}
                   </div>
                 </div>
+
               </>
             )}
 
@@ -445,7 +455,11 @@ export const Profile = () => {
             {/* Action Buttons */}
             {isEditing && (
               <div className="flex space-x-4">
-                <Button type="submit" disabled={saving} fullWidth>
+                <Button
+                  type="submit"
+                  disabled={saving || (profile.role === 'farmer' && !farmerMapCoords) || (profile.role === 'transporter' && !transporterMapCoords)}
+                  fullWidth
+                >
                   <Save className="w-4 h-4 mr-2" />
                   {saving ? 'Saving...' : 'Save Changes'}
                 </Button>

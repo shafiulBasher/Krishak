@@ -187,7 +187,7 @@ export default function MyListings() {
             {/* Actions */}
             <div className="flex gap-2 pt-3 border-t">
               <Link
-                to={`/farmer/listings/${listing._id}`}
+                to={`/products/${listing._id}`}
                 className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition text-sm font-medium"
               >
                 <Eye className="w-4 h-4" />
@@ -196,7 +196,7 @@ export default function MyListings() {
               {listing.status !== 'sold' && (
                 <>
                   <Link
-                    to={`/farmer/listings/edit/${listing._id}`}
+                    to={`/farmer/edit-listing/${listing._id}`}
                     className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-primary-100 hover:bg-primary-200 text-primary-700 rounded-lg transition text-sm font-medium"
                   >
                     <Edit className="w-4 h-4" />
@@ -284,7 +284,7 @@ export default function MyListings() {
               {/* Actions */}
               <div className="flex gap-2 pt-2">
                 <Link
-                  to={`/farmer/listings/${listing._id}`}
+                  to={`/products/${listing._id}`}
                   className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition text-sm font-medium"
                 >
                   <Eye className="w-4 h-4" />
@@ -293,7 +293,7 @@ export default function MyListings() {
                 {listing.status !== 'sold' && (
                   <>
                     <Link
-                      to={`/farmer/listings/edit/${listing._id}`}
+                      to={`/farmer/edit-listing/${listing._id}`}
                       className="flex items-center gap-2 px-4 py-2 bg-primary-100 hover:bg-primary-200 text-primary-700 rounded-lg transition text-sm font-medium"
                     >
                       <Edit className="w-4 h-4" />

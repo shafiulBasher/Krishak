@@ -303,7 +303,11 @@ export const MyOrders = () => {
                   <div className="lg:w-48 flex flex-col space-y-2">
                     <div className="text-right mb-2">
                       <p className="text-2xl font-bold text-primary-600">
-                        ৳{order.totalPrice?.toLocaleString()}
+                        ৳{(
+                          (order.totalPrice || 0) +
+                          (order.priceBreakdown?.transportFee || 0) +
+                          (order.priceBreakdown?.platformFee || 0)
+                        ).toLocaleString()}
                       </p>
                       <p className="text-sm text-gray-600">Total Amount</p>
                     </div>

@@ -35,8 +35,10 @@ export const Register = () => {
     transporterThana: '',
     transporterDistrict: '',
     transporterCoordinates: { lat: null, lng: null },
+    farmerCoordinates: { lat: null, lng: null },
   });
   const [showMapSelector, setShowMapSelector] = useState(false);
+  const [showFarmerMapSelector, setShowFarmerMapSelector] = useState(false);
 
   const roleOptions = [
     { value: 'farmer', label: 'Farmer' },
@@ -67,6 +69,11 @@ export const Register = () => {
       return alert('Password must be at least 6 characters');
     }
 
+    if (formData.role === 'farmer' && !formData.farmerCoordinates.lat) {
+      toast.error('Please pin your farm location on the map before registering');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -84,6 +91,7 @@ export const Register = () => {
           village: formData.village,
           thana: formData.thana,
           district: formData.district,
+          coordinates: formData.farmerCoordinates,
         };
       }
 
@@ -229,14 +237,34 @@ export const Register = () => {
                   placeholder="Enter thana name"
                   required
                 />
-                <Input
+                <Select
                   label="District"
                   name="district"
                   value={formData.district}
                   onChange={handleChange}
-                  placeholder="Enter district name"
+                  options={BANGLADESH_DISTRICTS.map(d => ({ value: d, label: d }))}
                   required
                 />
+                <div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setShowFarmerMapSelector(true)}
+                    fullWidth
+                  >
+                    <MapPin className="w-4 h-4 mr-2" />
+                    {formData.farmerCoordinates.lat ? 'Update Farm Location on Map' : 'Pin Farm Location on Map ✱'}
+                  </Button>
+                  {formData.farmerCoordinates.lat ? (
+                    <p className="text-sm text-green-600 mt-2">
+                      ✓ Farm location pinned: {formData.farmerCoordinates.lat.toFixed(4)}, {formData.farmerCoordinates.lng.toFixed(4)}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-red-500 mt-2">
+                      ✱ Required — buyers can only order within 50km of your farm
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -327,16 +355,25 @@ export const Register = () => {
             </>
           )}
 
-          {/* Map Selector Modal */}
+          {/* Farmer Map Selector Modal */}
+          {showFarmerMapSelector && (
+            <MapSelector
+              onClose={() => setShowFarmerMapSelector(false)}
+              onSelect={(coords) => {
+                setFormData(prev => ({ ...prev, farmerCoordinates: coords }));
+                setShowFarmerMapSelector(false);
+              }}
+            />
+          )}
+
+          {/* Transporter Map Selector Modal */}
           {showMapSelector && formData.role === 'transporter' && (
             <MapSelector
-              isOpen={showMapSelector}
               onClose={() => setShowMapSelector(false)}
-              onLocationSelect={(coords) => {
-                setFormData({ ...formData, transporterCoordinates: coords });
+              onSelect={(coords) => {
+                setFormData(prev => ({ ...prev, transporterCoordinates: coords }));
                 setShowMapSelector(false);
               }}
-              initialCoordinates={formData.transporterCoordinates}
             />
           )}
 

@@ -2,11 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Package, MapPin, Phone, Calendar, Clock, CheckCircle, 
-  Truck, Camera, AlertCircle, ChevronRight, User, X, Upload, Image
+  Truck, Camera, AlertCircle, User, X, Upload, Image, DollarSign
 } from 'lucide-react';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
-import { getMyDeliveries, updateDeliveryStatus, uploadDeliveryPhoto } from '../../services/transporterService';
+import { getMyDeliveries, updateDeliveryStatus, uploadDeliveryPhoto, confirmCashCollected } from '../../services/transporterService';
 import { toast } from 'react-toastify';
 import { getImageUrl } from '../../utils/imageHelper';
 
@@ -303,12 +303,7 @@ const MyDeliveries = () => {
                         Order #{delivery.orderNumber}
                       </span>
                     </div>
-                    <Link 
-                      to={`/transporter/delivery/${delivery._id}`}
-                      className="text-primary-600 hover:text-primary-700 flex items-center gap-1 text-sm font-medium"
-                    >
-                      View Details <ChevronRight className="w-4 h-4" />
-                    </Link>
+
                   </div>
 
                   {/* Product Info */}
@@ -437,12 +432,44 @@ const MyDeliveries = () => {
                     </div>
                   )}
 
-                  {/* Completed Badge */}
+                  {/* Completed / Cash Collection */}
                   {delivery.deliveryStatus === 'delivered' && (
-                    <div className="flex items-center justify-center gap-2 py-3 bg-green-50 rounded-lg text-green-700">
-                      <CheckCircle className="w-5 h-5" />
-                      <span className="font-medium">Delivery Completed</span>
-                    </div>
+                    delivery.paymentMethod === 'cash_on_delivery' && delivery.paymentStatus !== 'paid' ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-center gap-2 py-3 bg-green-50 rounded-lg text-green-700">
+                          <CheckCircle className="w-5 h-5" />
+                          <span className="font-medium">Delivery Completed</span>
+                        </div>
+                        <Button
+                          className="w-full bg-yellow-500 hover:bg-yellow-600 text-white flex items-center justify-center gap-2"
+                          onClick={async () => {
+                            try {
+                              await confirmCashCollected(delivery._id);
+                              toast.success('Cash payment confirmed!');
+                              fetchDeliveries();
+                            } catch (err) {
+                              toast.error(err.message || 'Failed to confirm cash collection');
+                            }
+                          }}
+                        >
+                          <DollarSign className="w-4 h-4" />
+                          Confirm Cash Collected
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-center gap-2 py-3 bg-green-50 rounded-lg text-green-700">
+                          <CheckCircle className="w-5 h-5" />
+                          <span className="font-medium">Delivery Completed</span>
+                        </div>
+                        {delivery.paymentMethod === 'cash_on_delivery' && (
+                          <div className="flex items-center justify-center gap-2 py-2 bg-green-100 rounded-lg text-green-800 text-sm font-medium">
+                            <DollarSign className="w-4 h-4" />
+                            Cash Collected ✔
+                          </div>
+                        )}
+                      </div>
+                    )
                   )}
 
                   {/* Order Date */}

@@ -176,6 +176,7 @@ export const Checkout = () => {
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [showMapSelector, setShowMapSelector] = useState(false);
+  const [showAddressMapSelector, setShowAddressMapSelector] = useState(false);
   const [mapCoordinates, setMapCoordinates] = useState(null);
   const [mapAddress, setMapAddress] = useState('');
   const [deliverySlot, setDeliverySlot] = useState({
@@ -187,6 +188,14 @@ export const Checkout = () => {
   const [selectedVehicle, setSelectedVehicle] = useState('van');
   const [estimatedDistance, setEstimatedDistance] = useState(null);
   const [calculatingDistance, setCalculatingDistance] = useState(false);
+
+  // Auto-switch vehicle when distance changes: if van is selected but distance > 30km, switch to pickup
+  useEffect(() => {
+    if (estimatedDistance !== null && estimatedDistance > 30 && selectedVehicle === 'van') {
+      setSelectedVehicle('pickup');
+      toast.info('Van is not available for this distance (max 30km). Switched to Pickup.', { autoClose: 4000 });
+    }
+  }, [estimatedDistance]);
 
   // Generate available time slots
   const timeSlots = [
@@ -242,6 +251,10 @@ export const Checkout = () => {
     setSelectedAddress(address);
     setMapCoordinates(null);
     setMapAddress(''); // Clear map address when selecting saved address
+    // If the saved address has no coordinates, prompt user to pin it
+    if (!address.coordinates?.lat) {
+      setShowAddressMapSelector(true);
+    }
   };
 
   // Calculate distance when address or cart items change
@@ -402,6 +415,17 @@ export const Checkout = () => {
       coordinates: coordinates,
       isMapSelected: true
     });
+  };
+
+  const handleAddressMapSelect = (coordinates, address) => {
+    // Update the selected saved address with coordinates
+    setSelectedAddress(prev => ({
+      ...prev,
+      coordinates,
+    }));
+    setMapCoordinates(coordinates);
+    setShowAddressMapSelector(false);
+    toast.success('Location pinned! Delivery distance will now be calculated accurately.');
   };
 
   const handlePlaceOrder = async () => {
@@ -694,6 +718,22 @@ export const Checkout = () => {
                 <p className="text-gray-600 mb-4">No saved addresses. Please add one first.</p>
               )}
 
+              {selectedAddress && !selectedAddress.coordinates?.lat && !selectedAddress.isMapSelected && (
+                <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm text-yellow-800 font-medium mb-2">
+                    ⚠️ This address has no GPS coordinates. The 50km delivery check and distance calculation won’t be accurate.
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => setShowAddressMapSelector(true)}
+                  >
+                    <MapPin className="w-3 h-3 mr-1" />
+                    Pin on Map
+                  </Button>
+                </div>
+              )}
+
               <div className="flex space-x-3">
                 <Button
                   variant="secondary"
@@ -931,11 +971,20 @@ export const Checkout = () => {
         </div>
       </div>
 
-      {/* Map Selector Modal */}
+      {/* Main Map Selector Modal (for fresh map pick) */}
       {showMapSelector && (
         <MapSelector
           onSelect={handleMapSelect}
           onClose={() => setShowMapSelector(false)}
+        />
+      )}
+
+      {/* Address Coordinate Pinning Modal */}
+      {showAddressMapSelector && (
+        <MapSelector
+          onSelect={handleAddressMapSelect}
+          onClose={() => setShowAddressMapSelector(false)}
+          initialPosition={selectedAddress?.coordinates?.lat ? selectedAddress.coordinates : null}
         />
       )}
     </div>

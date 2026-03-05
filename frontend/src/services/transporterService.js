@@ -7,9 +7,14 @@ export const getTransporterStats = async () => {
 };
 
 // Get available delivery jobs
-export const getAvailableJobs = async (district = '') => {
-  const params = district ? `?district=${district}` : '';
-  const response = await api.get(`/transporter/jobs${params}`);
+export const getAvailableJobs = async () => {
+  const response = await api.get('/transporter/jobs');
+  return response;
+};
+
+// Confirm cash collected for a COD order
+export const confirmCashCollected = async (orderId) => {
+  const response = await api.put(`/transporter/jobs/${orderId}/collect-cash`);
   return response;
 };
 

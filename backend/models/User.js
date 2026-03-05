@@ -54,7 +54,7 @@ const userSchema = new mongoose.Schema({
   // Transporter-specific fields
   vehicleType: {
     type: String,
-    enum: ['truck', 'van', 'pickup', 'motorbike', 'other']
+    enum: ['van', 'pickup', 'truck']
   },
   vehicleNumber: {
     type: String,
@@ -166,6 +166,10 @@ const userSchema = new mongoose.Schema({
     postalCode: {
       type: String,
       trim: true
+    },
+    coordinates: {
+      lat: { type: Number },
+      lng: { type: Number }
     },
     isDefault: {
       type: Boolean,
