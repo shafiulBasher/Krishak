@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../../context/LanguageContext';
+import { getLocalizedCrop } from '../../utils/bangladeshData';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { Loading } from '../../components/Loading';
@@ -10,6 +12,7 @@ import { getImageUrl } from '../../utils/imageHelper';
 
 const FarmerOrders = () => {
   const navigate = useNavigate();
+  const { t, lang } = useLanguage();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // all, pending, confirmed, completed, cancelled
@@ -38,7 +41,7 @@ const FarmerOrders = () => {
         setConnectionError(true);
       }
       if (!silent) {
-        toast.error('Failed to fetch orders');
+        toast.error(t('farmer.orders.fetchFail'));
       }
     } finally {
       if (!silent) setLoading(false);
@@ -67,14 +70,14 @@ const FarmerOrders = () => {
   };
 
   const getDeliveryStatusText = (status) => {
-    const texts = {
-      not_assigned: 'Not Assigned',
-      assigned: 'Assigned',
-      picked: 'Picked Up',
-      in_transit: 'In Transit',
-      delivered: 'Delivered'
+    const keyMap = {
+      not_assigned: t('farmer.orders.deliveryNotAssigned'),
+      assigned: t('farmer.orders.deliveryAssigned'),
+      picked: t('farmer.orders.deliveryPicked'),
+      in_transit: t('farmer.orders.deliveryInTransit'),
+      delivered: t('farmer.orders.deliveryDelivered'),
     };
-    return texts[status] || status;
+    return keyMap[status] || status;
   };
 
   const filteredOrders = filter === 'all' 
@@ -88,18 +91,18 @@ const FarmerOrders = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">My Orders</h1>
-        <p className="text-gray-600">Track and manage orders for your products</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('farmer.orders.title')}</h1>
+        <p className="text-gray-600">{t('farmer.orders.subtitle')}</p>
       </div>
 
       {/* Filter Tabs */}
       <div className="flex flex-wrap gap-2 mb-6">
         {[
-          { label: 'All Orders', value: 'all' },
-          { label: 'Pending', value: 'pending' },
-          { label: 'Confirmed', value: 'confirmed' },
-          { label: 'Completed', value: 'completed' },
-          { label: 'Cancelled', value: 'cancelled' }
+          { label: t('farmer.orders.allOrders'), value: 'all' },
+          { label: t('farmer.orders.pending'), value: 'pending' },
+          { label: t('farmer.orders.confirmed'), value: 'confirmed' },
+          { label: t('farmer.orders.completed'), value: 'completed' },
+          { label: t('farmer.orders.cancelled'), value: 'cancelled' }
         ].map((tab) => (
           <button
             key={tab.value}
@@ -125,11 +128,11 @@ const FarmerOrders = () => {
         <Card>
           <div className="text-center py-12">
             <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No orders found</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('farmer.orders.noOrders')}</h3>
             <p className="text-gray-600">
               {filter === 'all' 
-                ? "You haven't received any orders yet."
-                : `No ${filter} orders found.`}
+                ? t('farmer.orders.noOrdersYet')
+                : t('farmer.orders.noFilterOrders', { filter })}
             </p>
           </div>
         </Card>
@@ -154,13 +157,13 @@ const FarmerOrders = () => {
                     )}
                     <div className="flex-1">
                       <h3 className="text-lg font-semibold text-gray-900">
-                        {order.product?.cropName || 'Product'}
+                        {getLocalizedCrop(order.product?.cropName || '', lang) || t('common.na')}
                       </h3>
                       <p className="text-sm text-gray-600">
-                        Grade: {order.product?.grade || 'N/A'}
+                        {t('farmer.orders.grade')} {order.product?.grade || 'N/A'}
                       </p>
                       <p className="text-sm text-gray-600">
-                        Quantity: {order.quantity} {order.product?.unit || 'units'}
+                        {t('farmer.orders.quantityLabel')} {order.quantity} {order.product?.unit || 'units'}
                       </p>
                     </div>
                   </div>
@@ -168,13 +171,13 @@ const FarmerOrders = () => {
                   {/* Buyer Info */}
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <User className="w-4 h-4" />
-                    <span>Buyer: {order.buyer?.name || 'Unknown'}</span>
+                    <span>{t('farmer.orders.buyer')} {order.buyer?.name || 'Unknown'}</span>
                   </div>
 
                   {/* Order Date */}
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <Calendar className="w-4 h-4" />
-                    <span>Ordered: {new Date(order.createdAt).toLocaleDateString()}</span>
+                    <span>{t('farmer.orders.orderedLabel')} {new Date(order.createdAt).toLocaleDateString()}</span>
                   </div>
 
                   {/* Price */}
@@ -188,9 +191,9 @@ const FarmerOrders = () => {
                 <div className="flex flex-col gap-3 lg:items-end">
                   {/* Order Status */}
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">Order Status</p>
+                    <p className="text-xs text-gray-500 mb-1">{t('farmer.orders.orderStatus')}</p>
                     <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.orderStatus)}`}>
-                      {order.orderStatus?.charAt(0).toUpperCase() + order.orderStatus?.slice(1)}
+                      {t(`farmer.orders.${order.orderStatus}`) || order.orderStatus}
                     </span>
                   </div>
 
@@ -199,14 +202,14 @@ const FarmerOrders = () => {
                     <div>
                       <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
                         <Truck className="w-3 h-3" />
-                        Delivery Status
+                        {t('farmer.orders.deliveryStatus')}
                       </p>
                       <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getDeliveryStatusColor(order.deliveryInfo?.status || order.deliveryStatus)}`}>
                         {getDeliveryStatusText(order.deliveryInfo?.status || order.deliveryStatus)}
                       </span>
                       {order.deliveryInfo?.transporter && (
                         <p className="text-xs text-gray-600 mt-1">
-                          Transporter: {order.deliveryInfo.transporter.name}
+                          {t('farmer.orders.transporterLabel')} {order.deliveryInfo.transporter.name}
                         </p>
                       )}
                     </div>
@@ -220,7 +223,7 @@ const FarmerOrders = () => {
                     className="w-full lg:w-auto"
                   >
                     <Eye className="w-4 h-4 mr-2" />
-                    View Details
+                    {t('farmer.orders.viewDetails')}
                   </Button>
                 </div>
               </div>

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
+import { getLocalizedCrop } from '../../utils/bangladeshData';
 import { MapPin, Package, User, Phone, Calendar, ArrowRight, Search, AlertTriangle, Navigation } from 'lucide-react';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
@@ -10,6 +12,7 @@ import { toast } from 'react-toastify';
 const AvailableJobs = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t, lang } = useLanguage();
   const isVan = user?.vehicleType === 'van';
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +35,7 @@ const AvailableJobs = () => {
       setHasNoVehicleType(response.hasNoVehicleType ?? false);
     } catch (error) {
       console.error('Error fetching jobs:', error);
-      toast.error('Failed to load available jobs');
+      toast.error(t('transporter.jobs.loadFail'));
     } finally {
       setLoading(false);
     }
@@ -42,7 +45,7 @@ const AvailableJobs = () => {
     try {
       setAccepting(orderId);
       await acceptJob(orderId);
-      toast.success('Job accepted successfully! Check My Deliveries to manage it.');
+      toast.success(t('transporter.jobs.jobAccepted'));
       // Remove the accepted job from the list
       setJobs(jobs.filter(job => job._id !== orderId));
       // Navigate to my deliveries after a short delay
@@ -51,7 +54,7 @@ const AvailableJobs = () => {
       }, 1500);
     } catch (error) {
       console.error('Error accepting job:', error);
-      toast.error(error.response?.data?.message || 'Failed to accept job');
+      toast.error(error.response?.data?.message || t('transporter.jobs.acceptFail'));
     } finally {
       setAccepting(null);
     }
@@ -78,8 +81,8 @@ const AvailableJobs = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Available Delivery Jobs</h1>
-          <p className="text-gray-600 mt-1">Find and accept delivery jobs in your area</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t('transporter.jobs.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('transporter.jobs.subtitle')}</p>
         </div>
 
         {/* No Vehicle Type Banner */}
@@ -87,11 +90,10 @@ const AvailableJobs = () => {
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-semibold text-red-800">Vehicle type not set — you are only seeing unspecified orders</p>
+              <p className="text-sm font-semibold text-red-800">{t('transporter.jobs.noVehicleWarn')}</p>
               <p className="text-sm text-red-700 mt-1">
-                Set your vehicle type (Van / Pickup / Truck) in your{' '}
-                <a href="/profile" className="underline font-medium">profile</a>{' '}
-                to see jobs matching your vehicle.
+                {t('transporter.jobs.noVehicleDesc')}{' '}
+                <a href="/profile" className="underline font-medium">{t('nav.profile')}</a>
               </p>
             </div>
           </div>
@@ -100,12 +102,11 @@ const AvailableJobs = () => {
         {/* Refresh Bar */}
         <div className="mb-6 flex justify-between items-center">
           <p className="text-sm text-gray-600">
-            Showing jobs within <span className="font-semibold text-primary-700">{maxServiceRadius}km</span> of your base location,
-            for <span className="font-semibold text-primary-700">{user?.vehicleType ? user.vehicleType.charAt(0).toUpperCase() + user.vehicleType.slice(1) : 'all'}</span> vehicles
+            {t('transporter.jobs.showingRange', { range: maxServiceRadius, type: user?.vehicleType ? user.vehicleType.charAt(0).toUpperCase() + user.vehicleType.slice(1) : 'all' })}
           </p>
           <Button onClick={fetchJobs} variant="outline" className="flex items-center gap-2">
             <Search className="w-4 h-4" />
-            Refresh
+            {t('transporter.jobs.refresh')}
           </Button>
         </div>
 
@@ -116,9 +117,9 @@ const AvailableJobs = () => {
               <div className="bg-gray-100 p-4 rounded-full mb-4">
                 <Package className="w-12 h-12 text-gray-400" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No Jobs Available</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('transporter.jobs.noJobs')}</h3>
               <p className="text-gray-600 max-w-md">
-                There are no delivery jobs available for your vehicle type ({user?.vehicleType || 'unspecified'}) within {maxServiceRadius}km of your base location right now. Check back later.
+                {t('transporter.jobs.noJobsDesc', { type: user?.vehicleType || 'unspecified', range: maxServiceRadius })}
               </p>
             </div>
           </Card>
@@ -131,12 +132,12 @@ const AvailableJobs = () => {
                   <div className="bg-orange-50 border-l-4 border-orange-500 p-3 mb-4 flex items-start gap-2">
                     <AlertTriangle className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm font-semibold text-orange-800">Outside Service Area</p>
+                      <p className="text-sm font-semibold text-orange-800">{t('transporter.jobs.outsideArea')}</p>
                       <p className="text-xs text-orange-700">{job.distanceWarning}</p>
                       <p className="text-xs text-orange-600 mt-1">
                         {isVan
-                          ? 'Van vehicles: max 30km pickup range AND max 30km delivery routes. Use a pickup or truck for longer routes.'
-                          : `You can only accept jobs within ${maxServiceRadius}km of your base location`}
+                          ? t('transporter.jobs.vanLimit')
+                          : t('transporter.jobs.tooFar')}
                       </p>
                     </div>
                   </div>
@@ -147,11 +148,11 @@ const AvailableJobs = () => {
                   <div className="bg-green-50 border border-green-200 rounded-lg p-2 mb-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Navigation className="w-4 h-4 text-green-600" />
-                      <span className="text-sm text-green-800 font-medium">Within Your Service Area</span>
+                      <span className="text-sm text-green-800 font-medium">{t('transporter.jobs.withinArea')}</span>
                     </div>
                     {job.distances.pickupDistance > 0 && (
                       <span className="text-xs text-green-700 bg-green-100 px-2 py-1 rounded">
-                        Pickup ~{job.distances.pickupDistance.toFixed(1)}km away
+                          {t('transporter.jobs.pickupDistance', { distance: job.distances.pickupDistance.toFixed(1) })}
                       </span>
                     )}
                   </div>
@@ -171,14 +172,14 @@ const AvailableJobs = () => {
                       )}
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900">
-                      {job.product?.cropName || 'Product'} - {job.quantity} kg
+                      {getLocalizedCrop(job.product?.cropName || 'Product', lang)} - {job.quantity} kg
                     </h3>
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-bold text-primary-600">
                       ৳{job.priceBreakdown?.transportFee || 50}
                     </p>
-                    <p className="text-xs text-gray-500">Delivery Fee</p>
+                    <p className="text-xs text-gray-500">{t('transporter.jobs.deliveryFee')}</p>
                   </div>
                 </div>
 
@@ -191,7 +192,7 @@ const AvailableJobs = () => {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <p className="text-xs text-green-600 font-medium uppercase">Pickup From</p>
+                        <p className="text-xs text-green-600 font-medium uppercase">{t('transporter.jobs.pickupFrom')}</p>
                         {job.distances?.toFarmer > 0 && (
                           <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
                             {job.distances.toFarmer.toFixed(1)}km
@@ -220,10 +221,10 @@ const AvailableJobs = () => {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <p className="text-xs text-blue-600 font-medium uppercase">Deliver To</p>
+                        <p className="text-xs text-blue-600 font-medium uppercase">{t('transporter.jobs.deliverTo')}</p>
                         {job.distances?.deliveryDistance > 0 && (
                           <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
-                            Route ~{job.distances.deliveryDistance.toFixed(1)}km
+                            {t('transporter.jobs.routeDistance', { distance: job.distances.deliveryDistance.toFixed(1) })}
                           </span>
                         )}
                       </div>
@@ -242,7 +243,7 @@ const AvailableJobs = () => {
                 <div className="flex items-center justify-between text-sm text-gray-500 mb-4 pt-4 border-t">
                   <div className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
-                    <span>Ordered: {formatDate(job.createdAt)}</span>
+                    <span>{t('transporter.jobs.ordered', { date: formatDate(job.createdAt) })}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Package className="w-4 h-4" />
@@ -261,15 +262,15 @@ const AvailableJobs = () => {
                   {accepting === job._id ? (
                     <>
                       <span className="animate-spin mr-2">⏳</span>
-                      Accepting...
+                      {t('transporter.jobs.accepting')}
                     </>
                   ) : !job.isWithinRange ? (
                     <>
                       <AlertTriangle className="w-4 h-4 mr-2" />
-                      Too Far - Cannot Accept
+                      {t('transporter.jobs.tooFar')}
                     </>
                   ) : (
-                    'Accept This Job'
+                    t('transporter.jobs.accept')
                   )}
                 </Button>
               </Card>

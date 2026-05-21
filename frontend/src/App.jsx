@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { LanguageProvider } from './context/LanguageContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -46,6 +47,7 @@ function App() {
     googleClientId.includes('.apps.googleusercontent.com');
   
   return (
+    <LanguageProvider>
     <GoogleOAuthProvider clientId={isGoogleConfigured ? googleClientId : ''}>
       <AuthProvider>
         <CartProvider>
@@ -255,6 +257,7 @@ function App() {
         </CartProvider>
     </AuthProvider>
     </GoogleOAuthProvider>
+    </LanguageProvider>
   );
 }
 

@@ -4,8 +4,10 @@ import Button from './Button';
 import Card from './Card';
 import { reviewService } from '../services/reviewService';
 import { toast } from 'react-toastify';
+import { useLanguage } from '../context/LanguageContext';
 
 const ReviewForm = ({ order, product, onReviewSubmitted, onClose }) => {
+  const { t } = useLanguage();
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [comment, setComment] = useState('');
@@ -21,17 +23,17 @@ const ReviewForm = ({ order, product, onReviewSubmitted, onClose }) => {
     e.preventDefault();
 
     if (rating === 0) {
-      toast.error('Please select a rating');
+      toast.error(t('components.reviewForm.ratingRequired'));
       return;
     }
 
     if (!comment.trim()) {
-      toast.error('Please write a review comment');
+      toast.error(t('components.reviewForm.commentRequired'));
       return;
     }
 
     if (comment.trim().length < 10) {
-      toast.error('Review comment must be at least 10 characters');
+      toast.error(t('components.reviewForm.minChars'));
       return;
     }
 
@@ -45,7 +47,7 @@ const ReviewForm = ({ order, product, onReviewSubmitted, onClose }) => {
         aspects: Object.values(aspects).some(v => v > 0) ? aspects : undefined
       });
 
-      toast.success('Review submitted successfully!');
+      toast.success(t('components.reviewForm.success'));
       if (onReviewSubmitted) {
         onReviewSubmitted();
       }
@@ -53,7 +55,7 @@ const ReviewForm = ({ order, product, onReviewSubmitted, onClose }) => {
         onClose();
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to submit review');
+      toast.error(error.response?.data?.message || t('components.reviewForm.failedSubmit'));
       console.error('Review submission error:', error);
     } finally {
       setSubmitting(false);
@@ -105,7 +107,7 @@ const ReviewForm = ({ order, product, onReviewSubmitted, onClose }) => {
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-semibold text-gray-900">Write a Review</h3>
+        <h3 className="text-xl font-semibold text-gray-900">{t('components.reviewForm.title')}</h3>
         {onClose && (
           <button
             onClick={onClose}
@@ -120,7 +122,7 @@ const ReviewForm = ({ order, product, onReviewSubmitted, onClose }) => {
         {/* Overall Rating */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Overall Rating <span className="text-red-500">*</span>
+            {t('components.reviewForm.overallRating')}
           </label>
           <div className="flex gap-1">
             {[1, 2, 3, 4, 5].map((value) => (
@@ -134,11 +136,11 @@ const ReviewForm = ({ order, product, onReviewSubmitted, onClose }) => {
           </div>
           {rating > 0 && (
             <p className="text-sm text-gray-600 mt-1">
-              {rating === 5 && 'Excellent!'}
-              {rating === 4 && 'Very Good'}
-              {rating === 3 && 'Good'}
-              {rating === 2 && 'Fair'}
-              {rating === 1 && 'Poor'}
+              {rating === 5 && t('components.reviewForm.excellent')}
+              {rating === 4 && t('components.reviewForm.veryGood')}
+              {rating === 3 && t('components.reviewForm.good')}
+              {rating === 2 && t('components.reviewForm.fair')}
+              {rating === 1 && t('components.reviewForm.poor')}
             </p>
           )}
         </div>
@@ -146,44 +148,44 @@ const ReviewForm = ({ order, product, onReviewSubmitted, onClose }) => {
         {/* Review Comment */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Your Review <span className="text-red-500">*</span>
+            {t('components.reviewForm.yourReview')}
           </label>
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             rows={4}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            placeholder="Share your experience with this product..."
+            placeholder={t('components.reviewForm.reviewPlaceholder')}
             maxLength={1000}
           />
           <p className="text-xs text-gray-500 mt-1">
-            {comment.length}/1000 characters (minimum 10 characters)
+            {t('components.reviewForm.charCount', { count: comment.length })}
           </p>
         </div>
 
         {/* Additional Aspects (Optional) */}
         <div className="border-t pt-4">
           <label className="block text-sm font-medium text-gray-700 mb-3">
-            Additional Ratings (Optional)
+            {t('components.reviewForm.additionalRatings')}
           </label>
           <div className="space-y-2">
             <AspectRating
-              label="Product Quality"
+              label={t('components.reviewForm.quality')}
               value={aspects.quality}
               onChange={(value) => setAspects({ ...aspects, quality: value })}
             />
             <AspectRating
-              label="Freshness"
+              label={t('components.reviewForm.freshness')}
               value={aspects.freshness}
               onChange={(value) => setAspects({ ...aspects, freshness: value })}
             />
             <AspectRating
-              label="Packaging"
+              label={t('components.reviewForm.packaging')}
               value={aspects.packaging}
               onChange={(value) => setAspects({ ...aspects, packaging: value })}
             />
             <AspectRating
-              label="Value for Money"
+              label={t('components.reviewForm.value')}
               value={aspects.value}
               onChange={(value) => setAspects({ ...aspects, value: value })}
             />
@@ -193,10 +195,10 @@ const ReviewForm = ({ order, product, onReviewSubmitted, onClose }) => {
         {/* Product Info */}
         <div className="bg-gray-50 p-3 rounded-lg">
           <p className="text-sm text-gray-600">
-            <span className="font-medium">Product:</span> {product?.cropName}
+            <span className="font-medium">{t('components.reviewForm.product')}</span> {product?.cropName}
           </p>
           <p className="text-sm text-gray-600">
-            <span className="font-medium">Order:</span> #{order?.orderNumber}
+            <span className="font-medium">{t('components.reviewForm.order')}</span> #{order?.orderNumber}
           </p>
         </div>
 
@@ -207,7 +209,7 @@ const ReviewForm = ({ order, product, onReviewSubmitted, onClose }) => {
             disabled={submitting || rating === 0 || !comment.trim()}
             className="flex-1"
           >
-            {submitting ? 'Submitting...' : 'Submit Review'}
+            {submitting ? t('components.reviewForm.submitting') : t('components.reviewForm.submit')}
           </Button>
           {onClose && (
             <Button
@@ -216,7 +218,7 @@ const ReviewForm = ({ order, product, onReviewSubmitted, onClose }) => {
               onClick={onClose}
               disabled={submitting}
             >
-              Cancel
+              {t('components.reviewForm.cancel')}
             </Button>
           )}
         </div>

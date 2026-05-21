@@ -1,49 +1,52 @@
 import { Truck, Car, Package, AlertCircle } from 'lucide-react';
-
-const VEHICLES = [
-  {
-    type: 'van',
-    name: 'Van',
-    icon: Car,
-    baseRate: 300,
-    perKmRate: 50,
-    capacity: 'Up to 500kg',
-    description: 'Best for small to medium orders',
-    maxDistanceKm: 30, // hard limit: van only covers 30km
-    color: 'blue',
-  },
-  {
-    type: 'pickup',
-    name: 'Pickup',
-    icon: Package,
-    baseRate: 400,
-    perKmRate: 75,
-    capacity: 'Up to 1000kg',
-    description: 'Ideal for medium to large orders',
-    maxDistanceKm: null, // no hard limit
-    color: 'purple',
-  },
-  {
-    type: 'truck',
-    name: 'Truck',
-    icon: Truck,
-    baseRate: 500,
-    perKmRate: 100,
-    capacity: 'Up to 2000kg',
-    description: 'For bulk orders and heavy items',
-    maxDistanceKm: null, // no hard limit
-    color: 'orange',
-  },
-];
+import { useLanguage } from '../context/LanguageContext';
 
 export const VehicleSelector = ({ selected, onSelect, distance, disabled = false }) => {
+  const { t, n } = useLanguage();
+
+  const VEHICLES = [
+    {
+      type: 'van',
+      name: t('components.vehicle.van'),
+      icon: Car,
+      baseRate: 300,
+      perKmRate: 50,
+      capacity: t('components.vehicle.vanCapacity'),
+      description: t('components.vehicle.vanDesc'),
+      maxDistanceKm: 30,
+      color: 'blue',
+    },
+    {
+      type: 'pickup',
+      name: t('components.vehicle.pickup'),
+      icon: Package,
+      baseRate: 400,
+      perKmRate: 75,
+      capacity: t('components.vehicle.pickupCapacity'),
+      description: t('components.vehicle.pickupDesc'),
+      maxDistanceKm: null,
+      color: 'purple',
+    },
+    {
+      type: 'truck',
+      name: t('components.vehicle.truck'),
+      icon: Truck,
+      baseRate: 500,
+      perKmRate: 100,
+      capacity: t('components.vehicle.truckCapacity'),
+      description: t('components.vehicle.truckDesc'),
+      maxDistanceKm: null,
+      color: 'orange',
+    },
+  ];
+
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900">Select Delivery Vehicle</h3>
+        <h3 className="text-lg font-semibold text-gray-900">{t('components.vehicle.heading')}</h3>
         {distance && (
           <p className="text-sm text-gray-600 mt-1">
-            Estimated distance: <span className="font-medium">{distance} km</span>
+            {t('components.vehicle.estimatedDistance', { distance: n(distance) })}
           </p>
         )}
       </div>
@@ -64,7 +67,7 @@ export const VehicleSelector = ({ selected, onSelect, distance, disabled = false
               key={vehicle.type}
               onClick={() => !isDisabled && onSelect(vehicle.type)}
               disabled={isDisabled}
-              title={isOutOfRange ? `Not available — van only covers up to ${vehicle.maxDistanceKm}km` : ''}
+              title={isOutOfRange ? t('components.vehicle.notAvailable', { max: n(vehicle.maxDistanceKm), dist: n(distance) }) : ''}
               className={`
                 relative p-4 border-2 rounded-xl text-left transition-all duration-200
                 ${isSelected && !isOutOfRange
@@ -113,31 +116,30 @@ export const VehicleSelector = ({ selected, onSelect, distance, disabled = false
                 <div className="flex items-start gap-1.5 mb-3 p-2 bg-red-100 rounded-lg">
                   <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
                   <p className="text-xs text-red-600 font-medium">
-                    Not available — van only covers up to {vehicle.maxDistanceKm}km.
-                    Your delivery is {distance}km.
+                    {t('components.vehicle.notAvailable', { max: n(vehicle.maxDistanceKm), dist: n(distance) })}
                   </p>
                 </div>
               )}
               
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between text-gray-600">
-                  <span>Base Rate:</span>
-                  <span className="font-medium">৳{vehicle.baseRate}</span>
+                  <span>{t('components.vehicle.baseRate')}</span>
+                  <span className="font-medium">৳{n(vehicle.baseRate)}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
-                  <span>Per KM:</span>
-                  <span className="font-medium">৳{vehicle.perKmRate}/km</span>
+                  <span>{t('components.vehicle.perKm')}</span>
+                  <span className="font-medium">৳{n(vehicle.perKmRate)}/km</span>
                 </div>
                 {vehicle.maxDistanceKm && (
                   <div className="flex justify-between text-gray-600">
-                    <span>Max Range:</span>
-                    <span className="font-medium text-orange-600">{vehicle.maxDistanceKm}km</span>
+                    <span>{t('components.vehicle.maxRange')}</span>
+                    <span className="font-medium text-orange-600">{n(vehicle.maxDistanceKm)}km</span>
                   </div>
                 )}
                 {distance && !isOutOfRange && (
                   <div className="flex justify-between pt-2 border-t border-gray-200 mt-2">
-                    <span className="font-semibold text-gray-900">Estimated:</span>
-                    <span className="font-bold text-green-600">৳{Math.round(estimatedFee)}</span>
+                    <span className="font-semibold text-gray-900">{t('components.vehicle.estimated')}</span>
+                    <span className="font-bold text-green-600">৳{n(Math.round(estimatedFee))}</span>
                   </div>
                 )}
               </div>
@@ -148,7 +150,7 @@ export const VehicleSelector = ({ selected, onSelect, distance, disabled = false
       
       {!distance && (
         <p className="text-sm text-gray-500 text-center">
-          Distance will be calculated based on delivery location
+          {t('components.vehicle.distanceNote')}
         </p>
       )}
     </div>

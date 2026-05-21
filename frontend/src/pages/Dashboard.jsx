@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useCart } from '../context/CartContext';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
@@ -10,10 +11,12 @@ import { getProducts, getFarmerStats } from '../services/productService';
 import { getBuyerStats, getTransporterStats } from '../services/orderService';
 import { toast } from 'react-toastify';
 import PreOrderModal from '../components/PreOrderModal';
+import { getLocalizedCrop, getLocalizedDistrict } from '../utils/bangladeshData';
 
 export const Dashboard = () => {
   const { user } = useAuth();
   const { addToCart } = useCart();
+  const { t, lang } = useLanguage();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -181,7 +184,7 @@ export const Dashboard = () => {
   };
 
   const handlePreOrderSuccess = () => {
-    toast.success('Pre-order placed successfully!');
+    toast.success(t('dashboard.preOrderSuccess'));
     fetchProducts(); // Refresh products
   };
 
@@ -193,35 +196,35 @@ export const Dashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <Card className="text-center">
                 <h3 className="text-4xl font-bold text-primary-600">{farmerStats.activeListings}</h3>
-                <p className="text-gray-600 mt-2">Active Listings</p>
+                <p className="text-gray-600 mt-2">{t('dashboard.farmer.activeListings')}</p>
               </Card>
               <Card className="text-center">
                 <h3 className="text-4xl font-bold text-yellow-600">{farmerStats.pendingListings}</h3>
-                <p className="text-gray-600 mt-2">Pending Listings</p>
+                <p className="text-gray-600 mt-2">{t('dashboard.farmer.pendingListings')}</p>
               </Card>
               <Card className="text-center">
                 <h3 className="text-4xl font-bold text-blue-600">{farmerStats.totalOrders}</h3>
-                <p className="text-gray-600 mt-2">Total Orders</p>
+                <p className="text-gray-600 mt-2">{t('dashboard.farmer.totalOrders')}</p>
               </Card>
               <Card className="text-center">
                 <h3 className="text-4xl font-bold text-green-600">৳{farmerStats.totalEarnings.toLocaleString()}</h3>
-                <p className="text-gray-600 mt-2">Total Earnings</p>
+                <p className="text-gray-600 mt-2">{t('dashboard.farmer.totalEarnings')}</p>
               </Card>
             </div>
             <Card>
-              <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+              <h2 className="text-xl font-semibold mb-4">{t('dashboard.quickActions')}</h2>
               <div className="space-y-2">
                 <Link to="/farmer/create-listing" className="block p-4 bg-primary-50 hover:bg-primary-100 rounded-lg transition">
-                  <p className="font-medium text-primary-700">+ Create New Listing</p>
-                  <p className="text-sm text-gray-600">Add a new product to sell</p>
+                  <p className="font-medium text-primary-700">{t('dashboard.farmer.createListing')}</p>
+                  <p className="text-sm text-gray-600">{t('dashboard.farmer.createListingDesc')}</p>
                 </Link>
                 <Link to="/farmer/my-listings" className="block p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition">
-                  <p className="font-medium text-gray-700">View My Listings</p>
-                  <p className="text-sm text-gray-600">Manage your products</p>
+                  <p className="font-medium text-gray-700">{t('dashboard.farmer.viewListings')}</p>
+                  <p className="text-sm text-gray-600">{t('dashboard.farmer.viewListingsDesc')}</p>
                 </Link>
                 <Link to="/farmer/orders" className="block p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition">
-                  <p className="font-medium text-blue-700">View My Orders</p>
-                  <p className="text-sm text-gray-600">Track orders and shipments</p>
+                  <p className="font-medium text-blue-700">{t('dashboard.farmer.viewOrders')}</p>
+                  <p className="text-sm text-gray-600">{t('dashboard.farmer.viewOrdersDesc')}</p>
                 </Link>
               </div>
             </Card>
@@ -232,44 +235,44 @@ export const Dashboard = () => {
         return (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Your Statistics</h2>
+              <h2 className="text-xl font-semibold">{t('dashboard.yourStats')}</h2>
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={() => {
                   fetchBuyerStats();
                   fetchProducts();
-                  toast.info('Stats refreshed');
+                  toast.info(t('dashboard.statsRefreshed'));
                 }}
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
-                Refresh
+                {t('dashboard.refresh')}
               </Button>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <Card className="text-center">
                 <h3 className="text-4xl font-bold text-primary-600">{buyerStats.totalOrders}</h3>
-                <p className="text-gray-600 mt-2">Total Orders</p>
+                <p className="text-gray-600 mt-2">{t('dashboard.buyer.totalOrders')}</p>
               </Card>
               <Card className="text-center">
                 <h3 className="text-4xl font-bold text-primary-600">৳{buyerStats.totalSpent.toLocaleString()}</h3>
-                <p className="text-gray-600 mt-2">Total Spent</p>
+                <p className="text-gray-600 mt-2">{t('dashboard.buyer.totalSpent')}</p>
               </Card>
               <Card className="text-center">
                 <h3 className="text-4xl font-bold text-yellow-600">{buyerStats.pendingOrders}</h3>
-                <p className="text-gray-600 mt-2">Pending Orders</p>
+                <p className="text-gray-600 mt-2">{t('dashboard.buyer.pendingOrders')}</p>
               </Card>
               <Card className="text-center">
                 <h3 className="text-4xl font-bold text-green-600">{buyerStats.completedOrders}</h3>
-                <p className="text-gray-600 mt-2">Completed Orders</p>
+                <p className="text-gray-600 mt-2">{t('dashboard.buyer.completedOrders')}</p>
               </Card>
             </div>
 
             <div className="flex justify-end">
               <Link to="/buyer/orders">
                 <Button variant="secondary">
-                  View All Orders →
+                  {t('dashboard.viewAllOrders')}
                 </Button>
               </Link>
             </div>
@@ -278,7 +281,7 @@ export const Dashboard = () => {
             {/* Featured Products */}
             <Card>
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Featured Products</h2>
+                <h2 className="text-2xl font-bold text-gray-900">{t('dashboard.featuredProducts')}</h2>
                 <Link to="/browse-products" className="text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1">
                   View All <ArrowRight className="w-4 h-4" />
                 </Link>
@@ -315,22 +318,22 @@ export const Dashboard = () => {
 
                       <div className="p-5">
                         <div className="flex justify-between items-start mb-2">
-                          <h3 className="text-xl font-bold text-gray-900 flex-1">{product.cropName}</h3>
+                          <h3 className="text-xl font-bold text-gray-900 flex-1">{getLocalizedCrop(product.cropName, lang)}</h3>
                           <span className="text-xs font-semibold bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-1.5 rounded-full shadow-sm">
-                            Grade {product.grade}
+                            {t('common.grade', { g: product.grade })}
                           </span>
                         </div>
 
                         <div className="flex items-center text-gray-600 text-sm mb-3">
                           <MapPin className="w-4 h-4 mr-2 text-red-500" />
                           <span className="font-medium">
-                            {product.location.village}, {product.location.district}
+                            {product.location.village}, {getLocalizedDistrict(product.location.district, lang)}
                           </span>
                         </div>
 
                         <div className="flex justify-between items-end mb-3 pb-3 border-b border-gray-100">
                           <div>
-                            <div className="text-xs text-gray-500 mb-1 font-medium">Price</div>
+                            <div className="text-xs text-gray-500 mb-1 font-medium">{t('dashboard.price')}</div>
                             <div>
                               <span className="text-3xl font-bold text-primary-600">
                                 ৳{product.sellingPrice}
@@ -339,7 +342,7 @@ export const Dashboard = () => {
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="text-xs text-gray-500 mb-1">Available</div>
+                            <div className="text-xs text-gray-500 mb-1">{t('dashboard.available')}</div>
                             <span className="text-sm font-bold text-gray-700">
                               {product.quantity} {product.unit}
                             </span>
@@ -349,18 +352,18 @@ export const Dashboard = () => {
                         {/* Price Comparison - Only show market comparison, not cost breakdown */}
                         {product.calculatedPrice && (
                           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-lg mb-3 border border-blue-100">
-                            <h4 className="font-semibold text-sm mb-2 text-gray-700">Market Price Comparison</h4>
+                            <h4 className="font-semibold text-sm mb-2 text-gray-700">{t('dashboard.priceComparison')}</h4>
                             <div className="grid grid-cols-3 gap-3">
                               <div className="text-center">
-                                <div className="text-xs font-medium text-gray-500 mb-1">Wholesale</div>
+                                <div className="text-xs font-medium text-gray-500 mb-1">{t('dashboard.wholesale')}</div>
                                 <div className="text-sm font-bold text-gray-700 bg-white py-2 rounded-md shadow-sm">৳{((product.calculatedPrice.suggestedPrice || product.sellingPrice) * 0.8).toFixed(0)}</div>
                               </div>
                               <div className="text-center">
-                                <div className="text-xs font-medium text-blue-600 mb-1">You Pay</div>
+                                <div className="text-xs font-medium text-blue-600 mb-1">{t('dashboard.youPay')}</div>
                                 <div className="text-base font-bold text-blue-600 bg-white py-2 rounded-md shadow-md border-2 border-blue-500">৳{product.sellingPrice}</div>
                               </div>
                               <div className="text-center">
-                                <div className="text-xs font-medium text-gray-500 mb-1">Retail</div>
+                                <div className="text-xs font-medium text-gray-500 mb-1">{t('dashboard.retail')}</div>
                                 <div className="text-sm font-bold text-gray-700 bg-white py-2 rounded-md shadow-sm">৳{((product.calculatedPrice.suggestedPrice || product.sellingPrice) * 1.2).toFixed(0)}</div>
                               </div>
                             </div>
@@ -371,19 +374,19 @@ export const Dashboard = () => {
                           <Button
                             onClick={() => {
                               addToCart(product, 1);
-                              toast.success(`${product.cropName} added to cart!`);
+                              toast.success(t('dashboard.addedToCart', { name: product.cropName }));
                             }}
                             className="flex-1"
                           >
                             <ShoppingCart className="w-4 h-4 mr-2" />
-                            <span>Add to Cart</span>
+                            <span>{t('dashboard.addToCart')}</span>
                           </Button>
                           {product.isPreOrder && (
                             <Button
                               variant="secondary"
                               onClick={() => handlePreOrder(product)}
                             >
-                              Pre-Order
+                              {t('dashboard.preOrder')}
                             </Button>
                           )}
                         </div>
@@ -393,25 +396,25 @@ export const Dashboard = () => {
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-500">
-                  No products available at the moment.
+                  {t('dashboard.noProducts')}
                 </div>
               )}
             </Card>
 
             <Card>
-              <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+              <h2 className="text-xl font-semibold mb-4">{t('dashboard.quickActions')}</h2>
               <div className="space-y-2">
                 <Link to="/browse-products" className="block p-4 bg-primary-50 hover:bg-primary-100 rounded-lg transition">
-                  <p className="font-medium text-primary-700">Browse Products</p>
-                  <p className="text-sm text-gray-600">Find fresh produce from farmers</p>
+                  <p className="font-medium text-primary-700">{t('dashboard.buyer.browseProducts')}</p>
+                  <p className="text-sm text-gray-600">{t('dashboard.buyer.browseDesc')}</p>
                 </Link>
                 <Link to="/buyer/addresses" className="block p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition">
-                  <p className="font-medium text-gray-700">Delivery Addresses</p>
-                  <p className="text-sm text-gray-600">Manage your delivery locations</p>
+                  <p className="font-medium text-gray-700">{t('dashboard.buyer.addresses')}</p>
+                  <p className="text-sm text-gray-600">{t('dashboard.buyer.addressesDesc')}</p>
                 </Link>
                 <Link to="/buyer/orders" className="block p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition">
-                  <p className="font-medium text-gray-700">My Orders</p>
-                  <p className="text-sm text-gray-600">Track your purchases</p>
+                  <p className="font-medium text-gray-700">{t('dashboard.buyer.myOrders')}</p>
+                  <p className="text-sm text-gray-600">{t('dashboard.buyer.ordersDesc')}</p>
                 </Link>
               </div>
             </Card>
@@ -424,31 +427,31 @@ export const Dashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <Card className="text-center">
                 <h3 className="text-4xl font-bold text-primary-600">{transporterStats.totalDeliveries}</h3>
-                <p className="text-gray-600 mt-2">Total Deliveries</p>
+                <p className="text-gray-600 mt-2">{t('dashboard.transporter.totalDeliveries')}</p>
               </Card>
               <Card className="text-center">
                 <h3 className="text-4xl font-bold text-yellow-600">{transporterStats.activeDeliveries}</h3>
-                <p className="text-gray-600 mt-2">Active Deliveries</p>
+                <p className="text-gray-600 mt-2">{t('dashboard.transporter.activeDeliveries')}</p>
               </Card>
               <Card className="text-center">
                 <h3 className="text-4xl font-bold text-green-600">{transporterStats.completedTrips}</h3>
-                <p className="text-gray-600 mt-2">Completed Trips</p>
+                <p className="text-gray-600 mt-2">{t('dashboard.transporter.completedTrips')}</p>
               </Card>
               <Card className="text-center">
                 <h3 className="text-4xl font-bold text-primary-600">৳{transporterStats.totalEarnings.toLocaleString()}</h3>
-                <p className="text-gray-600 mt-2">Total Earnings</p>
+                <p className="text-gray-600 mt-2">{t('dashboard.transporter.totalEarnings')}</p>
               </Card>
             </div>
             <Card>
-              <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+              <h2 className="text-xl font-semibold mb-4">{t('dashboard.quickActions')}</h2>
               <div className="space-y-2">
                 <Link to="/deliveries" className="block p-4 bg-primary-50 hover:bg-primary-100 rounded-lg transition">
-                  <p className="font-medium text-primary-700">Available Jobs</p>
-                  <p className="text-sm text-gray-600">Find delivery jobs near you</p>
+                  <p className="font-medium text-primary-700">{t('dashboard.transporter.findJobs')}</p>
+                  <p className="text-sm text-gray-600">{t('dashboard.transporter.findJobsDesc')}</p>
                 </Link>
                 <Link to="/deliveries/active" className="block p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition">
-                  <p className="font-medium text-gray-700">My Deliveries</p>
-                  <p className="text-sm text-gray-600">Track your assigned deliveries</p>
+                  <p className="font-medium text-gray-700">{t('dashboard.transporter.myDeliveries')}</p>
+                  <p className="text-sm text-gray-600">{t('dashboard.transporter.deliveriesDesc')}</p>
                 </Link>
               </div>
             </Card>
@@ -461,31 +464,31 @@ export const Dashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <Card className="text-center">
                 <h3 className="text-4xl font-bold text-primary-600">0</h3>
-                <p className="text-gray-600 mt-2">Pending Listings</p>
+                <p className="text-gray-600 mt-2">{t('dashboard.admin.pendingListings')}</p>
               </Card>
               <Card className="text-center">
                 <h3 className="text-4xl font-bold text-primary-600">0</h3>
-                <p className="text-gray-600 mt-2">Total Users</p>
+                <p className="text-gray-600 mt-2">{t('dashboard.admin.totalUsers')}</p>
               </Card>
               <Card className="text-center">
                 <h3 className="text-4xl font-bold text-primary-600">0</h3>
-                <p className="text-gray-600 mt-2">Total Orders</p>
+                <p className="text-gray-600 mt-2">{t('dashboard.admin.totalOrders')}</p>
               </Card>
               <Card className="text-center">
                 <h3 className="text-4xl font-bold text-primary-600">৳0</h3>
-                <p className="text-gray-600 mt-2">Platform Revenue</p>
+                <p className="text-gray-600 mt-2">{t('dashboard.admin.platformRevenue')}</p>
               </Card>
             </div>
             <Card>
-              <h2 className="text-xl font-semibold mb-4">Admin Actions</h2>
+              <h2 className="text-xl font-semibold mb-4">{t('dashboard.admin.actions')}</h2>
               <div className="space-y-2">
                 <Link to="/admin/listings" className="block p-4 bg-primary-50 hover:bg-primary-100 rounded-lg transition">
-                  <p className="font-medium text-primary-700">Moderate Listings</p>
-                  <p className="text-sm text-gray-600">Approve or reject farmer listings</p>
+                  <p className="font-medium text-primary-700">{t('dashboard.admin.moderateListings')}</p>
+                  <p className="text-sm text-gray-600">{t('dashboard.admin.moderateDesc')}</p>
                 </Link>
                 <Link to="/admin/users" className="block p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition">
-                  <p className="font-medium text-gray-700">Manage Users</p>
-                  <p className="text-sm text-gray-600">View and manage all users</p>
+                  <p className="font-medium text-gray-700">{t('dashboard.admin.manageUsers')}</p>
+                  <p className="text-sm text-gray-600">{t('dashboard.admin.manageUsersDesc')}</p>
                 </Link>
               </div>
             </Card>
@@ -519,8 +522,8 @@ export const Dashboard = () => {
           <div className="flex items-center">
             {getRoleIcon()}
             <div className="ml-4">
-              <h1 className="text-3xl font-bold text-gray-900">Welcome back, {user?.name}!</h1>
-              <p className="text-gray-600 capitalize">{user?.role} Dashboard</p>
+              <h1 className="text-3xl font-bold text-gray-900">{t('dashboard.welcome', { name: user?.name })}</h1>
+              <p className="text-gray-600 capitalize">{t('dashboard.roleDashboard', { role: t('roles.' + user?.role) })}</p>
             </div>
           </div>
         </Card>

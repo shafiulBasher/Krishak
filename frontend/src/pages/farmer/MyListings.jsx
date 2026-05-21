@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { useLanguage } from '../../context/LanguageContext';
 import {
   Package,
   Edit,
@@ -28,34 +29,35 @@ export default function MyListings() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [filter, setFilter] = useState('all');
+  const { t, lang } = useLanguage();
 
   const statusConfig = {
     pending: {
-      label: 'Pending Review',
+      label: t('farmer.myListings.statusPending'),
       icon: Clock,
       color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
       iconColor: 'text-yellow-600',
     },
     approved: {
-      label: 'Approved',
+      label: t('farmer.myListings.statusApproved'),
       icon: CheckCircle,
       color: 'bg-green-100 text-green-800 border-green-200',
       iconColor: 'text-green-600',
     },
     rejected: {
-      label: 'Rejected',
+      label: t('farmer.myListings.statusRejected'),
       icon: XCircle,
       color: 'bg-red-100 text-red-800 border-red-200',
       iconColor: 'text-red-600',
     },
     sold: {
-      label: 'Sold',
+      label: t('farmer.myListings.statusSold'),
       icon: ShoppingCart,
       color: 'bg-blue-100 text-blue-800 border-blue-200',
       iconColor: 'text-blue-600',
     },
     expired: {
-      label: 'Expired',
+      label: t('farmer.myListings.statusExpired'),
       icon: AlertCircle,
       color: 'bg-gray-100 text-gray-800 border-gray-200',
       iconColor: 'text-gray-600',
@@ -77,7 +79,7 @@ export default function MyListings() {
       setListings(response.data || []);
     } catch (error) {
       console.error('Error fetching listings:', error);
-      toast.error('Failed to load listings');
+      toast.error(t('farmer.myListings.loadFail'));
     } finally {
       setLoading(false);
     }
@@ -92,22 +94,22 @@ export default function MyListings() {
   };
 
   const handleDelete = async (id, cropName) => {
-    if (!window.confirm(`Are you sure you want to delete "${cropName}" listing?`)) {
+    if (!window.confirm(t('farmer.myListings.deleteConfirm', { name: cropName }))) {
       return;
     }
 
     try {
       await deleteProduct(id);
-      toast.success('Listing deleted successfully');
+      toast.success(t('farmer.myListings.deletedSuccess'));
       fetchListings();
     } catch (error) {
       console.error('Error deleting listing:', error);
-      toast.error('Failed to delete listing');
+      toast.error(t('farmer.myListings.deleteFail'));
     }
   };
 
   if (loading) {
-    return <Loading message="Loading your listings..." />;
+    return <Loading message={t('farmer.myListings.loadingMsg')} />;
   }
 
   const renderStatusBadge = (status) => {
@@ -148,7 +150,7 @@ export default function MyListings() {
             </div>
             {listing.isPreOrder && (
               <div className="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 rounded text-xs font-semibold">
-                Pre-Order
+                {t('farmer.myListings.preOrderBadge')}
               </div>
             )}
           </div>
@@ -158,7 +160,7 @@ export default function MyListings() {
             <div>
               <h3 className="text-xl font-bold text-gray-900 mb-1">{listing.cropName}</h3>
               <div className="flex items-center gap-2 text-sm text-gray-600">
-                <span className="px-2 py-0.5 bg-gray-100 rounded">Grade {listing.grade}</span>
+                <span className="px-2 py-0.5 bg-gray-100 rounded">{t('common.grade', { g: listing.grade })}</span>
                 <span>•</span>
                 <span>{listing.quantity} {listing.unit}</span>
               </div>
@@ -174,12 +176,12 @@ export default function MyListings() {
             <div className="text-sm text-gray-600 space-y-1">
               <p>📍 {listing.location?.village}, {listing.location?.district}</p>
               <p>📦 MOQ: {listing.moq} {listing.unit}</p>
-              <p>👁️ Views: {listing.viewCount || 0}</p>
+              <p>👁️ {t('farmer.myListings.viewsCount', { count: listing.viewCount || 0 })}</p>
             </div>
 
             {listing.moderationNote && (
               <div className="bg-yellow-50 border border-yellow-200 rounded p-2 text-sm">
-                <p className="font-semibold text-yellow-800 mb-1">Admin Note:</p>
+                <p className="font-semibold text-yellow-800 mb-1">{t('farmer.myListings.adminNote')}</p>
                 <p className="text-yellow-700">{listing.moderationNote}</p>
               </div>
             )}
@@ -191,7 +193,7 @@ export default function MyListings() {
                 className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition text-sm font-medium"
               >
                 <Eye className="w-4 h-4" />
-                View
+                {t('farmer.myListings.view')}
               </Link>
               {listing.status !== 'sold' && (
                 <>
@@ -200,7 +202,7 @@ export default function MyListings() {
                     className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-primary-100 hover:bg-primary-200 text-primary-700 rounded-lg transition text-sm font-medium"
                   >
                     <Edit className="w-4 h-4" />
-                    Edit
+                    {t('farmer.myListings.edit')}
                   </Link>
                   <button
                     onClick={() => handleDelete(listing._id, listing.cropName)}
@@ -246,13 +248,13 @@ export default function MyListings() {
                 <div>
                   <h3 className="text-xl font-bold text-gray-900">{listing.cropName}</h3>
                   <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
-                    <span className="px-2 py-0.5 bg-gray-100 rounded">Grade {listing.grade}</span>
+                    <span className="px-2 py-0.5 bg-gray-100 rounded">{t('common.grade', { g: listing.grade })}</span>
                     <span>•</span>
                     <span>{listing.quantity} {listing.unit}</span>
                     {listing.isPreOrder && (
                       <>
                         <span>•</span>
-                        <span className="text-blue-600 font-semibold">Pre-Order</span>
+                        <span className="text-blue-600 font-semibold">{t('farmer.myListings.preOrderBadge')}</span>
                       </>
                     )}
                   </div>
@@ -276,7 +278,7 @@ export default function MyListings() {
 
               {listing.moderationNote && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded p-2 text-sm">
-                  <p className="font-semibold text-yellow-800">Admin Note:</p>
+                  <p className="font-semibold text-yellow-800">{t('farmer.myListings.adminNote')}</p>
                   <p className="text-yellow-700">{listing.moderationNote}</p>
                 </div>
               )}
@@ -288,7 +290,7 @@ export default function MyListings() {
                   className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition text-sm font-medium"
                 >
                   <Eye className="w-4 h-4" />
-                  View Details
+                  {t('farmer.myListings.viewDetails')}
                 </Link>
                 {listing.status !== 'sold' && (
                   <>
@@ -297,14 +299,14 @@ export default function MyListings() {
                       className="flex items-center gap-2 px-4 py-2 bg-primary-100 hover:bg-primary-200 text-primary-700 rounded-lg transition text-sm font-medium"
                     >
                       <Edit className="w-4 h-4" />
-                      Edit
+                      {t('farmer.myListings.edit')}
                     </Link>
                     <button
                       onClick={() => handleDelete(listing._id, listing.cropName)}
                       className="flex items-center gap-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition text-sm font-medium"
                     >
                       <Trash2 className="w-4 h-4" />
-                      Delete
+                      {t('farmer.myListings.deleteBtn')}
                     </button>
                   </>
                 )}
@@ -322,15 +324,18 @@ export default function MyListings() {
         {/* Header */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">My Listings</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('farmer.myListings.title')}</h1>
             <p className="text-gray-600">
-              Manage your crop listings ({filteredListings.length} {filter === 'all' ? 'total' : filter})
+              {t('farmer.myListings.subtitle', {
+                count: filteredListings.length,
+                status: filter === 'all' ? t('farmer.myListings.total') : t('farmer.myListings.status' + filter.charAt(0).toUpperCase() + filter.slice(1)),
+              })}
             </p>
           </div>
           <Link to="/farmer/create-listing">
             <Button className="flex items-center gap-2 shadow-lg">
               <Plus className="w-5 h-5" />
-              Create New Listing
+              {t('farmer.myListings.createNew')}
             </Button>
           </Link>
         </div>
@@ -345,18 +350,18 @@ export default function MyListings() {
                 onChange={(e) => setFilter(e.target.value)}
                 className="min-w-[200px]"
               >
-                <option value="all">All Listings ({listings.length})</option>
+              <option value="all">{t('farmer.myListings.filterAll', { count: listings.length })}</option>
                 <option value="pending">
-                  Pending ({listings.filter(l => l.status === 'pending').length})
+                  {t('farmer.myListings.filterPending', { count: listings.filter(l => l.status === 'pending').length })}
                 </option>
                 <option value="approved">
-                  Approved ({listings.filter(l => l.status === 'approved').length})
+                  {t('farmer.myListings.filterApproved', { count: listings.filter(l => l.status === 'approved').length })}
                 </option>
                 <option value="rejected">
-                  Rejected ({listings.filter(l => l.status === 'rejected').length})
+                  {t('farmer.myListings.filterRejected', { count: listings.filter(l => l.status === 'rejected').length })}
                 </option>
                 <option value="sold">
-                  Sold ({listings.filter(l => l.status === 'sold').length})
+                  {t('farmer.myListings.filterSold', { count: listings.filter(l => l.status === 'sold').length })}
                 </option>
               </Select>
             </div>
@@ -391,18 +396,18 @@ export default function MyListings() {
           <Card className="text-center py-16">
             <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              {filter === 'all' ? 'No listings yet' : `No ${filter} listings`}
+              {filter === 'all' ? t('farmer.myListings.empty.noListings') : t('farmer.myListings.noFilterListings', { status: filter })}
             </h3>
             <p className="text-gray-600 mb-6">
               {filter === 'all'
-                ? 'Start by creating your first crop listing'
-                : `You don't have any ${filter} listings`}
+                ? t('farmer.myListings.empty.startCreating')
+                : t('farmer.myListings.noFilterListingsDesc', { status: filter })}
             </p>
             {filter === 'all' && (
               <Link to="/farmer/create-listing">
                 <Button className="inline-flex items-center gap-2">
                   <Plus className="w-5 h-5" />
-                  Create Your First Listing
+                  {t('farmer.myListings.empty.createFirst')}
                 </Button>
               </Link>
             )}

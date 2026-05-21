@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { Input } from '../components/Input';
 import { Select } from '../components/Select';
 import { Button } from '../components/Button';
@@ -13,6 +14,7 @@ import MapSelector from '../components/MapSelector';
 export const CompleteProfile = () => {
   const navigate = useNavigate();
   const { user, updateUser } = useAuth();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [mapCoordinates, setMapCoordinates] = useState(null);
@@ -64,7 +66,7 @@ export const CompleteProfile = () => {
       const response = await api.put('/auth/complete-profile', profileData);
       
       updateUser(response.data);
-      toast.success('Profile completed successfully!');
+      toast.success(t('auth.completedSuccess'));
       
       // Redirect based on role
       if (response.data.role === 'admin') {
@@ -74,7 +76,7 @@ export const CompleteProfile = () => {
       }
     } catch (error) {
       console.error('Profile completion error:', error);
-      toast.error(error || 'Failed to complete profile');
+      toast.error(t('auth.completedFailed'));
     } finally {
       setLoading(false);
     }
@@ -85,70 +87,70 @@ export const CompleteProfile = () => {
       <Card className="max-w-2xl w-full">
         <div className="text-center mb-8">
           <UserCircle className="mx-auto h-12 w-12 text-primary-600" />
-          <h2 className="mt-4 text-3xl font-bold text-gray-900">Complete Your Profile</h2>
+          <h2 className="mt-4 text-3xl font-bold text-gray-900">{t('auth.completeProfile')}</h2>
           <p className="mt-2 text-sm text-gray-600">
-            Welcome, {user?.name}! Please provide additional information to continue.
+            {t('auth.completeProfileDesc', { name: user?.name })}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Phone Number */}
           <Input
-            label="Phone Number"
+            label={t('auth.phoneNumber')}
             type="tel"
             name="phone"
             value={formData.phone}
             onChange={handleChange}
-            placeholder="01XXXXXXXXX"
+            placeholder={t('auth.phonePlaceholder')}
             required
-            helperText="Enter your 11-digit BD phone number"
+            helperText={t('auth.phoneHelperText')}
           />
 
           {/* Role Selection */}
           <Select
-            label="I am a"
+            label={t('auth.iAmA')}
             name="role"
             value={formData.role}
             onChange={handleChange}
             required
             options={[
-              { value: '', label: 'Select your role' },
-              { value: 'farmer', label: 'Farmer - I want to sell my crops' },
-              { value: 'buyer', label: 'Buyer - I want to purchase crops' },
-              { value: 'transporter', label: 'Transporter - I want to deliver crops' }
+              { value: '', label: t('auth.selectRole') },
+              { value: 'farmer', label: t('auth.farmerRole') },
+              { value: 'buyer', label: t('auth.buyerRole') },
+              { value: 'transporter', label: t('auth.transporterRole') }
             ]}
           />
 
           {/* Farmer-specific fields */}
           {formData.role === 'farmer' && (
             <div className="space-y-4 p-4 bg-primary-50 rounded-lg">
-              <h3 className="font-semibold text-gray-900">Farm Location</h3>
+              <h3 className="font-semibold text-gray-900">{t('auth.farmLocation')}</h3>
               <Input
-                label="Village"
+                label={t('auth.village')}
                 name="village"
                 value={formData.village}
                 onChange={handleChange}
-                placeholder="Enter your village name"
+                placeholder={t('auth.villagePlaceholder')}
               />
               <Input
-                label="Thana/Upazila"
+                label={t('auth.thana')}
                 name="thana"
                 value={formData.thana}
                 onChange={handleChange}
-                placeholder="Enter your thana"
+                placeholder={t('auth.thanaPlaceholder')}
               />
               <Input
-                label="District"
+                label={t('auth.district')}
                 name="district"
                 value={formData.district}
                 onChange={handleChange}
-                placeholder="Enter your district"
+                placeholder={t('auth.district')}
               />
               
               {/* Map Location Selector */}
               <div className="mt-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Farm Location on Map (for delivery distance calculation)
+                  {t('auth.farmMapLabel')}
                 </label>
                 <Button
                   type="button"
@@ -157,12 +159,12 @@ export const CompleteProfile = () => {
                   className="w-full"
                 >
                   <MapPin className="w-4 h-4 mr-2" />
-                  {mapCoordinates ? 'Update Map Location' : 'Set Location on Map'}
+                  {mapCoordinates ? t('auth.updateMapLocation') : t('auth.setLocationMap')}
                 </Button>
                 
                 {mapCoordinates && (
                   <p className="text-sm text-green-600 mt-2">
-                    📍 Location set: {mapCoordinates.lat.toFixed(4)}, {mapCoordinates.lng.toFixed(4)}
+                    {t('auth.locationSet', { lat: mapCoordinates.lat.toFixed(4), lng: mapCoordinates.lng.toFixed(4) })}
                   </p>
                 )}
                 
@@ -172,7 +174,7 @@ export const CompleteProfile = () => {
                       onSelect={(coords, address) => {
                         setMapCoordinates(coords);
                         setShowMap(false);
-                        toast.success('Farm location set on map');
+                        toast.success(t('auth.farmLocationSet'));
                       }}
                       initialPosition={mapCoordinates}
                     />
@@ -185,40 +187,40 @@ export const CompleteProfile = () => {
           {/* Transporter-specific fields */}
           {formData.role === 'transporter' && (
             <div className="space-y-4 p-4 bg-primary-50 rounded-lg">
-              <h3 className="font-semibold text-gray-900">Vehicle Information</h3>
+              <h3 className="font-semibold text-gray-900">{t('auth.vehicleInfo')}</h3>
               <Select
-                label="Vehicle Type"
+                label={t('auth.vehicleType')}
                 name="vehicleType"
                 value={formData.vehicleType}
                 onChange={handleChange}
                 options={[
-                  { value: '', label: 'Select vehicle type' },
-                  { value: 'truck', label: 'Truck' },
-                  { value: 'van', label: 'Van' },
-                  { value: 'motorbike', label: 'Motorbike' },
-                  { value: 'other', label: 'Other' }
+                  { value: '', label: t('auth.enterVehicleType') },
+                  { value: 'truck', label: t('auth.truck') },
+                  { value: 'van', label: t('auth.van') },
+                  { value: 'motorbike', label: t('auth.motorbike') },
+                  { value: 'other', label: t('auth.other') }
                 ]}
               />
               <Input
-                label="Vehicle Number"
+                label={t('auth.vehicleNumber')}
                 name="vehicleNumber"
                 value={formData.vehicleNumber}
                 onChange={handleChange}
-                placeholder="e.g., DHA-1234"
+                placeholder={t('auth.vehicleNumShortPlaceholder')}
               />
               <Input
-                label="License Number"
+                label={t('auth.licenseNumber')}
                 name="licenseNumber"
                 value={formData.licenseNumber}
                 onChange={handleChange}
-                placeholder="Enter your driving license number"
+                placeholder={t('auth.licensePlaceholder')}
               />
             </div>
           )}
 
           <div className="mt-6">
             <Button type="submit" disabled={loading} fullWidth>
-              {loading ? 'Completing Profile...' : 'Complete Profile'}
+              {loading ? t('auth.completing') : t('auth.completeBtn')}
             </Button>
           </div>
         </form>

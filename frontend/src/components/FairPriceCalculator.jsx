@@ -2,8 +2,10 @@ import { useState } from 'react';
 import Button from './Button';
 import Input from './Input';
 import Card from './Card';
+import { useLanguage } from '../context/LanguageContext';
 
 const FairPriceCalculator = ({ onCalculate, initialData = {} }) => {
+  const { t } = useLanguage();
   const [costBreakdown, setCostBreakdown] = useState({
     seedCost: initialData.seedCost || 0,
     fertilizerCost: initialData.fertilizerCost || 0,
@@ -46,11 +48,11 @@ const FairPriceCalculator = ({ onCalculate, initialData = {} }) => {
           onCalculate(data.data);
         }
       } else {
-        alert('Error calculating price');
+        alert(t('common.error'));
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Network error');
+      alert(t('common.error'));
     }
     setLoading(false);
   };
@@ -59,11 +61,11 @@ const FairPriceCalculator = ({ onCalculate, initialData = {} }) => {
 
   return (
     <Card className="max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6 text-center">Fair Price Calculator</h2>
+      <h2 className="text-2xl font-bold mb-6 text-center">{t('fairPrice.title')}</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div>
-          <label className="block text-sm font-medium mb-2">Seed Cost (৳)</label>
+          <label className="block text-sm font-medium mb-2">{t('fairPrice.seedCost')}</label>
           <Input
             type="number"
             value={costBreakdown.seedCost}
@@ -73,7 +75,7 @@ const FairPriceCalculator = ({ onCalculate, initialData = {} }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Fertilizer Cost (৳)</label>
+          <label className="block text-sm font-medium mb-2">{t('fairPrice.fertilizerCost')}</label>
           <Input
             type="number"
             value={costBreakdown.fertilizerCost}
@@ -83,7 +85,7 @@ const FairPriceCalculator = ({ onCalculate, initialData = {} }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Labor Cost (৳)</label>
+          <label className="block text-sm font-medium mb-2">{t('fairPrice.laborCost')}</label>
           <Input
             type="number"
             value={costBreakdown.laborCost}
@@ -93,7 +95,7 @@ const FairPriceCalculator = ({ onCalculate, initialData = {} }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Transport Cost (৳)</label>
+          <label className="block text-sm font-medium mb-2">{t('fairPrice.transportCost')}</label>
           <Input
             type="number"
             value={costBreakdown.transportCost}
@@ -103,7 +105,7 @@ const FairPriceCalculator = ({ onCalculate, initialData = {} }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Other Cost (৳)</label>
+          <label className="block text-sm font-medium mb-2">{t('fairPrice.otherCost')}</label>
           <Input
             type="number"
             value={costBreakdown.otherCost}
@@ -113,7 +115,7 @@ const FairPriceCalculator = ({ onCalculate, initialData = {} }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Quantity (kg)</label>
+          <label className="block text-sm font-medium mb-2">{t('fairPrice.quantityKg')}</label>
           <Input
             type="number"
             value={quantity}
@@ -123,7 +125,7 @@ const FairPriceCalculator = ({ onCalculate, initialData = {} }) => {
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium mb-2">Profit Margin (%)</label>
+          <label className="block text-sm font-medium mb-2">{t('fairPrice.profitMargin')}</label>
           <Input
             type="number"
             value={margin}
@@ -134,45 +136,45 @@ const FairPriceCalculator = ({ onCalculate, initialData = {} }) => {
       </div>
 
       <div className="text-center mb-6">
-        <p className="text-lg font-semibold">Total Cost: ৳{totalCost.toFixed(2)}</p>
-        <p className="text-sm text-gray-600">Cost per kg: ৳{(totalCost / quantity).toFixed(2)}</p>
+        <p className="text-lg font-semibold">{t('fairPrice.totalCost')} ৳{totalCost.toFixed(2)}</p>
+        <p className="text-sm text-gray-600">{t('fairPrice.costPerKg')} ৳{(totalCost / quantity).toFixed(2)}</p>
       </div>
 
       <div className="text-center mb-6">
         <Button onClick={calculatePrice} disabled={loading}>
-          {loading ? 'Calculating...' : 'Calculate Fair Price'}
+          {loading ? t('fairPrice.calculating') : t('fairPrice.calculate')}
         </Button>
       </div>
 
       {result && (
         <div className="border-t pt-6">
-          <h3 className="text-xl font-bold mb-4">Calculation Result</h3>
+          <h3 className="text-xl font-bold mb-4">{t('fairPrice.result')}</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div className="bg-green-50 p-4 rounded">
-              <h4 className="font-semibold text-green-800">Suggested Price</h4>
+              <h4 className="font-semibold text-green-800">{t('fairPrice.suggestedPriceKg')}</h4>
               <p className="text-2xl font-bold text-green-600">৳{result.suggestedPrice.toFixed(2)}/kg</p>
             </div>
 
             <div className="bg-blue-50 p-4 rounded">
-              <h4 className="font-semibold text-blue-800">Farmer Earnings</h4>
+              <h4 className="font-semibold text-blue-800">{t('fairPrice.farmerEarningsKg')}</h4>
               <p className="text-2xl font-bold text-blue-600">৳{result.breakdown.farmerEarnings.toFixed(2)}/kg</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-gray-50 p-3 rounded text-center">
-              <h5 className="font-medium">Wholesale</h5>
+              <h5 className="font-medium">{t('fairPrice.wholesale')}</h5>
               <p className="text-lg">৳{result.breakdown.wholesale.toFixed(2)}/kg</p>
             </div>
 
             <div className="bg-yellow-50 p-3 rounded text-center">
-              <h5 className="font-medium">Retail</h5>
+              <h5 className="font-medium">{t('fairPrice.retail')}</h5>
               <p className="text-lg">৳{result.breakdown.retail.toFixed(2)}/kg</p>
             </div>
 
             <div className="bg-purple-50 p-3 rounded text-center">
-              <h5 className="font-medium">You Pay</h5>
+              <h5 className="font-medium">{t('fairPrice.youPay')}</h5>
               <p className="text-lg">৳{result.suggestedPrice.toFixed(2)}/kg</p>
             </div>
           </div>

@@ -4,9 +4,11 @@ import { Button } from '../../components/Button';
 import Loading from '../../components/Loading';
 import paymentService from '../../services/paymentService';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 export const Earnings = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   
   const [loading, setLoading] = useState(true);
   const [earnings, setEarnings] = useState(null);
@@ -25,7 +27,7 @@ export const Earnings = () => {
       setEarnings(data);
     } catch (error) {
       console.error('Fetch earnings error:', error);
-      setError('Failed to load earnings');
+      setError(t('farmer.earnings.failedToLoad'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -58,7 +60,7 @@ export const Earnings = () => {
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <p className="text-red-800">{error}</p>
           <Button onClick={fetchEarnings} className="mt-4">
-            Try Again
+            {t('farmer.earnings.tryAgain')}
           </Button>
         </div>
       </div>
@@ -70,8 +72,8 @@ export const Earnings = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Earnings</h1>
-          <p className="text-gray-600 mt-1">Track your payment history and balance</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t('farmer.earnings.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('farmer.earnings.subtitle')}</p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -84,7 +86,7 @@ export const Earnings = () => {
           <Button onClick={openDashboard} variant="outline">
             <span className="flex items-center gap-2">
               <ExternalLink className="w-4 h-4" />
-              Stripe Dashboard
+              {t('farmer.earnings.stripeDashboard')}
             </span>
           </Button>
         </div>
@@ -98,10 +100,10 @@ export const Earnings = () => {
             <div className="p-2 bg-white/20 rounded-lg">
               <DollarSign className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-medium opacity-90">Available Balance</h3>
+            <h3 className="text-lg font-medium opacity-90">{t('farmer.earnings.availableBalance')}</h3>
           </div>
           <p className="text-4xl font-bold">৳{earnings?.availableBalance || 0}</p>
-          <p className="text-sm opacity-80 mt-2">Ready for payout</p>
+          <p className="text-sm opacity-80 mt-2">{t('farmer.earnings.readyForPayout')}</p>
         </div>
         
         {/* Pending Balance */}
@@ -110,10 +112,10 @@ export const Earnings = () => {
             <div className="p-2 bg-white/20 rounded-lg">
               <Clock className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-medium opacity-90">Pending Balance</h3>
+            <h3 className="text-lg font-medium opacity-90">{t('farmer.earnings.pendingBalance')}</h3>
           </div>
           <p className="text-4xl font-bold">৳{earnings?.pendingBalance || 0}</p>
-          <p className="text-sm opacity-80 mt-2">Being processed</p>
+          <p className="text-sm opacity-80 mt-2">{t('farmer.earnings.beingProcessed')}</p>
         </div>
       </div>
       
@@ -121,7 +123,7 @@ export const Earnings = () => {
       <div className="bg-white rounded-xl shadow-md p-6">
         <div className="flex items-center gap-3 mb-6">
           <TrendingUp className="w-6 h-6 text-green-600" />
-          <h2 className="text-xl font-semibold text-gray-900">Recent Transfers</h2>
+          <h2 className="text-xl font-semibold text-gray-900">{t('farmer.earnings.recentTransfers')}</h2>
         </div>
         
         {earnings?.transfers && earnings.transfers.length > 0 ? (
@@ -149,11 +151,11 @@ export const Earnings = () => {
                 <div className="text-right">
                   {transfer.metadata?.orderId && (
                     <p className="text-xs text-gray-500">
-                      Order #{transfer.metadata.orderId.slice(-8)}
+                      {t('farmer.earnings.orderRef', { id: transfer.metadata.orderId.slice(-8) })}
                     </p>
                   )}
                   <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
-                    Completed
+                    {t('farmer.earnings.completed')}
                   </span>
                 </div>
               </div>
@@ -162,9 +164,9 @@ export const Earnings = () => {
         ) : (
           <div className="text-center py-12">
             <TrendingUp className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">No transfers yet</p>
+            <p className="text-gray-500">{t('farmer.earnings.noTransfers')}</p>
             <p className="text-sm text-gray-400 mt-1">
-              Transfers will appear here after orders are delivered
+              {t('farmer.earnings.noTransfersDesc')}
             </p>
           </div>
         )}
@@ -172,24 +174,14 @@ export const Earnings = () => {
       
       {/* Info Card */}
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-        <h3 className="font-semibold text-blue-900 mb-3">How It Works</h3>
+        <h3 className="font-semibold text-blue-900 mb-3">{t('farmer.earnings.howItWorks')}</h3>
         <ul className="space-y-2 text-sm text-blue-800">
-          <li className="flex items-start gap-2">
-            <span className="font-bold">1.</span>
-            <span>When a buyer pays for an order, the funds are held securely by Stripe</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="font-bold">2.</span>
-            <span>After the order is marked as delivered, funds are automatically transferred to your account</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="font-bold">3.</span>
-            <span>Transfers typically take 2-7 business days to reach your bank account</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="font-bold">4.</span>
-            <span>You can view detailed payout information in your Stripe Dashboard</span>
-          </li>
+          {t('farmer.earnings.howItWorksList').map((item, i) => (
+            <li key={i} className="flex items-start gap-2">
+              <span className="font-bold">{i + 1}.</span>
+              <span>{item}</span>
+            </li>
+          ))}
         </ul>
       </div>
     </div>

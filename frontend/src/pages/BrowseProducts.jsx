@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useLanguage } from '../context/LanguageContext';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
@@ -10,7 +11,7 @@ import { Loading } from '../components/Loading';
 import { Search, Filter, ShoppingCart, MapPin, Package, Star, User, MessageSquare, X } from 'lucide-react';
 import { getProducts } from '../services/productService';
 import { toast } from 'react-toastify';
-import { BANGLADESH_DISTRICTS } from '../utils/bangladeshData';
+import { BANGLADESH_DISTRICTS, getLocalizedDistrict, getLocalizedCrop } from '../utils/bangladeshData';
 import ProductReviews from '../components/ProductReviews';
 import MapSelector from '../components/MapSelector';
 
@@ -18,6 +19,7 @@ export const BrowseProducts = () => {
   const { user } = useAuth();
   const { addToCart } = useCart();
   const navigate = useNavigate();
+  const { t, lang } = useLanguage();
   
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -110,7 +112,7 @@ export const BrowseProducts = () => {
       setProducts(fetchedProducts);
     } catch (error) {
       console.error('Error fetching products:', error);
-      toast.error('Failed to load products');
+      toast.error(t('browse.loadFail'));
     } finally {
       setLoading(false);
     }
@@ -146,7 +148,7 @@ export const BrowseProducts = () => {
     localStorage.setItem('buyerDeliveryLocation', JSON.stringify(location));
     setShowLocationGate(false);
     setShowLocationMapSelector(false);
-    toast.success('Delivery location set! Showing nearby products.');
+    toast.success(t('browse.locationSet'));
   };
 
   const handleClearLocation = () => {
@@ -156,7 +158,7 @@ export const BrowseProducts = () => {
 
   const handleAddToCart = (product) => {
     addToCart(product, 1);
-    toast.success(`${product.cropName} added to cart!`);
+    toast.success(t('browse.addedToCart', { name: product.cropName }));
   };
 
   const activeFiltersCount = Object.values(filters).filter(v => v !== '').length + (searchTerm ? 1 : 0);
@@ -166,8 +168,8 @@ export const BrowseProducts = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Browse Products</h1>
-          <p className="text-gray-600 mt-1">Find the best agricultural products from local farmers</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t('browse.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('browse.subtitle')}</p>
         </div>
 
         {/* Buyer Location Banner */}
@@ -179,18 +181,18 @@ export const BrowseProducts = () => {
               <MapPin className={`w-4 h-4 flex-shrink-0 ${buyerLocation ? 'text-green-600' : 'text-yellow-600'}`} />
               {buyerLocation ? (
                 <span className="text-green-800">
-                  Showing products within 50km of <strong>{buyerLocation.label}</strong>
+                  {t('browse.showing50km')} <strong>{buyerLocation.label}</strong>
                 </span>
               ) : (
                 <span className="text-yellow-800">
-                  Set your delivery location to see nearby products within 50km
+                  {t('browse.setLocation')}
                 </span>
               )}
             </div>
             <div className="flex items-center gap-2">
               <Button size="sm" variant="secondary" onClick={() => setShowLocationMapSelector(true)}>
                 <MapPin className="w-3 h-3 mr-1" />
-                {buyerLocation ? 'Change' : 'Set Location'}
+                {buyerLocation ? t('browse.change') : t('browse.setLocationBtn')}
               </Button>
               {buyerLocation && (
                 <button onClick={handleClearLocation} className="text-gray-400 hover:text-gray-600" title="Clear location (show all)">
@@ -212,13 +214,13 @@ export const BrowseProducts = () => {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search by crop name, district, or location..."
+                  placeholder={t('browse.searchPlaceholder')}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
-              <Button type="submit">
+                <Button type="submit">
                 <Search className="w-4 h-4 mr-2" />
-                Search
+                {t('browse.searchBtn')}
               </Button>
             </div>
           </form>
@@ -227,30 +229,30 @@ export const BrowseProducts = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Crop Name
+                {t('browse.cropName')}
               </label>
               <input
                 type="text"
                 value={filters.cropName}
                 onChange={(e) => handleFilterChange('cropName', e.target.value)}
-                placeholder="e.g., Rice, Potato"
+                placeholder={t('browse.cropPlaceholder')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                District
+                {t('browse.district')}
               </label>
               <select
                 value={filters.district}
                 onChange={(e) => handleFilterChange('district', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
-                <option value="">All Districts</option>
+                <option value="">{t('browse.allDistricts')}</option>
                 {BANGLADESH_DISTRICTS.map((district) => (
                   <option key={district} value={district}>
-                    {district}
+                    {getLocalizedDistrict(district, lang)}
                   </option>
                 ))}
               </select>
@@ -258,42 +260,42 @@ export const BrowseProducts = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Grade
+                {t('browse.grade')}
               </label>
               <select
                 value={filters.grade}
                 onChange={(e) => handleFilterChange('grade', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
-                <option value="">All Grades</option>
-                <option value="A">Grade A</option>
-                <option value="B">Grade B</option>
-                <option value="C">Grade C</option>
+                <option value="">{t('browse.allGrades')}</option>
+                <option value="A">{t('browse.gradeA')}</option>
+                <option value="B">{t('browse.gradeB')}</option>
+                <option value="C">{t('browse.gradeC')}</option>
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Min Price (৳)
+                {t('browse.minPrice')}
               </label>
               <input
                 type="number"
                 value={filters.minPrice}
                 onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-                placeholder="Min"
+                placeholder={t('browse.min')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Max Price (৳)
+                {t('browse.maxPrice')}
               </label>
               <input
                 type="number"
                 value={filters.maxPrice}
                 onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-                placeholder="Max"
+                placeholder={t('browse.max')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
@@ -302,22 +304,22 @@ export const BrowseProducts = () => {
           {/* Sort and Clear */}
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
-              <label className="text-sm font-medium text-gray-700">Sort by:</label>
+              <label className="text-sm font-medium text-gray-700">{t('browse.sortBy')}</label>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
-                <option value="newest">Newest First</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
+                <option value="newest">{t('browse.newestFirst')}</option>
+                <option value="price-low">{t('browse.priceLow')}</option>
+                <option value="price-high">{t('browse.priceHigh')}</option>
               </select>
             </div>
 
             {activeFiltersCount > 0 && (
               <Button variant="secondary" onClick={clearFilters} size="sm">
                 <Filter className="w-4 h-4 mr-2" />
-                Clear Filters ({activeFiltersCount})
+                {t('browse.clearFilters', { count: activeFiltersCount })}
               </Button>
             )}
           </div>
@@ -326,7 +328,7 @@ export const BrowseProducts = () => {
         {/* Results Count */}
         <div className="mb-4 flex justify-between items-center">
           <p className="text-gray-600">
-            {loading ? 'Loading...' : `Found ${products.length} product${products.length !== 1 ? 's' : ''}`}
+            {loading ? t('browse.loading') : t('browse.found', { count: products.length })}
           </p>
         </div>
 
@@ -336,14 +338,14 @@ export const BrowseProducts = () => {
         ) : products.length === 0 ? (
           <Card className="text-center py-12">
             <Package className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Products Found</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('browse.noProducts')}</h3>
             <p className="text-gray-600 mb-6">
               {activeFiltersCount > 0
-                ? 'Try adjusting your search or filters'
-                : 'No products available at the moment'}
+                ? t('browse.noProductsFiltered')
+                : t('browse.noProductsAvailable')}
             </p>
             {activeFiltersCount > 0 && (
-              <Button onClick={clearFilters}>Clear All Filters</Button>
+              <Button onClick={clearFilters}>{t('browse.clearAll')}</Button>
             )}
           </Card>
         ) : (
@@ -373,9 +375,9 @@ export const BrowseProducts = () => {
                 {/* Product Info */}
                 <div className="p-5">
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-2xl font-bold text-gray-900 flex-1">{product.cropName}</h3>
+                    <h3 className="text-2xl font-bold text-gray-900 flex-1">{getLocalizedCrop(product.cropName, lang)}</h3>
                     <span className="text-xs font-semibold bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-1.5 rounded-full shadow-sm">
-                      Grade {product.grade}
+                      {t('common.grade', { g: product.grade })}
                     </span>
                   </div>
 
@@ -424,7 +426,7 @@ export const BrowseProducts = () => {
 
                   <div className="flex justify-between items-end mb-3 pb-3 border-b border-gray-100">
                     <div>
-                      <div className="text-xs text-gray-500 mb-1 font-medium">Price</div>
+                      <div className="text-xs text-gray-500 mb-1 font-medium">{t('browse.priceLabel')}</div>
                       <div>
                         <span className="text-3xl font-bold text-primary-600">
                           ৳{product.sellingPrice?.toLocaleString()}
@@ -433,7 +435,7 @@ export const BrowseProducts = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-xs text-gray-500 mb-1">Available</div>
+                      <div className="text-xs text-gray-500 mb-1">{t('browse.available')}</div>
                       <span className="text-sm font-bold text-gray-700">
                         {product.quantity} {product.unit || 'kg'}
                       </span>
@@ -443,18 +445,18 @@ export const BrowseProducts = () => {
                   {/* Price Comparison (if available) */}
                   {product.calculatedPrice && (
                     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-lg mb-3 border border-blue-100">
-                      <h4 className="font-semibold text-sm mb-2 text-gray-700">Price Comparison</h4>
+                      <h4 className="font-semibold text-sm mb-2 text-gray-700">{t('browse.priceComparison')}</h4>
                       <div className="grid grid-cols-3 gap-3">
                         <div className="text-center">
-                          <div className="text-xs font-medium text-gray-500 mb-1">Wholesale</div>
+                          <div className="text-xs font-medium text-gray-500 mb-1">{t('browse.wholesale')}</div>
                           <div className="text-sm font-bold text-gray-700 bg-white py-2 rounded-md shadow-sm">৳{((product.calculatedPrice.suggestedPrice || product.sellingPrice) * 0.8).toFixed(0)}</div>
                         </div>
                         <div className="text-center">
-                          <div className="text-xs font-medium text-blue-600 mb-1">You Pay</div>
+                          <div className="text-xs font-medium text-blue-600 mb-1">{t('browse.youPay')}</div>
                           <div className="text-base font-bold text-blue-600 bg-white py-2 rounded-md shadow-md border-2 border-blue-500">৳{product.sellingPrice}</div>
                         </div>
                         <div className="text-center">
-                          <div className="text-xs font-medium text-gray-500 mb-1">Retail</div>
+                          <div className="text-xs font-medium text-gray-500 mb-1">{t('browse.retail')}</div>
                           <div className="text-sm font-bold text-gray-700 bg-white py-2 rounded-md shadow-sm">৳{((product.calculatedPrice.suggestedPrice || product.sellingPrice) * 1.2).toFixed(0)}</div>
                         </div>
                       </div>
@@ -464,7 +466,7 @@ export const BrowseProducts = () => {
                   {/* Harvest Date */}
                   {product.harvestDate && (
                     <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 p-2 rounded">
-                      <span className="font-medium">Harvested:</span>
+                      <span className="font-medium">{t('browse.harvested')}</span>
                       <span>{new Date(product.harvestDate).toLocaleDateString()}</span>
                     </div>
                   )}
@@ -477,7 +479,7 @@ export const BrowseProducts = () => {
                           className="flex-1"
                         >
                           <ShoppingCart className="w-4 h-4 mr-2" />
-                          <span>Add to Cart</span>
+                          <span>{t('browse.addToCart')}</span>
                         </Button>
                       )}
                     {product.isPreOrder && user?.role === 'buyer' && (
@@ -485,7 +487,7 @@ export const BrowseProducts = () => {
                         variant="secondary"
                         onClick={() => navigate(`/pre-order/${product._id}`)}
                       >
-                        Pre-Order
+                        {t('browse.preOrder')}
                       </Button>
                     )}
                   </div>
@@ -497,7 +499,7 @@ export const BrowseProducts = () => {
                       className="w-full"
                     >
                       <MessageSquare className="w-4 h-4 mr-2" />
-                      View Reviews ({product.reviewCount})
+                      {t('browse.viewReviews', { count: product.reviewCount })}
                     </Button>
                   )}
                   </div>
@@ -512,7 +514,7 @@ export const BrowseProducts = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
               <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900">Product Reviews</h2>
+                <h2 className="text-xl font-semibold text-gray-900">{t('browse.productReviews')}</h2>
                 <button
                   onClick={() => setSelectedProductForReviews(null)}
                   className="text-gray-400 hover:text-gray-600"
@@ -533,19 +535,18 @@ export const BrowseProducts = () => {
             <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl">
               <div className="text-center mb-5">
                 <MapPin className="w-12 h-12 text-primary-600 mx-auto mb-3" />
-                <h2 className="text-xl font-bold text-gray-900">Set Your Delivery Location</h2>
+                <h2 className="text-xl font-bold text-gray-900">{t('browse.setDeliveryLocation')}</h2>
                 <p className="text-gray-600 mt-2 text-sm">
-                  KRISHAK shows you products within 50km of your delivery location.
-                  Pin your location to see relevant products.
+                  {t('browse.locationGateDesc')}
                 </p>
               </div>
               <div className="space-y-3">
                 <Button fullWidth onClick={() => { setShowLocationGate(false); setShowLocationMapSelector(true); }}>
                   <MapPin className="w-4 h-4 mr-2" />
-                  Pin My Location on Map
+                  {t('browse.pinMyLocation')}
                 </Button>
                 <Button fullWidth variant="secondary" onClick={() => setShowLocationGate(false)}>
-                  Browse All Products
+                  {t('browse.browseAll')}
                 </Button>
               </div>
             </div>

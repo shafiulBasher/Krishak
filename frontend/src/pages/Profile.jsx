@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { getLocalizedDistrict } from '../utils/bangladeshData';
 import { getProfile, updateProfile } from '../services/userService';
 import { Input } from '../components/Input';
 import { Select } from '../components/Select';
@@ -12,6 +14,7 @@ import MapSelector from '../components/MapSelector';
 
 export const Profile = () => {
   const { user, updateUser } = useAuth();
+  const { t, lang } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -39,9 +42,9 @@ export const Profile = () => {
   });
 
   const vehicleTypeOptions = [
-    { value: 'van', label: 'Van (local deliveries, up to 30km route)' },
-    { value: 'pickup', label: 'Pickup (medium-distance deliveries)' },
-    { value: 'truck', label: 'Truck (long-distance, bulk deliveries)' },
+    { value: 'van', label: t('profile.vanOption') },
+    { value: 'pickup', label: t('profile.pickupOption') },
+    { value: 'truck', label: t('profile.truckOption') },
   ];
 
   useEffect(() => {
@@ -75,7 +78,7 @@ export const Profile = () => {
       }
 
     } catch (error) {
-      toast.error('Failed to load profile');
+      toast.error(t('profile.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -135,9 +138,9 @@ export const Profile = () => {
       updateUser(response.data);
       setProfile(response.data);
       setIsEditing(false);
-      toast.success('Profile updated successfully!');
+      toast.success(t('profile.profileUpdated'));
     } catch (error) {
-      toast.error('Failed to update profile');
+      toast.error(t('profile.updateFailed'));
     } finally {
       setSaving(false);
     }
@@ -184,14 +187,14 @@ export const Profile = () => {
             <div className="flex items-center">
               <User className="h-8 w-8 text-primary-600 mr-3" />
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
-                <p className="text-sm text-gray-600">Role: {profile?.role}</p>
+                <h1 className="text-2xl font-bold text-gray-900">{t('profile.myProfile')}</h1>
+                <p className="text-sm text-gray-600">{t('profile.role')} {profile?.role && t('roles.' + profile.role)}</p>
               </div>
             </div>
             {!isEditing && (
               <Button onClick={() => setIsEditing(true)} variant="outline">
                 <Edit2 className="w-4 h-4 mr-2" />
-                Edit Profile
+                {t('profile.editProfile')}
               </Button>
             )}
           </div>
@@ -199,10 +202,10 @@ export const Profile = () => {
           <form onSubmit={handleSubmit}>
             {/* Basic Information */}
             <div className="space-y-4 mb-6">
-              <h2 className="text-lg font-semibold text-gray-900">Basic Information</h2>
+              <h2 className="text-lg font-semibold text-gray-900">{t('profile.basicInfo')}</h2>
               
               <Input
-                label="Full Name"
+                label={t('auth.fullName')}
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
@@ -211,18 +214,18 @@ export const Profile = () => {
               />
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('auth.emailAddress')}</label>
                 <input
                   type="email"
                   value={profile?.email || ''}
                   disabled
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
                 />
-                <p className="mt-1 text-xs text-gray-500">Email cannot be changed</p>
+                <p className="mt-1 text-xs text-gray-500">{t('profile.emailReadonly')}</p>
               </div>
 
               <Input
-                label="Phone Number"
+                label={t('auth.phoneNumber')}
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
@@ -232,12 +235,12 @@ export const Profile = () => {
 
               {isEditing && (
                 <Input
-                  label="New Password"
+                  label={t('profile.newPassword')}
                   type="password"
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="Leave blank to keep current password"
+                  placeholder={t('profile.leaveBlank')}
                 />
               )}
             </div>
@@ -245,25 +248,27 @@ export const Profile = () => {
             {/* Farmer-specific fields */}
             {profile?.role === 'farmer' && (
               <div className="space-y-4 mb-6 p-4 bg-primary-50 rounded-lg">
-                <h2 className="text-lg font-semibold text-gray-900">Farm Location</h2>
+                <h2 className="text-lg font-semibold text-gray-900">{t('profile.farmLocation')}</h2>
                 <Input
-                  label="Village"
+                  label={t('profile.village')}
                   name="village"
                   value={formData.village}
                   onChange={handleChange}
                   disabled={!isEditing}
+                  placeholder={t('profile.villagePlaceholder')}
                 />
                 <Input
-                  label="Thana/Upazila"
+                  label={t('profile.thana')}
                   name="thana"
                   value={formData.thana}
                   onChange={handleChange}
                   disabled={!isEditing}
+                  placeholder={t('profile.thanaPlaceholder')}
                 />
                 <Input
-                  label="District"
+                  label={t('profile.district')}
                   name="district"
-                  value={formData.district}
+                  value={!isEditing ? getLocalizedDistrict(formData.district, lang) : formData.district}
                   onChange={handleChange}
                   disabled={!isEditing}
                 />
@@ -272,16 +277,16 @@ export const Profile = () => {
                 <div className="mt-4 pt-4 border-t border-primary-200">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <MapPin className="w-4 h-4 inline mr-1" />
-                    Farm GPS Location <span className="text-red-500">*</span> (required for 50km delivery check)
+                    {t('profile.farmGps')}
                   </label>
                   
                   {farmerMapCoords ? (
                     <p className="text-sm text-green-600 mb-2">
-                      ✓ Location: {farmerMapCoords.lat.toFixed(4)}, {farmerMapCoords.lng.toFixed(4)}
+                      {t('profile.farmPinned', { lat: farmerMapCoords.lat.toFixed(4), lng: farmerMapCoords.lng.toFixed(4) })}
                     </p>
                   ) : (
                     <p className="text-sm text-red-500 mb-2">
-                      ✱ No GPS location set — buyers cannot order until you add your farm location
+                      {t('profile.noGpsFarmer')}
                     </p>
                   )}
                   
@@ -294,7 +299,7 @@ export const Profile = () => {
                         size="sm"
                       >
                         <MapPin className="w-4 h-4 mr-2" />
-                        {farmerMapCoords ? 'Update Location' : 'Set Location on Map'}
+                        {farmerMapCoords ? t('profile.updateLocation') : t('profile.setLocationMap')}
                       </Button>
                       
                       {showFarmerMap && (
@@ -303,7 +308,7 @@ export const Profile = () => {
                             onSelect={(coords, address) => {
                               setFarmerMapCoords(coords);
                               setShowFarmerMap(false);
-                              toast.success('Farm location updated');
+                              toast.success(t('profile.farmUpdated'));
                             }}
                             initialPosition={farmerMapCoords}
                           />
@@ -319,9 +324,9 @@ export const Profile = () => {
             {profile?.role === 'transporter' && (
               <>
                 <div className="space-y-4 mb-6 p-4 bg-primary-50 rounded-lg">
-                  <h2 className="text-lg font-semibold text-gray-900">Vehicle Information</h2>
+                  <h2 className="text-lg font-semibold text-gray-900">{t('profile.vehicleInfo')}</h2>
                   <Select
-                    label="Vehicle Type"
+                    label={t('auth.vehicleType')}
                     name="vehicleType"
                     value={formData.vehicleType}
                     onChange={handleChange}
@@ -329,14 +334,14 @@ export const Profile = () => {
                     disabled={!isEditing}
                   />
                   <Input
-                    label="Vehicle Number"
+                    label={t('profile.vehicleNumber')}
                     name="vehicleNumber"
                     value={formData.vehicleNumber}
                     onChange={handleChange}
                     disabled={!isEditing}
                   />
                   <Input
-                    label="License Number"
+                    label={t('profile.licenseNumber')}
                     name="licenseNumber"
                     value={formData.licenseNumber}
                     onChange={handleChange}
@@ -346,49 +351,49 @@ export const Profile = () => {
 
                 {/* Transporter Base Location */}
                 <div className="space-y-4 mb-6 p-4 bg-blue-50 rounded-lg">
-                  <h2 className="text-lg font-semibold text-gray-900">Base Location</h2>
+                  <h2 className="text-lg font-semibold text-gray-900">{t('profile.baseLocation')}</h2>
                   <p className="text-sm text-gray-600 mb-3">
-                    📍 You'll only see delivery jobs within 50km of this address
+                    {t('profile.baseLocationDesc')}
                   </p>
                   <Input
-                    label="Village/Area"
+                    label={t('profile.villageArea')}
                     name="transporterVillage"
                     value={formData.transporterVillage}
                     onChange={handleChange}
                     disabled={!isEditing}
-                    placeholder="Enter your village or area"
+                    placeholder={t('profile.villageAreaPlaceholder')}
                   />
                   <Input
-                    label="Thana/Upazila"
+                    label={t('profile.thana')}
                     name="transporterThana"
                     value={formData.transporterThana}
                     onChange={handleChange}
                     disabled={!isEditing}
-                    placeholder="Enter your thana"
+                    placeholder={t('profile.thanaPlaceholder')}
                   />
                   <Input
-                    label="District"
+                    label={t('profile.district')}
                     name="transporterDistrict"
-                    value={formData.transporterDistrict}
+                    value={!isEditing ? getLocalizedDistrict(formData.transporterDistrict, lang) : formData.transporterDistrict}
                     onChange={handleChange}
                     disabled={!isEditing}
-                    placeholder="Enter your district"
+                    placeholder={t('profile.districtPlaceholder')}
                   />
                   
                   {/* Map Location for service radius */}
                   <div className="mt-4 pt-4 border-t border-blue-200">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       <MapPin className="w-4 h-4 inline mr-1" />
-                      GPS Location (for 50km service radius calculation)
+                      {t('profile.gpsNote')}
                     </label>
                     
                     {transporterMapCoords ? (
                       <p className="text-sm text-green-600 mb-2">
-                        ✓ Location: {transporterMapCoords.lat.toFixed(4)}, {transporterMapCoords.lng.toFixed(4)}
+                        {t('profile.farmPinned', { lat: transporterMapCoords.lat.toFixed(4), lng: transporterMapCoords.lng.toFixed(4) })}
                       </p>
                     ) : (
                       <p className="text-sm text-orange-600 mb-2">
-                        ⚠️ No GPS location set - you won't see delivery jobs until you set your location
+                        {t('profile.noGpsTransporter')}
                       </p>
                     )}
                     
@@ -401,7 +406,7 @@ export const Profile = () => {
                           size="sm"
                         >
                           <MapPin className="w-4 h-4 mr-2" />
-                          {transporterMapCoords ? 'Update Location' : 'Set Location on Map'}
+                          {transporterMapCoords ? t('profile.updateLocation') : t('profile.setLocationMap')}
                         </Button>
                         
                         {showTransporterMap && (
@@ -410,7 +415,7 @@ export const Profile = () => {
                               onSelect={(coords, address) => {
                                 setTransporterMapCoords(coords);
                                 setShowTransporterMap(false);
-                                toast.success('Base location updated');
+                                toast.success(t('profile.baseUpdated'));
                               }}
                               initialPosition={transporterMapCoords}
                             />
@@ -427,25 +432,25 @@ export const Profile = () => {
             {/* Account Stats */}
             <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg mb-6">
               <div>
-                <p className="text-sm text-gray-600">Account Status</p>
+                <p className="text-sm text-gray-600">{t('profile.accountStatus')}</p>
                 <p className="font-semibold text-gray-900">
-                  {profile?.isActive ? 'Active' : 'Inactive'}
+                  {profile?.isActive ? t('profile.active') : t('profile.inactive')}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Verified</p>
+                <p className="text-sm text-gray-600">{t('profile.verified')}</p>
                 <p className="font-semibold text-gray-900">
-                  {profile?.isVerified ? 'Yes' : 'No'}
+                  {profile?.isVerified ? t('profile.yes') : t('profile.no')}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Rating</p>
+                <p className="text-sm text-gray-600">{t('profile.rating')}</p>
                 <p className="font-semibold text-gray-900">
                   {profile?.rating?.average || 0} / 5 ({profile?.rating?.count || 0} reviews)
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Member Since</p>
+                <p className="text-sm text-gray-600">{t('profile.memberSince')}</p>
                 <p className="font-semibold text-gray-900">
                   {profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : 'N/A'}
                 </p>
@@ -461,11 +466,11 @@ export const Profile = () => {
                   fullWidth
                 >
                   <Save className="w-4 h-4 mr-2" />
-                  {saving ? 'Saving...' : 'Save Changes'}
+                  {saving ? t('profile.saving') : t('profile.saveChanges')}
                 </Button>
                 <Button type="button" variant="outline" onClick={handleCancel} fullWidth>
                   <X className="w-4 h-4 mr-2" />
-                  Cancel
+                  {t('profile.cancel')}
                 </Button>
               </div>
             )}

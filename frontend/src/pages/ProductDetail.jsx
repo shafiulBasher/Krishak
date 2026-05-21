@@ -12,6 +12,7 @@ import {
   Edit, ArrowLeft, CheckCircle, Tag, Wheat, Weight
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { useLanguage } from '../context/LanguageContext';
 
 const GRADE_COLORS = {
   'A': 'bg-green-100 text-green-800',
@@ -31,6 +32,7 @@ const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -145,7 +147,7 @@ const ProductDetail = () => {
                 <h1 className="text-3xl font-bold text-gray-900">{product.cropName}</h1>
                 {product.grade && (
                   <span className={`text-sm font-semibold px-3 py-1 rounded-full ${GRADE_COLORS[product.grade] || 'bg-gray-100 text-gray-700'}`}>
-                    Grade {product.grade}
+                    {t('common.grade', { g: product.grade })}
                   </span>
                 )}
               </div>

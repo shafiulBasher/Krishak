@@ -7,6 +7,8 @@ import Button from '../../components/Button';
 import Card from '../../components/Card';
 import Input from '../../components/Input';
 import Select from '../../components/Select';
+import { getLocalizedCrop } from '../../utils/bangladeshData';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function ListingModeration() {
   const [products, setProducts] = useState([]);
@@ -18,6 +20,7 @@ export default function ListingModeration() {
   const [showModal, setShowModal] = useState(false);
   const [modalAction, setModalAction] = useState(null); // 'approve' or 'reject'
   const [error, setError] = useState(null);
+  const { t, lang } = useLanguage();
 
   useEffect(() => {
     fetchProducts();
@@ -43,7 +46,7 @@ export default function ListingModeration() {
       setProducts(productsData);
     } catch (error) {
       console.error('Error fetching products:', error);
-      const errorMsg = typeof error === 'string' ? error : error?.message || 'Failed to fetch products';
+      const errorMsg = typeof error === 'string' ? error : error?.message || t('admin.listings.fetchFail');
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {
@@ -54,30 +57,30 @@ export default function ListingModeration() {
   const handleApprove = async () => {
     try {
       await approveProduct(selectedProduct._id, moderationNote);
-      toast.success('Product approved successfully');
+      toast.success(t('admin.listings.approveSuccess'));
       setShowModal(false);
       setSelectedProduct(null);
       setModerationNote('');
       fetchProducts();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to approve product');
+      toast.error(error.response?.data?.message || t('admin.listings.approveFail'));
     }
   };
 
   const handleReject = async () => {
     if (!moderationNote.trim()) {
-      toast.error('Please provide a reason for rejection');
+      toast.error(t('admin.listings.rejectNoteRequired'));
       return;
     }
     try {
       await rejectProduct(selectedProduct._id, moderationNote);
-      toast.success('Product rejected successfully');
+      toast.success(t('admin.listings.rejectSuccess'));
       setShowModal(false);
       setSelectedProduct(null);
       setModerationNote('');
       fetchProducts();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to reject product');
+      toast.error(error.response?.data?.message || t('admin.listings.rejectFail'));
     }
   };
 
@@ -96,7 +99,7 @@ export default function ListingModeration() {
   };
 
   if (loading && products.length === 0) {
-    return <Loading message="Loading listings..." />;
+    return <Loading message={t('admin.listings.loadingListings')} />;
   }
 
   if (error) {
@@ -120,9 +123,9 @@ export default function ListingModeration() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Listing Moderation</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{t('admin.listings.title')}</h1>
         <div className="text-sm text-gray-600">
-          Total Listings: <span className="font-semibold">{products.length}</span>
+          {t('admin.listings.totalListings')} <span className="font-semibold">{products.length}</span>
         </div>
       </div>
 
@@ -130,23 +133,23 @@ export default function ListingModeration() {
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <div className="flex items-center gap-2 mb-4">
           <Filter className="w-5 h-5 text-gray-600" />
-          <h2 className="text-lg font-semibold text-gray-800">Filters</h2>
+          <h2 className="text-lg font-semibold text-gray-800">{t('admin.listings.filters')}</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <Input
               type="text"
-              placeholder="Search by product name or category..."
+              placeholder={t('admin.listings.searchPlaceholder')}
               className="pl-10"
               onChange={handleSearchChange}
             />
           </div>
           <Select value={filter} onChange={(e) => setFilter(e.target.value)}>
-            <option value="all">All Listings</option>
-            <option value="pending">Pending Review</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
+            <option value="all">{t('admin.listings.allListings')}</option>
+            <option value="pending">{t('admin.listings.pendingReview')}</option>
+            <option value="approved">{t('admin.listings.approved')}</option>
+            <option value="rejected">{t('admin.listings.rejected')}</option>
           </Select>
         </div>
       </div>
@@ -156,7 +159,7 @@ export default function ListingModeration() {
         <Card>
           <div className="text-center py-12">
             <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">No listings found</p>
+            <p className="text-gray-500">{t('admin.listings.noListings')}</p>
           </div>
         </Card>
       ) : (
@@ -167,15 +170,15 @@ export default function ListingModeration() {
                 {/* Product Header */}
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900">{product.cropName}</h3>
-                    <p className="text-sm text-gray-600">Grade: {product.grade}</p>
+                    <h3 className="text-lg font-semibold text-gray-900">{getLocalizedCrop(product.cropName, lang)}</h3>
+                    <p className="text-sm text-gray-600">{t('admin.listings.gradeLabel')} {product.grade}</p>
                   </div>
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-medium ${
                       statusColors[product.status]
                     }`}
                   >
-                    {product.status.charAt(0).toUpperCase() + product.status.slice(1)}
+                    {t(`admin.listings.${product.status}`)}
                   </span>
                 </div>
 
@@ -201,27 +204,27 @@ export default function ListingModeration() {
                 {/* Product Details */}
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Available Quantity:</span>
+                    <span className="text-gray-600">{t('admin.listings.availableQty')}</span>
                     <span className="font-medium">{product.quantity} {product.unit}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Selling Price:</span>
+                    <span className="text-gray-600">{t('admin.listings.sellingPrice')}</span>
                     <span className="font-medium text-primary-600">
                       ৳{product.sellingPrice}/{product.unit}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">MOQ:</span>
+                    <span className="text-gray-600">{t('admin.listings.moq')}</span>
                     <span className="font-medium">{product.moq} {product.unit}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Location:</span>
+                    <span className="text-gray-600">{t('admin.listings.locationLabel')}</span>
                     <span className="font-medium">
                       {product.location?.village}, {product.location?.thana}, {product.location?.district}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Harvest Date:</span>
+                    <span className="text-gray-600">{t('admin.listings.harvestDate')}</span>
                     <span className="font-medium">{new Date(product.harvestDate).toLocaleDateString()}</span>
                   </div>
                 </div>
@@ -229,7 +232,7 @@ export default function ListingModeration() {
                 {/* Farmer Info */}
                 {product.farmer && (
                   <div className="pt-3 border-t">
-                    <p className="text-xs text-gray-500 mb-1">Farmer Details</p>
+                    <p className="text-xs text-gray-500 mb-1">{t('admin.listings.farmerDetails')}</p>
                     <div className="text-sm">
                       <p className="font-medium text-gray-900">{product.farmer.name}</p>
                       <p className="text-gray-600">{product.farmer.phone}</p>
@@ -245,7 +248,7 @@ export default function ListingModeration() {
                 {/* Moderation Note */}
                 {product.moderationNote && (
                   <div className="pt-3 border-t">
-                    <p className="text-xs text-gray-500 mb-1">Moderation Note</p>
+                    <p className="text-xs text-gray-500 mb-1">{t('admin.listings.moderationNote')}</p>
                     <p className="text-sm text-gray-700">{product.moderationNote}</p>
                   </div>
                 )}
@@ -259,7 +262,7 @@ export default function ListingModeration() {
                       onClick={() => openModal(product, 'approve')}
                     >
                       <Check className="w-4 h-4" />
-                      Approve
+                      {t('admin.listings.approve')}
                     </Button>
                     <Button
                       variant="danger"
@@ -267,14 +270,14 @@ export default function ListingModeration() {
                       onClick={() => openModal(product, 'reject')}
                     >
                       <X className="w-4 h-4" />
-                      Reject
+                      {t('admin.listings.reject')}
                     </Button>
                   </div>
                 )}
 
                 {/* Timestamp */}
                 <div className="text-xs text-gray-500 pt-2 border-t">
-                  Created: {new Date(product.createdAt).toLocaleDateString()}
+                  {t('admin.listings.created')} {new Date(product.createdAt).toLocaleDateString()}
                 </div>
               </div>
             </Card>
@@ -287,27 +290,27 @@ export default function ListingModeration() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              {modalAction === 'approve' ? 'Approve Product' : 'Reject Product'}
+              {modalAction === 'approve' ? t('admin.listings.approveProduct') : t('admin.listings.rejectProduct')}
             </h3>
             <div className="mb-4">
               <p className="text-sm text-gray-600 mb-2">
-                Product: <span className="font-medium">{selectedProduct.name}</span>
+                {t('admin.listings.productLabel')} <span className="font-medium">{selectedProduct.name}</span>
               </p>
               <p className="text-sm text-gray-600 mb-2">
-                Farmer: <span className="font-medium">{selectedProduct.farmer?.name}</span>
+                {t('admin.listings.farmerLabel')} <span className="font-medium">{selectedProduct.farmer?.name}</span>
               </p>
             </div>
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {modalAction === 'approve' ? 'Note (Optional)' : 'Reason for Rejection *'}
+                {modalAction === 'approve' ? t('admin.listings.noteOptional') : t('admin.listings.reasonRequired')}
               </label>
               <textarea
                 value={moderationNote}
                 onChange={(e) => setModerationNote(e.target.value)}
                 placeholder={
                   modalAction === 'approve'
-                    ? 'Add a note about the approval...'
-                    : 'Explain why this listing is being rejected...'
+                    ? t('admin.listings.approvePlaceholder')
+                    : t('admin.listings.rejectPlaceholder')
                 }
                 rows={4}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -322,13 +325,13 @@ export default function ListingModeration() {
                   setModerationNote('');
                 }}
               >
-                Cancel
+                {t('admin.listings.cancel')}
               </Button>
               <Button
                 variant={modalAction === 'approve' ? 'primary' : 'danger'}
                 onClick={modalAction === 'approve' ? handleApprove : handleReject}
               >
-                {modalAction === 'approve' ? 'Approve' : 'Reject'}
+                {modalAction === 'approve' ? t('admin.listings.approve') : t('admin.listings.reject')}
               </Button>
             </div>
           </div>

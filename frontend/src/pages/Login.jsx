@@ -7,10 +7,12 @@ import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { LogIn } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { useLanguage } from '../context/LanguageContext';
 
 export const Login = () => {
   const navigate = useNavigate();
   const { login, googleLogin } = useAuth();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -55,7 +57,7 @@ export const Login = () => {
       }
     } catch (error) {
       console.error('Google login error:', error);
-      toast.error(error || 'Failed to login with Google');
+      toast.error(error || t('auth.loginGoogleFailed'));
     } finally {
       setLoading(false);
     }
@@ -71,7 +73,7 @@ export const Login = () => {
     if (error?.message?.includes('origin') || error?.type === 'idpiframe_initialization_failed') {
       toast.error('Google Sign-In configuration error. Please use email/password login or contact support.');
     } else {
-      toast.error('Google sign-in is not available. Please use email/password login.');
+      toast.error(t('auth.googleNotAvailable'));
     }
   };
 
@@ -80,34 +82,34 @@ export const Login = () => {
       <Card className="max-w-md w-full">
         <div className="text-center mb-8">
           <LogIn className="mx-auto h-12 w-12 text-primary-600" />
-          <h2 className="mt-4 text-3xl font-bold text-gray-900">Welcome Back</h2>
-          <p className="mt-2 text-sm text-gray-600">Login to your Krishak account</p>
+          <h2 className="mt-4 text-3xl font-bold text-gray-900">{t('auth.welcomeBack')}</h2>
+          <p className="mt-2 text-sm text-gray-600">{t('auth.loginToKrishak')}</p>
         </div>
 
         <form onSubmit={handleSubmit}>
           <Input
-            label="Email Address"
+            label={t('auth.emailAddress')}
             type="email"
             name="email"
             value={formData.email}
             onChange={handleChange}
-            placeholder="your@email.com"
+            placeholder={t('auth.emailPlaceholder')}
             required
           />
 
           <Input
-            label="Password"
+            label={t('auth.password')}
             type="password"
             name="password"
             value={formData.password}
             onChange={handleChange}
-            placeholder="Enter your password"
+            placeholder={t('auth.enterPassword')}
             required
           />
 
           <div className="mt-6">
             <Button type="submit" disabled={loading} fullWidth>
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? t('auth.loggingIn') : t('auth.loginBtn')}
             </Button>
           </div>
 
@@ -117,7 +119,7 @@ export const Login = () => {
                 <div className="w-full border-t border-gray-300"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                <span className="px-2 bg-white text-gray-500">{t('auth.orContinueWith')}</span>
               </div>
             </div>
 
@@ -137,16 +139,16 @@ export const Login = () => {
                 />
               ) : (
                 <div className="text-center text-sm text-gray-500 py-3 bg-gray-50 rounded-lg border border-gray-200">
-                  Google Sign-In is not configured. Please use email/password login.
+                  {t('auth.googleNotConfigured')}
                 </div>
               )}
             </div>
           </div>
 
           <div className="mt-4 text-center text-sm">
-            <span className="text-gray-600">Don't have an account? </span>
+            <span className="text-gray-600">{t('auth.noAccount')} </span>
             <Link to="/register" className="text-primary-600 hover:text-primary-700 font-medium">
-              Register here
+              {t('auth.registerHere')}
             </Link>
           </div>
         </form>

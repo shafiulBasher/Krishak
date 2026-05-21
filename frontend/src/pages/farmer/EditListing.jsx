@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { useLanguage } from '../../context/LanguageContext';
 import { Camera, MapPin, Calendar, Package, DollarSign, ArrowLeft } from 'lucide-react';
 import { getProduct, updateProduct } from '../../services/productService';
 import { useAuth } from '../../context/AuthContext';
@@ -14,6 +15,7 @@ export default function EditListing() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -35,15 +37,15 @@ export default function EditListing() {
   });
 
   const gradeOptions = [
-    { value: '', label: 'Select Grade' },
-    { value: 'A', label: 'Grade A (Premium Quality)' },
-    { value: 'B', label: 'Grade B (Good Quality)' },
-    { value: 'C', label: 'Grade C (Standard Quality)' },
+    { value: '', label: t('farmer.createListing.selectGrade') },
+    { value: 'A', label: t('farmer.createListing.gradeA') },
+    { value: 'B', label: t('farmer.createListing.gradeB') },
+    { value: 'C', label: t('farmer.createListing.gradeC') },
   ];
 
   const unitOptions = [
-    { value: 'kg', label: 'Kilograms (kg)' },
-    { value: 'ton', label: 'Tons' },
+    { value: 'kg', label: t('farmer.createListing.kg') },
+    { value: 'ton', label: t('farmer.createListing.tons') },
   ];
 
   useEffect(() => {
@@ -58,7 +60,7 @@ export default function EditListing() {
 
       // Check if user owns this listing
       if (listing.farmer._id !== user._id && user.role !== 'admin') {
-        toast.error('You are not authorized to edit this listing');
+        toast.error(t('farmer.editListing.notAuthorized'));
         navigate('/farmer/my-listings');
         return;
       }
@@ -83,7 +85,7 @@ export default function EditListing() {
       });
     } catch (error) {
       console.error('Error fetching listing:', error);
-      toast.error('Failed to load listing');
+      toast.error(t('farmer.editListing.loadFail'));
       navigate('/farmer/my-listings');
     } finally {
       setLoading(false);
@@ -103,7 +105,7 @@ export default function EditListing() {
     const totalPhotos = formData.existingPhotos.length + formData.newPhotoFiles.length + files.length;
     
     if (totalPhotos > 5) {
-      toast.error('Maximum 5 photos allowed');
+      toast.error(t('farmer.editListing.maxPhotos'));
       return;
     }
 
@@ -129,7 +131,7 @@ export default function EditListing() {
       newPhotoPreviews: [...prev.newPhotoPreviews, ...newPreviews],
     }));
 
-    toast.success(`${validFiles.length} photo(s) added!`);
+    toast.success(t('farmer.editListing.photosAdded', { count: validFiles.length }));
     e.target.value = '';
   };
 
@@ -154,22 +156,22 @@ export default function EditListing() {
 
     // Validation
     if (!formData.cropName || !formData.grade || !formData.quantity || !formData.moq) {
-      toast.error('Please fill in all required fields');
+      toast.error(t('farmer.editListing.fillRequired'));
       return;
     }
 
     if (parseFloat(formData.quantity) <= 0 || parseFloat(formData.moq) <= 0) {
-      toast.error('Quantity and MOQ must be greater than 0');
+      toast.error(t('farmer.editListing.qtyMoqError'));
       return;
     }
 
     if (!formData.village || !formData.thana || !formData.district || !formData.harvestDate) {
-      toast.error('Please fill in all location and harvest date fields');
+      toast.error(t('farmer.editListing.fillLocation'));
       return;
     }
 
     if (!formData.sellingPrice || parseFloat(formData.sellingPrice) <= 0) {
-      toast.error('Please enter a valid selling price');
+      toast.error(t('farmer.editListing.invalidPrice'));
       return;
     }
 
@@ -203,18 +205,18 @@ export default function EditListing() {
       });
 
       await updateProduct(id, formDataToSend);
-      toast.success('Listing updated successfully!');
+      toast.success(t('farmer.editListing.updateSuccess'));
       navigate('/farmer/my-listings');
     } catch (error) {
       console.error('Error updating listing:', error);
-      toast.error(error.response?.data?.message || 'Failed to update listing');
+      toast.error(t('farmer.editListing.updateFail'));
     } finally {
       setSubmitting(false);
     }
   };
 
   if (loading) {
-    return <Loading message="Loading listing..." />;
+    return <Loading message={t('farmer.editListing.loadingMsg')} />;
   }
 
   return (
@@ -227,13 +229,13 @@ export default function EditListing() {
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition"
           >
             <ArrowLeft className="w-5 h-5" />
-            Back to My Listings
+            {t('farmer.editListing.backToListings')}
           </button>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Listing</h1>
-          <p className="text-gray-600">Update your crop listing details</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('farmer.editListing.title')}</h1>
+          <p className="text-gray-600">{t('farmer.editListing.subtitle')}</p>
           <div className="mt-3 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
             <p className="text-sm text-yellow-800">
-              ⚠️ <strong>Note:</strong> Editing an approved listing will reset it to "Pending" status and require re-approval.
+              ⚠️ <strong>Note:</strong> {t('farmer.editListing.updateNote')}
             </p>
           </div>
         </div>
@@ -244,20 +246,20 @@ export default function EditListing() {
             <div className="space-y-6">
               <div className="flex items-center gap-3 pb-3 border-b">
                 <Package className="w-6 h-6 text-primary-600" />
-                <h3 className="text-xl font-semibold text-gray-900">Crop Details</h3>
+                <h3 className="text-xl font-semibold text-gray-900">{t('farmer.editListing.cropDetails')}</h3>
               </div>
 
               <Input
-                label="Crop Name *"
+                label={t('farmer.createListing.cropName')}
                 name="cropName"
                 value={formData.cropName}
                 onChange={handleChange}
-                placeholder="e.g., Rice, Wheat, Potato"
+                placeholder={t('farmer.createListing.cropPlaceholder')}
                 required
               />
 
               <Select
-                label="Quality Grade *"
+                label={t('farmer.createListing.grade')}
                 name="grade"
                 value={formData.grade}
                 onChange={handleChange}
@@ -267,17 +269,17 @@ export default function EditListing() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
-                  label="Available Quantity *"
+                  label={t('farmer.createListing.quantity')}
                   type="number"
                   name="quantity"
                   value={formData.quantity}
                   onChange={handleChange}
-                  placeholder="Enter quantity"
+                  placeholder={t('farmer.createListing.qtyPlaceholder')}
                   min="1"
                   required
                 />
                 <Select
-                  label="Unit *"
+                  label={t('farmer.createListing.unit')}
                   name="unit"
                   value={formData.unit}
                   onChange={handleChange}
@@ -287,12 +289,12 @@ export default function EditListing() {
               </div>
 
               <Input
-                label="Minimum Order Quantity (MOQ) *"
+                label={t('farmer.createListing.moq')}
                 type="number"
                 name="moq"
                 value={formData.moq}
                 onChange={handleChange}
-                placeholder="Minimum quantity buyers must order"
+                placeholder={t('farmer.createListing.moqPlaceholder')}
                 min="1"
                 required
               />
@@ -307,13 +309,13 @@ export default function EditListing() {
                   className="w-5 h-5 text-primary-600 rounded focus:ring-2 focus:ring-primary-500"
                 />
                 <label htmlFor="isPreOrder" className="text-sm font-medium text-gray-700">
-                  This is a pre-order (crop not yet harvested)
+                  {t('farmer.editListing.preOrderLabel')}
                 </label>
               </div>
 
               {formData.isPreOrder && (
                 <Input
-                  label="Expected Harvest Date *"
+                  label={t('farmer.editListing.expectedHarvestDate')}
                   type="date"
                   name="expectedHarvestDate"
                   value={formData.expectedHarvestDate}
@@ -327,38 +329,38 @@ export default function EditListing() {
             <div className="space-y-6">
               <div className="flex items-center gap-3 pb-3 border-b">
                 <MapPin className="w-6 h-6 text-primary-600" />
-                <h3 className="text-xl font-semibold text-gray-900">Location & Harvest Date</h3>
+                <h3 className="text-xl font-semibold text-gray-900">{t('farmer.editListing.locationHarvest')}</h3>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Input
-                  label="Village *"
+                  label={t('farmer.createListing.village')}
                   name="village"
                   value={formData.village}
                   onChange={handleChange}
-                  placeholder="Enter village name"
+                  placeholder={t('farmer.createListing.villagePlaceholder')}
                   required
                 />
                 <Input
-                  label="Thana/Upazila *"
+                  label={t('farmer.createListing.thana')}
                   name="thana"
                   value={formData.thana}
                   onChange={handleChange}
-                  placeholder="Enter thana name"
+                  placeholder={t('farmer.createListing.thanaPlaceholder')}
                   required
                 />
                 <Input
-                  label="District *"
+                  label={t('farmer.createListing.district')}
                   name="district"
                   value={formData.district}
                   onChange={handleChange}
-                  placeholder="Enter district name"
+                  placeholder={t('farmer.createListing.districtPlaceholder')}
                   required
                 />
               </div>
 
               <Input
-                label="Harvest Date *"
+                label={t('farmer.createListing.harvestDate')}
                 type="date"
                 name="harvestDate"
                 value={formData.harvestDate}
@@ -371,10 +373,10 @@ export default function EditListing() {
             <div className="space-y-6">
               <div className="flex items-center gap-3 pb-3 border-b">
                 <Camera className="w-6 h-6 text-primary-600" />
-                <h3 className="text-xl font-semibold text-gray-900">Quality Photos (Optional)</h3>
+                <h3 className="text-xl font-semibold text-gray-900">{t('farmer.editListing.qualityPhotos')}</h3>
               </div>
               <p className="text-sm text-gray-600">
-                Add photos to showcase your crop quality. Better photos increase buyer trust! (Max 5 photos, 5MB each)
+                {t('farmer.editListing.photoNote')}
               </p>
 
               <div>
@@ -396,17 +398,17 @@ export default function EditListing() {
                   }`}
                 >
                   <Camera className="w-5 h-5" />
-                  Choose Photos from Gallery
+                  {t('farmer.editListing.choosePhotos')}
                 </label>
                 <p className="text-xs text-gray-500 mt-2">
-                  {formData.existingPhotos.length + formData.newPhotoFiles.length}/5 photos
+                  {t('farmer.editListing.photoCount', { used: formData.existingPhotos.length + formData.newPhotoFiles.length })}
                 </p>
               </div>
 
               {/* Existing Photos */}
               {formData.existingPhotos.length > 0 && (
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Current Photos:</p>
+                  <p className="text-sm font-medium text-gray-700 mb-2">{t('farmer.editListing.currentPhotos')}</p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {formData.existingPhotos.map((photo, index) => (
                       <div key={`existing-${index}`} className="relative group">
@@ -434,7 +436,7 @@ export default function EditListing() {
               {/* New Photos */}
               {formData.newPhotoPreviews.length > 0 && (
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">New Photos:</p>
+                  <p className="text-sm font-medium text-gray-700 mb-2">{t('farmer.editListing.newPhotos')}</p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {formData.newPhotoPreviews.map((preview, index) => (
                       <div key={`new-${index}`} className="relative group">
@@ -451,7 +453,7 @@ export default function EditListing() {
                           ×
                         </button>
                         <div className="absolute bottom-2 left-2 bg-green-600 text-white text-xs px-2 py-1 rounded">
-                          New
+                          {t('farmer.editListing.newBadge')}
                         </div>
                       </div>
                     ))}
@@ -464,22 +466,22 @@ export default function EditListing() {
             <div className="space-y-6">
               <div className="flex items-center gap-3 pb-3 border-b">
                 <DollarSign className="w-6 h-6 text-primary-600" />
-                <h3 className="text-xl font-semibold text-gray-900">Set Your Price</h3>
+                <h3 className="text-xl font-semibold text-gray-900">{t('farmer.editListing.priceSection')}</h3>
               </div>
 
               <div className="bg-blue-50 p-4 rounded-lg">
                 <p className="text-sm text-blue-800">
-                  💡 Set a competitive price for your crop. Consider market rates and quality when pricing.
+                  {t('farmer.editListing.priceTip')}
                 </p>
               </div>
 
               <Input
-                label="Selling Price (per kg/ton) *"
+                label={t('farmer.createListing.sellingPrice')}
                 type="number"
                 name="sellingPrice"
                 value={formData.sellingPrice}
                 onChange={handleChange}
-                placeholder="Enter your selling price"
+                placeholder={t('farmer.createListing.enterPrice')}
                 min="0"
                 step="0.01"
                 required
@@ -487,7 +489,7 @@ export default function EditListing() {
 
               <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-xl border-2 border-green-200 shadow-sm">
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 mb-2">Your Selling Price</p>
+                  <p className="text-sm text-gray-600 mb-2">{t('farmer.editListing.yourSellingPrice')}</p>
                   <p className="text-4xl font-bold text-green-600">
                     ৳{formData.sellingPrice || '0.00'}
                   </p>
@@ -497,7 +499,7 @@ export default function EditListing() {
 
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <p className="text-sm text-yellow-800">
-                  <strong>Tip:</strong> Research local market prices to ensure your listing is competitive and attractive to buyers.
+                  <strong>Tip:</strong> {t('farmer.createListing.priceTip')}
                 </p>
               </div>
             </div>
@@ -510,10 +512,10 @@ export default function EditListing() {
                 onClick={() => navigate('/farmer/my-listings')}
                 className="flex-1"
               >
-                Cancel
+                {t('farmer.editListing.cancel')}
               </Button>
               <Button type="submit" disabled={submitting} className="flex-1">
-                {submitting ? 'Updating...' : 'Update Listing'}
+                {submitting ? t('farmer.editListing.updating') : t('farmer.editListing.updateListing')}
               </Button>
             </div>
           </form>

@@ -1,3 +1,14 @@
 ﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Bangla language font override */
+html.lang-bn,
+html.lang-bn body,
+html.lang-bn * {
+  font-family: 'Hind Siliguri', sans-serif;
+}
+
+.font-bangla {
+  font-family: 'Hind Siliguri', sans-serif;
+}

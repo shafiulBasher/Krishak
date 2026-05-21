@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, MapPin, Search, Navigation, ZoomIn, ZoomOut, Maximize2, Locate } from 'lucide-react';
 import { Button } from './Button';
+import { useLanguage } from '../context/LanguageContext';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap, Circle, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -41,6 +42,7 @@ function FlyToLocation({ center, zoom, triggerKey }) {
 }
 
 const MapSelector = ({ onSelect, onClose }) => {
+  const { t } = useLanguage();
   // Center of Bangladesh (approximate center point)
   const [coordinates, setCoordinates] = useState({ lat: 23.6850, lng: 90.3563 }); // Center of Bangladesh
   const [address, setAddress] = useState('');
@@ -291,7 +293,7 @@ const MapSelector = ({ onSelect, onClose }) => {
         <div className="sticky top-0 bg-gradient-to-r from-primary-600 to-primary-700 text-white p-5 flex justify-between items-center z-10 shadow-lg">
           <h2 className="text-2xl font-bold flex items-center">
             <MapPin className="w-6 h-6 mr-3" />
-            Select Delivery Location
+            {t('components.map.selectLocation')}
           </h2>
           <div className="flex items-center gap-2">
             <button
@@ -327,7 +329,7 @@ const MapSelector = ({ onSelect, onClose }) => {
                       setShowSearchResults(true);
                     }
                   }}
-                  placeholder="Search: Road 12 Mirpur, House 45 Gulshan, Dhanmondi 27..."
+                  placeholder={t('components.map.searchPlaceholder')}
                   className="w-full pl-12 pr-12 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-base shadow-sm"
                 />
                 {searching ? (
@@ -353,7 +355,7 @@ const MapSelector = ({ onSelect, onClose }) => {
                 title="Use my current location"
               >
                 <Locate className="w-5 h-5" />
-                <span className="hidden sm:inline">Current Location</span>
+                <span className="hidden sm:inline">{t('components.map.currentLocation')}</span>
               </button>
             </div>
             
@@ -448,8 +450,8 @@ const MapSelector = ({ onSelect, onClose }) => {
                 <Marker position={[coordinates.lat, coordinates.lng]}>
                   <Popup>
                     <div className="text-center">
-                      <p className="font-semibold">Delivery Location</p>
-                      <p className="text-sm text-gray-600">{address || 'Selected point'}</p>
+                      <p className="font-semibold">{t('components.map.deliveryLocationPopup')}</p>
+                      <p className="text-sm text-gray-600">{address || t('components.map.selectedPoint')}</p>
                     </div>
                   </Popup>
                 </Marker>
@@ -499,20 +501,20 @@ const MapSelector = ({ onSelect, onClose }) => {
           {/* Address Display */}
           {loading ? (
             <div className="p-4 bg-gray-50 rounded-xl border-2 border-gray-200 animate-pulse">
-              <p className="text-sm text-gray-500">Loading address...</p>
+              <p className="text-sm text-gray-500">{t('components.map.loadingAddress')}</p>
             </div>
           ) : address ? (
             <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-300 shadow-sm">
               <p className="text-sm font-bold text-green-900 mb-2 flex items-center">
                 <MapPin className="w-4 h-4 mr-2" />
-                Selected Location:
+                {t('components.map.selectedLocation')}
               </p>
               <p className="text-base text-green-800 font-medium">{address}</p>
             </div>
           ) : (
             <div className="p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
               <p className="text-sm text-gray-600 font-medium">
-                Coordinates: {coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}
+                {t('components.map.coordinates')} {coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}
               </p>
             </div>
           )}
@@ -521,15 +523,15 @@ const MapSelector = ({ onSelect, onClose }) => {
         {/* Footer with Actions */}
         <div className="sticky bottom-0 bg-gray-50 border-t-2 border-gray-200 p-5 flex justify-between items-center">
           <p className="text-sm text-gray-600">
-            Click <strong>Confirm</strong> to use this location
+            {t('components.map.confirmInstructions')}
           </p>
           <div className="flex gap-3">
             <Button variant="secondary" onClick={onClose}>
-              Cancel
+              {t('components.map.cancel')}
             </Button>
             <Button onClick={handleConfirm} className="px-6">
               <MapPin className="w-4 h-4 mr-2" />
-              Confirm Location
+              {t('components.map.confirm')}
             </Button>
           </div>
         </div>

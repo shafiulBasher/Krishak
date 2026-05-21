@@ -10,10 +10,12 @@ import { UserPlus, MapPin } from 'lucide-react';
 import { toast } from 'react-toastify';
 import MapSelector from '../components/MapSelector';
 import { BANGLADESH_DISTRICTS } from '../utils/bangladeshData';
+import { useLanguage } from '../context/LanguageContext';
 
 export const Register = () => {
   const navigate = useNavigate();
   const { register, googleLogin } = useAuth();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -41,16 +43,16 @@ export const Register = () => {
   const [showFarmerMapSelector, setShowFarmerMapSelector] = useState(false);
 
   const roleOptions = [
-    { value: 'farmer', label: 'Farmer' },
-    { value: 'buyer', label: 'Buyer' },
-    { value: 'transporter', label: 'Transporter' },
+    { value: 'farmer', label: t('roles.farmer') },
+    { value: 'buyer', label: t('roles.buyer') },
+    { value: 'transporter', label: t('roles.transporter') },
   ];
 
   const vehicleTypeOptions = [
-    { value: 'truck', label: 'Truck' },
-    { value: 'van', label: 'Van' },
-    { value: 'motorbike', label: 'Motorbike' },
-    { value: 'other', label: 'Other' },
+    { value: 'truck', label: t('auth.truck') },
+    { value: 'van', label: t('auth.van') },
+    { value: 'motorbike', label: t('auth.motorbike') },
+    { value: 'other', label: t('auth.other') },
   ];
 
   const handleChange = (e) => {
@@ -62,15 +64,15 @@ export const Register = () => {
 
     // Validation
     if (formData.password !== formData.confirmPassword) {
-      return alert('Passwords do not match');
+      return alert(t('auth.passwordMismatch'));
     }
 
     if (formData.password.length < 6) {
-      return alert('Password must be at least 6 characters');
+      return alert(t('auth.passwordTooShort'));
     }
 
     if (formData.role === 'farmer' && !formData.farmerCoordinates.lat) {
-      toast.error('Please pin your farm location on the map before registering');
+      toast.error(t('auth.pinFarmFirst'));
       return;
     }
 
@@ -130,7 +132,7 @@ export const Register = () => {
       }
     } catch (error) {
       console.error('Google login error:', error);
-      toast.error(error || 'Failed to register with Google');
+      toast.error(error || t('auth.googleFailed'));
     } finally {
       setLoading(false);
     }
@@ -150,44 +152,44 @@ export const Register = () => {
       <Card className="max-w-2xl w-full">
         <div className="text-center mb-8">
           <UserPlus className="mx-auto h-12 w-12 text-primary-600" />
-          <h2 className="mt-4 text-3xl font-bold text-gray-900">Create Your Account</h2>
-          <p className="mt-2 text-sm text-gray-600">Join Krishak marketplace today</p>
+          <h2 className="mt-4 text-3xl font-bold text-gray-900">{t('auth.createAccount')}</h2>
+          <p className="mt-2 text-sm text-gray-600">{t('auth.joinToday')}</p>
         </div>
 
         <form onSubmit={handleSubmit}>
           {/* Basic Information */}
           <div className="space-y-4">
             <Input
-              label="Full Name"
+              label={t('auth.fullName')}
               name="name"
               value={formData.name}
               onChange={handleChange}
-              placeholder="Enter your full name"
+              placeholder={t('auth.enterFullName')}
               required
             />
 
             <Input
-              label="Email Address"
+              label={t('auth.emailAddress')}
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="your@email.com"
+              placeholder={t('auth.emailPlaceholder')}
               required
             />
 
             <Input
-              label="Phone Number"
+              label={t('auth.phoneNumber')}
               type="tel"
               name="phone"
               value={formData.phone}
               onChange={handleChange}
-              placeholder="01XXXXXXXXX"
+              placeholder={t('auth.phonePlaceholder')}
               required
             />
 
             <Select
-              label="I am a"
+              label={t('auth.iAmA')}
               name="role"
               value={formData.role}
               onChange={handleChange}
@@ -196,22 +198,22 @@ export const Register = () => {
             />
 
             <Input
-              label="Password"
+              label={t('auth.password')}
               type="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
-              placeholder="Minimum 6 characters"
+              placeholder={t('auth.passwordPlaceholder')}
               required
             />
 
             <Input
-              label="Confirm Password"
+              label={t('auth.confirmPassword')}
               type="password"
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleChange}
-              placeholder="Re-enter password"
+              placeholder={t('auth.confirmPasswordPlaceholder')}
               required
             />
           </div>
@@ -219,26 +221,26 @@ export const Register = () => {
           {/* Farmer-specific fields */}
           {formData.role === 'farmer' && (
             <div className="mt-6 p-4 bg-primary-50 rounded-lg">
-              <h3 className="font-semibold text-gray-900 mb-3">Farm Location</h3>
+              <h3 className="font-semibold text-gray-900 mb-3">{t('auth.farmLocation')}</h3>
               <div className="space-y-4">
                 <Input
-                  label="Village"
+                  label={t('auth.village')}
                   name="village"
                   value={formData.village}
                   onChange={handleChange}
-                  placeholder="Enter village name"
+                  placeholder={t('auth.villagePlaceholder')}
                   required
                 />
                 <Input
-                  label="Thana/Upazila"
+                  label={t('auth.thana')}
                   name="thana"
                   value={formData.thana}
                   onChange={handleChange}
-                  placeholder="Enter thana name"
+                  placeholder={t('auth.thanaPlaceholder')}
                   required
                 />
                 <Select
-                  label="District"
+                  label={t('auth.district')}
                   name="district"
                   value={formData.district}
                   onChange={handleChange}
@@ -253,15 +255,15 @@ export const Register = () => {
                     fullWidth
                   >
                     <MapPin className="w-4 h-4 mr-2" />
-                    {formData.farmerCoordinates.lat ? 'Update Farm Location on Map' : 'Pin Farm Location on Map ✱'}
+                    {formData.farmerCoordinates.lat ? t('auth.updateFarmLocation') : t('auth.pinFarmLocation')}
                   </Button>
                   {formData.farmerCoordinates.lat ? (
                     <p className="text-sm text-green-600 mt-2">
-                      ✓ Farm location pinned: {formData.farmerCoordinates.lat.toFixed(4)}, {formData.farmerCoordinates.lng.toFixed(4)}
+                      {t('auth.farmPinned', { lat: formData.farmerCoordinates.lat.toFixed(4), lng: formData.farmerCoordinates.lng.toFixed(4) })}
                     </p>
                   ) : (
                     <p className="text-sm text-red-500 mt-2">
-                      ✱ Required — buyers can only order within 50km of your farm
+                      {t('auth.farmRequired')}
                     </p>
                   )}
                 </div>
@@ -273,10 +275,10 @@ export const Register = () => {
           {formData.role === 'transporter' && (
             <>
               <div className="mt-6 p-4 bg-primary-50 rounded-lg">
-                <h3 className="font-semibold text-gray-900 mb-3">Vehicle Information</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">{t('auth.vehicleInfo')}</h3>
                 <div className="space-y-4">
                   <Select
-                    label="Vehicle Type"
+                    label={t('auth.vehicleType')}
                     name="vehicleType"
                     value={formData.vehicleType}
                     onChange={handleChange}
@@ -284,19 +286,19 @@ export const Register = () => {
                     required
                   />
                   <Input
-                    label="Vehicle Number"
+                    label={t('auth.vehicleNumber')}
                     name="vehicleNumber"
                     value={formData.vehicleNumber}
                     onChange={handleChange}
-                    placeholder="e.g., DHAKA-GA-12-3456"
+                    placeholder={t('auth.vehicleNumberPlaceholder')}
                     required
                   />
                   <Input
-                    label="License Number"
+                    label={t('auth.licenseNumber')}
                     name="licenseNumber"
                     value={formData.licenseNumber}
                     onChange={handleChange}
-                    placeholder="Enter your license number"
+                    placeholder={t('auth.enterLicense')}
                   />
                 </div>
               </div>
@@ -304,30 +306,30 @@ export const Register = () => {
               <div className="mt-4 p-4 bg-blue-50 rounded-lg">
                 <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                   <MapPin className="w-5 h-5" />
-                  Base Location (For Job Filtering)
+                  {t('auth.baseLocation')}
                 </h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  You'll only see delivery jobs within 50km of this address
+                  {t('auth.baseLocationDesc')}
                 </p>
                 <div className="space-y-4">
                   <Input
-                    label="Village/Area"
+                    label={t('auth.transporterVillageLabel')}
                     name="transporterVillage"
                     value={formData.transporterVillage}
                     onChange={handleChange}
-                    placeholder="Enter your village or area name"
+                    placeholder={t('auth.transporterVillagePlaceholder')}
                     required
                   />
                   <Input
-                    label="Thana/Upazila"
+                    label={t('auth.thana')}
                     name="transporterThana"
                     value={formData.transporterThana}
                     onChange={handleChange}
-                    placeholder="Enter thana name"
+                    placeholder={t('auth.thanaPlaceholder')}
                     required
                   />
                   <Select
-                    label="District"
+                    label={t('auth.district')}
                     name="transporterDistrict"
                     value={formData.transporterDistrict}
                     onChange={handleChange}
@@ -342,11 +344,11 @@ export const Register = () => {
                       fullWidth
                     >
                       <MapPin className="w-4 h-4 mr-2" />
-                      {formData.transporterCoordinates.lat ? 'Update Location' : 'Set Location on Map'}
+                      {formData.transporterCoordinates.lat ? t('auth.updateLocation') : t('auth.setLocationMap')}
                     </Button>
                     {formData.transporterCoordinates.lat && (
                       <p className="text-sm text-green-600 mt-2">
-                        ✓ Location set: {formData.transporterCoordinates.lat.toFixed(4)}, {formData.transporterCoordinates.lng.toFixed(4)}
+                        {t('auth.transporterLocationSet', { lat: formData.transporterCoordinates.lat.toFixed(4), lng: formData.transporterCoordinates.lng.toFixed(4) })}
                       </p>
                     )}
                   </div>
@@ -379,7 +381,7 @@ export const Register = () => {
 
           <div className="mt-6">
             <Button type="submit" disabled={loading} fullWidth>
-              {loading ? 'Creating Account...' : 'Create Account'}
+              {loading ? t('auth.creatingAccount') : t('auth.createAccount')}
             </Button>
           </div>
 
@@ -389,7 +391,7 @@ export const Register = () => {
                 <div className="w-full border-t border-gray-300"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                <span className="px-2 bg-white text-gray-500">{t('auth.orContinueWith')}</span>
               </div>
             </div>
 
@@ -408,16 +410,16 @@ export const Register = () => {
                 />
               ) : (
                 <div className="text-center text-sm text-gray-500 py-3 bg-gray-50 rounded-lg border border-gray-200">
-                  Google Sign-In is not configured. Please use email/password registration.
+                  {t('auth.googleRegisterNotConfigured')}
                 </div>
               )}
             </div>
           </div>
 
           <div className="mt-4 text-center text-sm">
-            <span className="text-gray-600">Already have an account? </span>
+            <span className="text-gray-600">{t('auth.alreadyAccount')} </span>
             <Link to="/login" className="text-primary-600 hover:text-primary-700 font-medium">
-              Login here
+              {t('auth.loginHere')}
             </Link>
           </div>
         </form>
