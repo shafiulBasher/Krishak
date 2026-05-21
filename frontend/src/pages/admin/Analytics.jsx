@@ -12,6 +12,7 @@ import {
 import { getAnalytics } from '../../services/adminService';
 import Loading from '../../components/Loading';
 import Card from '../../components/Card';
+import { useLanguage } from '../../context/LanguageContext';
 
 // ─── Color maps ───────────────────────────────────────────────────────────────
 const LISTING_COLORS = {
@@ -87,6 +88,7 @@ function EmptyChart({ message = 'No data available yet' }) {
 export default function Analytics() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
 
   useEffect(() => { fetchAnalytics(); }, []);
 
@@ -97,14 +99,14 @@ export default function Analytics() {
       setData(response.data);
     } catch (error) {
       console.error('Analytics fetch error:', error);
-      toast.error('Failed to load analytics data');
+      toast.error(t('admin.analytics.loadFail'));
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) return <Loading message="Loading analytics…" />;
-  if (!data)   return <div className="text-center py-12 text-gray-500">No analytics data available</div>;
+  if (loading) return <Loading message={t('admin.analytics.loading')} />;
+  if (!data)   return <div className="text-center py-12 text-gray-500">{t('admin.analytics.noData')}</div>;
 
   const {
     kpis,
@@ -165,53 +167,53 @@ export default function Analytics() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Analytics &amp; Reports</h1>
-          <p className="text-sm text-gray-500 mt-1">Platform-wide statistics — live from database</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t('admin.analytics.title')}</h1>
+          <p className="text-sm text-gray-500 mt-1">{t('admin.analytics.subtitle')}</p>
         </div>
         <button
           onClick={fetchAnalytics}
           className="flex items-center gap-2 px-4 py-2 bg-primary-50 hover:bg-primary-100 text-primary-700 rounded-lg text-sm font-medium transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
-          Refresh
+          {t('admin.analytics.refresh')}
         </button>
       </div>
 
       {/* ── Section 1: KPI Cards ─────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
         <KPICard
-          title="Total Revenue"
+          title={t('admin.analytics.totalRevenue')}
           value={`৳${(rev.totalRevenue || 0).toLocaleString()}`}
           icon={DollarSign}
           color="green"
-          sub={`${rev.count || 0} paid orders`}
+          sub={t('admin.analytics.paidOrders', { count: rev.count || 0 })}
         />
         <KPICard
-          title="Platform Fees"
+          title={t('admin.analytics.platformFees')}
           value={`৳${(rev.platformFees || 0).toLocaleString()}`}
           icon={TrendingUp}
           color="blue"
         />
         <KPICard
-          title="Total Orders"
+          title={t('admin.analytics.totalOrders')}
           value={kpis.totalOrders.toLocaleString()}
           icon={ShoppingBag}
           color="purple"
         />
         <KPICard
-          title="Completion Rate"
+          title={t('admin.analytics.completionRate')}
           value={`${kpis.completionRate}%`}
           icon={CheckCircle}
           color="green"
         />
         <KPICard
-          title="Active Listings"
+          title={t('admin.analytics.activeListings')}
           value={kpis.activeListings.toLocaleString()}
           icon={Package}
           color="yellow"
         />
         <KPICard
-          title="Total Users"
+          title={t('admin.analytics.totalUsers')}
           value={kpis.totalUsers.toLocaleString()}
           icon={Users}
           color="primary"
@@ -223,11 +225,11 @@ export default function Analytics() {
         <div className="p-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-1 flex items-center gap-2">
             <BarChart2 className="w-5 h-5 text-primary-600" />
-            Orders Over Last 30 Days
+            {t('admin.analytics.ordersLast30')}
           </h2>
-          <p className="text-xs text-gray-400 mb-4">Daily order count across the platform</p>
+          <p className="text-xs text-gray-400 mb-4">{t('admin.analytics.ordersLast30Desc')}</p>
           {ordersChartData.length === 0
-            ? <EmptyChart message="No orders placed in the last 30 days" />
+            ? <EmptyChart message={t('admin.analytics.noOrdersLast30')} />
             : (
               <ResponsiveContainer width="100%" height={260}>
                 <LineChart data={ordersChartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
@@ -255,8 +257,8 @@ export default function Analytics() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <Card>
           <div className="p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-1">Listings by Status</h2>
-            <p className="text-xs text-gray-400 mb-4">All-time product listing distribution</p>
+            <h2 className="text-lg font-semibold text-gray-800 mb-1">{t('admin.analytics.listingsByStatus')}</h2>
+            <p className="text-xs text-gray-400 mb-4">{t('admin.analytics.listingsByStatusDesc')}</p>
             {listingsChartData.length === 0
               ? <EmptyChart />
               : (
@@ -293,8 +295,8 @@ export default function Analytics() {
 
         <Card>
           <div className="p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-1">Users by Role</h2>
-            <p className="text-xs text-gray-400 mb-4">Registered user distribution</p>
+            <h2 className="text-lg font-semibold text-gray-800 mb-1">{t('admin.analytics.usersByRole')}</h2>
+            <p className="text-xs text-gray-400 mb-4">{t('admin.analytics.usersByRoleDesc')}</p>
             {usersChartData.length === 0
               ? <EmptyChart />
               : (
@@ -333,10 +335,10 @@ export default function Analytics() {
       {/* ── Section 4: Top Crops by Volume ───────────────────────────────── */}
       <Card className="mb-8">
         <div className="p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-1">Top 10 Crops by Quantity Traded</h2>
-          <p className="text-xs text-gray-400 mb-4">Based on confirmed and completed orders</p>
+          <h2 className="text-lg font-semibold text-gray-800 mb-1">{t('admin.analytics.topCrops')}</h2>
+          <p className="text-xs text-gray-400 mb-4">{t('admin.analytics.topCropsDesc')}</p>
           {cropsChartData.length === 0
-            ? <EmptyChart message="No confirmed orders yet — crop data will appear once orders are confirmed" />
+            ? <EmptyChart message={t('admin.analytics.noCrops')} />
             : (
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={cropsChartData} margin={{ top: 5, right: 20, left: 0, bottom: 70 }}>
@@ -366,19 +368,19 @@ export default function Analytics() {
         {/* District Table */}
         <Card>
           <div className="p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-1">Top Districts by Listings</h2>
-            <p className="text-xs text-gray-400 mb-4">Most active farming regions on the platform</p>
+            <h2 className="text-lg font-semibold text-gray-800 mb-1">{t('admin.analytics.topDistricts')}</h2>
+            <p className="text-xs text-gray-400 mb-4">{t('admin.analytics.topDistrictsDesc')}</p>
             {districtActivity.length === 0
-              ? <EmptyChart message="No listing data available" />
+              ? <EmptyChart message={t('admin.analytics.noDistrictData')} />
               : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-left text-xs text-gray-500 border-b pb-2">
                         <th className="pb-2 pr-4">#</th>
-                        <th className="pb-2 pr-4">District</th>
-                        <th className="pb-2 text-right pr-4">Listings</th>
-                        <th className="pb-2 text-right">Unique Farmers</th>
+                        <th className="pb-2 pr-4">{t('admin.analytics.districtCol')}</th>
+                        <th className="pb-2 text-right pr-4">{t('admin.analytics.listingsCol')}</th>
+                        <th className="pb-2 text-right">{t('admin.analytics.uniqueFarmers')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -403,20 +405,20 @@ export default function Analytics() {
           <div className="p-6">
             <h2 className="text-lg font-semibold text-gray-800 mb-1 flex items-center gap-2">
               <Clock className="w-5 h-5 text-yellow-500" />
-              Moderation Activity (Last 30 Days)
+              {t('admin.analytics.modActivity')}
             </h2>
-            <p className="text-xs text-gray-400 mb-4">Response speed and volume of listing reviews</p>
+            <p className="text-xs text-gray-400 mb-4">{t('admin.analytics.modActivityDesc')}</p>
 
             <div className="space-y-3">
               {/* Approved */}
               <div className="p-4 rounded-lg bg-green-50 border border-green-100">
                 <div className="flex justify-between items-center">
-                  <span className="font-semibold text-sm text-green-700">✅ Approved</span>
+                  <span className="font-semibold text-sm text-green-700">{t('admin.analytics.approvedLabel')}</span>
                   <span className="text-xl font-bold text-green-700">{modStats.approved?.count ?? 0}</span>
                 </div>
                 {modStats.approved?.avgHours != null && (
                   <p className="text-xs text-gray-500 mt-1">
-                    Avg response time: <span className="font-medium text-green-700">{modStats.approved.avgHours} hrs</span>
+                    {t('admin.analytics.avgResponse', { hours: modStats.approved.avgHours })}
                   </p>
                 )}
               </div>
@@ -424,12 +426,12 @@ export default function Analytics() {
               {/* Rejected */}
               <div className="p-4 rounded-lg bg-red-50 border border-red-100">
                 <div className="flex justify-between items-center">
-                  <span className="font-semibold text-sm text-red-700">❌ Rejected</span>
+                  <span className="font-semibold text-sm text-red-700">{t('admin.analytics.rejectedLabel')}</span>
                   <span className="text-xl font-bold text-red-700">{modStats.rejected?.count ?? 0}</span>
                 </div>
                 {modStats.rejected?.avgHours != null && (
                   <p className="text-xs text-gray-500 mt-1">
-                    Avg response time: <span className="font-medium text-red-700">{modStats.rejected.avgHours} hrs</span>
+                    {t('admin.analytics.avgResponse', { hours: modStats.rejected.avgHours })}
                   </p>
                 )}
               </div>
@@ -437,12 +439,12 @@ export default function Analytics() {
               {/* Awaiting */}
               <div className="p-4 rounded-lg bg-yellow-50 border border-yellow-100">
                 <div className="flex justify-between items-center">
-                  <span className="font-semibold text-sm text-yellow-700">⏳ Awaiting Review</span>
+                  <span className="font-semibold text-sm text-yellow-700">{t('admin.analytics.awaitingReview')}</span>
                   <span className="text-xl font-bold text-yellow-700">{pendingCount}</span>
                 </div>
                 {pendingCount > 0 && (
                   <p className="text-xs text-yellow-600 mt-1">
-                    Needs attention — these listings are visible to farmers but not to buyers yet.
+                    {t('admin.analytics.needsAttention')}
                   </p>
                 )}
               </div>
@@ -450,7 +452,7 @@ export default function Analytics() {
 
             {moderationActivity.length === 0 && (
               <p className="text-xs text-gray-400 text-center mt-3">
-                No moderation actions in the last 30 days
+                {t('admin.analytics.noModActions')}
               </p>
             )}
           </div>
@@ -460,10 +462,10 @@ export default function Analytics() {
       {/* ── Section 7: Order Status Breakdown ───────────────────────────── */}
       <Card className="mb-8">
         <div className="p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-1">Order Status Breakdown</h2>
-          <p className="text-xs text-gray-400 mb-4">All-time orders by current status</p>
+          <h2 className="text-lg font-semibold text-gray-800 mb-1">{t('admin.analytics.orderStatusBreakdown')}</h2>
+          <p className="text-xs text-gray-400 mb-4">{t('admin.analytics.orderStatusDesc')}</p>
           {ordersByStatus.length === 0
-            ? <EmptyChart message="No orders yet" />
+            ? <EmptyChart message={t('admin.analytics.noOrders')} />
             : (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {ordersByStatus.map((o, i) => {

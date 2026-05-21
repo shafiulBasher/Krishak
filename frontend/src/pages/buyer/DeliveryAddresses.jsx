@@ -5,8 +5,10 @@ import { Input } from '../../components/Input';
 import { Loading } from '../../components/Loading';
 import { MapPin, Plus, Edit2, Trash2, Check } from 'lucide-react';
 import { getAddresses, addAddress, updateAddress, deleteAddress, setDefaultAddress } from '../../services/userService';
+import { useLanguage } from '../../context/LanguageContext';
 
 export const DeliveryAddresses = () => {
+  const { t } = useLanguage();
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -34,12 +36,11 @@ export const DeliveryAddresses = () => {
     try {
       setLoading(true);
       const response = await getAddresses();
-      // API interceptor already unwraps response.data, so response.data contains the actual data
       setAddresses(response.data || []);
       setError('');
     } catch (err) {
-      setError(typeof err === 'string' ? err : 'Failed to load addresses');
-      setAddresses([]); // Ensure addresses is always an array
+      setError(typeof err === 'string' ? err : t('buyer.addresses.loadFail'));
+      setAddresses([]);
     } finally {
       setLoading(false);
     }
@@ -96,42 +97,42 @@ export const DeliveryAddresses = () => {
     try {
       if (editingId) {
         await updateAddress(editingId, formData);
-        setSuccess('Address updated successfully!');
+        setSuccess(t('buyer.addresses.updateSuccess'));
       } else {
         await addAddress(formData);
-        setSuccess('Address added successfully!');
+        setSuccess(t('buyer.addresses.addSuccess'));
       }
       await fetchAddresses();
       resetForm();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError(typeof err === 'string' ? err : 'Failed to save address');
+      setError(typeof err === 'string' ? err : t('buyer.addresses.saveFail'));
     }
   };
 
   const handleDelete = async (addressId) => {
-    if (!window.confirm('Are you sure you want to delete this address?')) {
+    if (!window.confirm(t('buyer.addresses.deleteConfirm'))) {
       return;
     }
 
     try {
       await deleteAddress(addressId);
-      setSuccess('Address deleted successfully!');
+      setSuccess(t('buyer.addresses.deleteSuccess'));
       await fetchAddresses();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError(typeof err === 'string' ? err : 'Failed to delete address');
+      setError(typeof err === 'string' ? err : t('buyer.addresses.deleteFail'));
     }
   };
 
   const handleSetDefault = async (addressId) => {
     try {
       await setDefaultAddress(addressId);
-      setSuccess('Default address updated!');
+      setSuccess(t('buyer.addresses.setDefaultSuccess'));
       await fetchAddresses();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError(typeof err === 'string' ? err : 'Failed to set default address');
+      setError(typeof err === 'string' ? err : t('buyer.addresses.setDefaultFail'));
     }
   };
 
@@ -144,13 +145,13 @@ export const DeliveryAddresses = () => {
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Delivery Addresses</h1>
-            <p className="text-gray-600 mt-1">Manage your delivery addresses</p>
+            <h1 className="text-3xl font-bold text-gray-900">{t('buyer.addresses.title')}</h1>
+            <p className="text-gray-600 mt-1">{t('buyer.addresses.subtitle')}</p>
           </div>
           {!showForm && (
             <Button onClick={() => setShowForm(true)}>
               <Plus className="w-4 h-4 mr-2" />
-              Add Address
+              {t('buyer.addresses.addAddress')}
             </Button>
           )}
         </div>
@@ -170,30 +171,30 @@ export const DeliveryAddresses = () => {
         {showForm && (
           <Card className="mb-6">
             <h2 className="text-xl font-semibold mb-4">
-              {editingId ? 'Edit Address' : 'Add New Address'}
+              {editingId ? t('buyer.addresses.editAddress') : t('buyer.addresses.addNew')}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
-                  label="Address Label"
+                  label={t('buyer.addresses.labelField')}
                   name="label"
                   value={formData.label}
                   onChange={handleInputChange}
-                  placeholder="e.g., Home, Office"
+                  placeholder={t('buyer.addresses.labelPlaceholder')}
                   required
                 />
                 <Input
-                  label="Recipient Name"
+                  label={t('buyer.addresses.recipientName')}
                   name="recipientName"
                   value={formData.recipientName}
                   onChange={handleInputChange}
-                  placeholder="Full name"
+                  placeholder={t('buyer.addresses.namePlaceholder')}
                   required
                 />
               </div>
 
               <Input
-                label="Recipient Phone"
+                label={t('buyer.addresses.recipientPhone')}
                 name="recipientPhone"
                 value={formData.recipientPhone}
                 onChange={handleInputChange}
@@ -203,50 +204,50 @@ export const DeliveryAddresses = () => {
               />
 
               <Input
-                label="Address Line 1"
+                label={t('buyer.addresses.addressLine1')}
                 name="addressLine1"
                 value={formData.addressLine1}
                 onChange={handleInputChange}
-                placeholder="House/Flat number, Road"
+                placeholder={t('buyer.addresses.addressLine1Placeholder')}
                 required
               />
 
               <Input
-                label="Address Line 2 (Optional)"
+                label={t('buyer.addresses.addressLine2')}
                 name="addressLine2"
                 value={formData.addressLine2}
                 onChange={handleInputChange}
-                placeholder="Landmark or additional details"
+                placeholder={t('buyer.addresses.addressLine2Placeholder')}
               />
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Input
-                  label="Village/Area (Optional)"
+                  label={t('buyer.addresses.villageArea')}
                   name="village"
                   value={formData.village}
                   onChange={handleInputChange}
-                  placeholder="Village/Area name"
+                  placeholder={t('buyer.addresses.villageAreaPlaceholder')}
                 />
                 <Input
-                  label="Thana/Upazila"
+                  label={t('buyer.addresses.thana')}
                   name="thana"
                   value={formData.thana}
                   onChange={handleInputChange}
-                  placeholder="Thana"
+                  placeholder={t('buyer.addresses.thanaPlaceholder')}
                   required
                 />
                 <Input
-                  label="District"
+                  label={t('buyer.addresses.district')}
                   name="district"
                   value={formData.district}
                   onChange={handleInputChange}
-                  placeholder="District"
+                  placeholder={t('buyer.addresses.districtPlaceholder')}
                   required
                 />
               </div>
 
               <Input
-                label="Postal Code (Optional)"
+                label={t('buyer.addresses.postalCode')}
                 name="postalCode"
                 value={formData.postalCode}
                 onChange={handleInputChange}
@@ -261,15 +262,15 @@ export const DeliveryAddresses = () => {
                   onChange={handleInputChange}
                   className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
                 />
-                <span className="text-sm text-gray-700">Set as default address</span>
+                <span className="text-sm text-gray-700">{t('buyer.addresses.setAsDefault')}</span>
               </label>
 
               <div className="flex space-x-4">
                 <Button type="submit">
-                  {editingId ? 'Update Address' : 'Add Address'}
+                  {editingId ? t('buyer.addresses.updateAddress') : t('buyer.addresses.addAddress')}
                 </Button>
                 <Button type="button" variant="secondary" onClick={resetForm}>
-                  Cancel
+                  {t('buyer.addresses.cancel')}
                 </Button>
               </div>
             </form>
@@ -279,12 +280,12 @@ export const DeliveryAddresses = () => {
         {!addresses || addresses.length === 0 ? (
           <Card className="text-center py-12">
             <MapPin className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Addresses Yet</h3>
-            <p className="text-gray-600 mb-4">Add your first delivery address to get started</p>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('buyer.addresses.noAddressesTitle')}</h3>
+            <p className="text-gray-600 mb-4">{t('buyer.addresses.getStarted')}</p>
             {!showForm && (
               <Button onClick={() => setShowForm(true)}>
                 <Plus className="w-4 h-4 mr-2" />
-                Add Address
+                {t('buyer.addresses.addAddress')}
               </Button>
             )}
           </Card>
@@ -296,7 +297,7 @@ export const DeliveryAddresses = () => {
                   <div className="absolute top-4 right-4">
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
                       <Check className="w-3 h-3 mr-1" />
-                      Default
+                      {t('buyer.addresses.default')}
                     </span>
                   </div>
                 )}
@@ -327,7 +328,7 @@ export const DeliveryAddresses = () => {
                       size="sm"
                       onClick={() => handleSetDefault(address._id)}
                     >
-                      Set as Default
+                      {t('buyer.addresses.setDefault')}
                     </Button>
                   )}
                   <Button
@@ -336,7 +337,7 @@ export const DeliveryAddresses = () => {
                     onClick={() => handleEdit(address)}
                   >
                     <Edit2 className="w-4 h-4 mr-1" />
-                    Edit
+                    {t('buyer.addresses.edit')}
                   </Button>
                   <Button
                     variant="secondary"
@@ -345,7 +346,7 @@ export const DeliveryAddresses = () => {
                     className="text-red-600 hover:text-red-700"
                   >
                     <Trash2 className="w-4 h-4 mr-1" />
-                    Delete
+                    {t('buyer.addresses.delete')}
                   </Button>
                 </div>
               </Card>

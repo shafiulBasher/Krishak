@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
@@ -65,6 +66,7 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
 const StripeCardForm = ({ onPaymentSuccess, onPaymentError, amount, disabled, orderData, createOrderAndPay }) => {
   const stripe = useStripe();
   const elements = useElements();
+  const { t } = useLanguage();
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState(null);
 
@@ -157,11 +159,11 @@ const StripeCardForm = ({ onPaymentSuccess, onPaymentError, amount, disabled, or
         className="w-full"
         size="lg"
       >
-        {processing ? 'Processing...' : `Pay ৳${amount?.toLocaleString() || 0}`}
+        {processing ? t('buyer.checkout.processing') : t('buyer.checkout.payAmount', { amount: amount?.toLocaleString() || 0 })}
       </Button>
       
       <p className="text-xs text-gray-500 text-center">
-        🔒 Secured by Stripe. Your card details are encrypted.
+        {t('buyer.checkout.stripeSecured')}
       </p>
     </form>
   );
@@ -170,6 +172,7 @@ const StripeCardForm = ({ onPaymentSuccess, onPaymentError, amount, disabled, or
 export const Checkout = () => {
   const { cartItems, getCartTotal, clearCart } = useCart();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   
   const [loading, setLoading] = useState(false);
@@ -193,16 +196,16 @@ export const Checkout = () => {
   useEffect(() => {
     if (estimatedDistance !== null && estimatedDistance > 30 && selectedVehicle === 'van') {
       setSelectedVehicle('pickup');
-      toast.info('Van is not available for this distance (max 30km). Switched to Pickup.', { autoClose: 4000 });
+      toast.info(t('buyer.checkout.vanSwitched'), { autoClose: 4000 });
     }
   }, [estimatedDistance]);
 
   // Generate available time slots
   const timeSlots = [
-    '09:00 AM - 12:00 PM',
-    '12:00 PM - 03:00 PM',
-    '03:00 PM - 06:00 PM',
-    '06:00 PM - 09:00 PM'
+    t('buyer.checkout.slot.slot1'),
+    t('buyer.checkout.slot.slot2'),
+    t('buyer.checkout.slot.slot3'),
+    t('buyer.checkout.slot.slot4'),
   ];
 
   // Generate available dates (next 7 days)
@@ -243,7 +246,7 @@ export const Checkout = () => {
       }
     } catch (error) {
       console.error('Error fetching addresses:', error);
-      toast.error('Failed to load delivery addresses');
+      toast.error(t('buyer.checkout.addressLoadFail'));
     }
   };
 
@@ -425,23 +428,23 @@ export const Checkout = () => {
     }));
     setMapCoordinates(coordinates);
     setShowAddressMapSelector(false);
-    toast.success('Location pinned! Delivery distance will now be calculated accurately.');
+    toast.success(t('buyer.checkout.locationPinned'));
   };
 
   const handlePlaceOrder = async () => {
     // Validation
     if (!selectedAddress) {
-      toast.error('Please select a delivery address');
+      toast.error(t('buyer.checkout.noAddressErr'));
       return;
     }
 
     if (!deliverySlot.date || !deliverySlot.timeSlot) {
-      toast.error('Please select a delivery date and time slot');
+      toast.error(t('buyer.checkout.noSlotErr'));
       return;
     }
 
     if (cartItems.length === 0) {
-      toast.error('Your cart is empty');
+      toast.error(t('buyer.cart.emptyCart'));
       return;
     }
 
@@ -506,12 +509,12 @@ export const Checkout = () => {
 
       await Promise.all(orderPromises);
       
-      toast.success('Order placed successfully!');
+      toast.success(t('buyer.checkout.orderSuccess'));
       clearCart();
       navigate('/buyer/orders');
     } catch (error) {
       console.error('Error placing order:', error);
-      toast.error(error || 'Failed to place order. Please try again.');
+      toast.error(t('buyer.checkout.orderFail'));
     } finally {
       setLoading(false);
     }
@@ -620,15 +623,15 @@ export const Checkout = () => {
       const confirmResult = await confirmPayment(paymentIntentId);
       
       if (confirmResult.success) {
-        toast.success('🎉 Payment successful! Order confirmed.');
+        toast.success(t('buyer.checkout.paymentSuccess'));
         clearCart();
         navigate('/buyer/orders');
       } else {
-        toast.error('Payment confirmation failed. Please contact support.');
+        toast.error(t('buyer.checkout.paymentConfirmFail'));
       }
     } catch (error) {
       console.error('Error confirming payment:', error);
-      toast.error('Payment was processed but confirmation failed. Please contact support.');
+      toast.error(t('buyer.checkout.paymentProcessedFail'));
     } finally {
       setLoading(false);
     }
@@ -657,10 +660,10 @@ export const Checkout = () => {
           className="flex items-center text-gray-600 hover:text-gray-900 mb-6"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Cart
+          {t('buyer.checkout.backToCart')}
         </button>
 
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Checkout</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">{t('buyer.checkout.title')}</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
@@ -669,7 +672,7 @@ export const Checkout = () => {
             <Card>
               <div className="flex items-center mb-4">
                 <MapPin className="w-5 h-5 text-primary-600 mr-2" />
-                <h2 className="text-xl font-semibold">Delivery Address</h2>
+                <h2 className="text-xl font-semibold">{t('buyer.checkout.deliveryAddress')}</h2>
               </div>
 
               {addresses.length > 0 ? (
@@ -715,13 +718,13 @@ export const Checkout = () => {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-600 mb-4">No saved addresses. Please add one first.</p>
+                <p className="text-gray-600 mb-4">{t('buyer.checkout.noAddress')}</p>
               )}
 
               {selectedAddress && !selectedAddress.coordinates?.lat && !selectedAddress.isMapSelected && (
                 <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                   <p className="text-sm text-yellow-800 font-medium mb-2">
-                    ⚠️ This address has no GPS coordinates. The 50km delivery check and distance calculation won’t be accurate.
+                    {t('buyer.checkout.noGps')}
                   </p>
                   <Button
                     size="sm"
@@ -729,7 +732,7 @@ export const Checkout = () => {
                     onClick={() => setShowAddressMapSelector(true)}
                   >
                     <MapPin className="w-3 h-3 mr-1" />
-                    Pin on Map
+                    {t('buyer.checkout.pinOnMap')}
                   </Button>
                 </div>
               )}
@@ -739,21 +742,21 @@ export const Checkout = () => {
                   variant="secondary"
                   onClick={() => navigate('/buyer/addresses')}
                 >
-                  {addresses.length > 0 ? 'Manage Addresses' : 'Add Address'}
+                  {addresses.length > 0 ? t('buyer.checkout.manageAddresses') : t('buyer.checkout.addAddress')}
                 </Button>
                 <Button
                   variant="secondary"
                   onClick={() => setShowMapSelector(true)}
                 >
                   <MapPin className="w-4 h-4 mr-2" />
-                  Select on Map
+                  {t('buyer.checkout.selectOnMap')}
                 </Button>
               </div>
 
               {selectedAddress?.isMapSelected && mapCoordinates && (
                 <div className="mt-4 p-3 bg-blue-50 rounded-lg">
                   <p className="text-sm text-blue-800">
-                    📍 Map location selected: {mapAddress || `${mapCoordinates.lat.toFixed(6)}, ${mapCoordinates.lng.toFixed(6)}`}
+                    {t('buyer.checkout.mapSelected', { address: mapAddress || `${mapCoordinates.lat.toFixed(6)}, ${mapCoordinates.lng.toFixed(6)}` })}
                   </p>
                 </div>
               )}
@@ -763,17 +766,17 @@ export const Checkout = () => {
             <Card>
               <div className="flex items-center mb-4">
                 <Calendar className="w-5 h-5 text-primary-600 mr-2" />
-                <h2 className="text-xl font-semibold">Delivery Slot</h2>
+                <h2 className="text-xl font-semibold">{t('buyer.checkout.deliverySlot')}</h2>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Select
-                  label="Select Date"
+                  label={t('buyer.checkout.slot.selectDate')}
                   value={deliverySlot.date}
                   onChange={(e) => setDeliverySlot({ ...deliverySlot, date: e.target.value })}
                   required
                 >
-                  <option value="">Choose a date</option>
+                  <option value="">{t('buyer.checkout.slot.chooseDate')}</option>
                   {getAvailableDates().map((date) => (
                     <option key={date.value} value={date.value}>
                       {date.label}
@@ -782,12 +785,12 @@ export const Checkout = () => {
                 </Select>
 
                 <Select
-                  label="Select Time Slot"
+                  label={t('buyer.checkout.slot.selectTime')}
                   value={deliverySlot.timeSlot}
                   onChange={(e) => setDeliverySlot({ ...deliverySlot, timeSlot: e.target.value })}
                   required
                 >
-                  <option value="">Choose a time</option>
+                  <option value="">{t('buyer.checkout.slot.chooseTime')}</option>
                   {timeSlots.map((slot) => (
                     <option key={slot} value={slot}>
                       {slot}
@@ -800,7 +803,7 @@ export const Checkout = () => {
                 <div className="mt-4 p-3 bg-green-50 rounded-lg">
                   <p className="text-sm text-green-800">
                     <Clock className="w-4 h-4 inline mr-2" />
-                    Delivery scheduled for {new Date(deliverySlot.date).toLocaleDateString()} between {deliverySlot.timeSlot}
+                    {t('buyer.checkout.deliveryScheduled', { date: new Date(deliverySlot.date).toLocaleDateString(), slot: deliverySlot.timeSlot })}
                   </p>
                 </div>
               )}
@@ -810,7 +813,7 @@ export const Checkout = () => {
             <Card>
               <div className="flex items-center mb-4">
                 <Truck className="w-5 h-5 text-primary-600 mr-2" />
-                <h2 className="text-xl font-semibold">Delivery Vehicle</h2>
+                <h2 className="text-xl font-semibold">{t('buyer.checkout.vehicle')}</h2>
               </div>
               
               <VehicleSelector
@@ -825,15 +828,15 @@ export const Checkout = () => {
             <Card>
               <div className="flex items-center mb-4">
                 <CreditCard className="w-5 h-5 text-primary-600 mr-2" />
-                <h2 className="text-xl font-semibold">Payment Method</h2>
+                <h2 className="text-xl font-semibold">{t('buyer.checkout.paymentMethod')}</h2>
               </div>
 
               <div className="space-y-3">
                 {[
-                  { value: 'stripe', label: '💳 Credit/Debit Card', description: 'Pay securely with Stripe' },
-                  { value: 'cash_on_delivery', label: '💵 Cash on Delivery', description: 'Pay when you receive' },
-                  { value: 'bkash', label: '📱 bKash', description: 'Mobile payment' },
-                  { value: 'nagad', label: '📱 Nagad', description: 'Mobile payment' },
+                  { value: 'stripe', label: t('buyer.checkout.creditCard'), description: t('buyer.checkout.stripeCard') },
+                  { value: 'cash_on_delivery', label: t('buyer.checkout.cashOnDelivery'), description: t('buyer.checkout.payOnReceive') },
+                  { value: 'bkash', label: t('buyer.checkout.bkash'), description: t('buyer.checkout.mobilePayment') },
+                  { value: 'nagad', label: t('buyer.checkout.nagad'), description: t('buyer.checkout.mobilePayment') },
                 ].map((method) => (
                   <label
                     key={method.value}
@@ -867,7 +870,7 @@ export const Checkout = () => {
               {/* Stripe Card Input - Show only when stripe is selected */}
               {paymentMethod === 'stripe' && (
                 <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                  <h3 className="font-medium mb-3">Card Details</h3>
+                  <h3 className="font-medium mb-3">{t('buyer.checkout.cardDetails')}</h3>
                   <StripeWrapper>
                     <StripeCardForm
                       onPaymentSuccess={handleStripePaymentSuccess}
@@ -884,11 +887,11 @@ export const Checkout = () => {
             {/* Order Notes */}
             <Card>
               <Input
-                label="Order Notes (Optional)"
+                label={t('buyer.checkout.orderNotes')}
                 type="textarea"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Any special instructions for delivery..."
+                placeholder={t('buyer.checkout.notesPlaceholder')}
                 rows={3}
               />
             </Card>
@@ -897,7 +900,7 @@ export const Checkout = () => {
           {/* Order Summary */}
           <div className="lg:col-span-1">
             <Card className="sticky top-4">
-              <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+              <h2 className="text-xl font-semibold mb-4">{t('buyer.checkout.orderSummary')}</h2>
               
               <div className="space-y-2 mb-4">
                 {cartItems.map((item) => (
@@ -912,18 +915,18 @@ export const Checkout = () => {
 
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between text-gray-600">
-                  <span>Subtotal</span>
+                  <span>{t('buyer.checkout.subtotal')}</span>
                   <span>৳{subtotal.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span className="flex items-center gap-1">
-                    Delivery ({selectedVehicle})
+                    {t('buyer.checkout.deliveryVehicle', { vehicle: selectedVehicle })}
                     {calculatingDistance ? (
-                      <span className="text-xs text-blue-500">calculating...</span>
+                      <span className="text-xs text-blue-500">{t('buyer.checkout.calculating')}</span>
                     ) : estimatedDistance ? (
-                      <span className="text-xs text-gray-400">~{estimatedDistance}km</span>
+                      <span className="text-xs text-gray-400">{t('buyer.checkout.distanceEst', { km: estimatedDistance })}</span>
                     ) : (
-                      <span className="text-xs text-gray-400">~10km est.</span>
+                      <span className="text-xs text-gray-400">{t('buyer.checkout.defaultEst')}</span>
                     )}
                   </span>
                   <span>
@@ -935,12 +938,12 @@ export const Checkout = () => {
                   </span>
                 </div>
                 <div className="flex justify-between text-gray-600">
-                  <span>Platform Fee (5%)</span>
+                  <span>{t('buyer.checkout.platformFee')}</span>
                   <span>৳{platformFee.toLocaleString()}</span>
                 </div>
                 <div className="border-t pt-2">
                   <div className="flex justify-between text-lg font-semibold">
-                    <span>Total</span>
+                    <span>{t('buyer.checkout.total')}</span>
                     <span className="text-primary-600">৳{total.toLocaleString()}</span>
                   </div>
                 </div>
@@ -954,7 +957,7 @@ export const Checkout = () => {
                   size="lg"
                   disabled={loading || !selectedAddress || !deliverySlot.date || !deliverySlot.timeSlot}
                 >
-                  {loading ? 'Placing Order...' : 'Place Order'}
+                  {loading ? t('buyer.checkout.placingOrder') : t('buyer.checkout.placeOrder')}
                 </Button>
               )}
 
@@ -962,7 +965,7 @@ export const Checkout = () => {
               {paymentMethod === 'stripe' && (
                 <div className="mt-6 p-3 bg-blue-50 rounded-lg text-center">
                   <p className="text-sm text-blue-800">
-                    👆 Complete payment using the card form above
+                    {t('buyer.checkout.cardFormNote')}
                   </p>
                 </div>
               )}

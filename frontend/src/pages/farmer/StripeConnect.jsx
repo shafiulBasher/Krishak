@@ -5,10 +5,12 @@ import { Button } from '../../components/Button';
 import Loading from '../../components/Loading';
 import paymentService from '../../services/paymentService';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 export const StripeConnect = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState(null);
@@ -75,7 +77,7 @@ export const StripeConnect = () => {
       <div className="max-w-2xl mx-auto p-6">
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <p className="text-yellow-800">
-            Stripe Connect is only available for farmers and transporters.
+            {t('farmer.stripe.roleOnly')}
           </p>
         </div>
       </div>
@@ -89,9 +91,9 @@ export const StripeConnect = () => {
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Stripe Connect</h1>
+        <h1 className="text-3xl font-bold text-gray-900">{t('farmer.stripe.title')}</h1>
         <p className="text-gray-600 mt-1">
-          Setup your payment account to receive earnings from orders
+          {t('farmer.stripe.subtitle')}
         </p>
       </div>
       
@@ -104,15 +106,14 @@ export const StripeConnect = () => {
       
       {/* Account Status */}
       <div className="bg-white rounded-xl shadow-md p-6 space-y-4">
-        <h2 className="text-xl font-semibold text-gray-900">Account Status</h2>
+        <h2 className="text-xl font-semibold text-gray-900">{t('farmer.stripe.accountStatus')}</h2>
         
         {!status?.hasAccount ? (
           <div className="space-y-4">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-blue-900 font-medium mb-2">No Payment Account Yet</p>
+              <p className="text-blue-900 font-medium mb-2">{t('farmer.stripe.noAccount')}</p>
               <p className="text-sm text-blue-800">
-                You need to create a Stripe Connect account to receive payments from orders.
-                This process is secure and takes about 5 minutes.
+                {t('farmer.stripe.noAccountDesc')}
               </p>
             </div>
             
@@ -124,12 +125,12 @@ export const StripeConnect = () => {
               {creating ? (
                 <span className="flex items-center justify-center gap-2">
                   <Loader className="w-5 h-5 animate-spin" />
-                  Creating Account...
+                  {t('farmer.stripe.creating')}
                 </span>
               ) : (
                 <span className="flex items-center justify-center gap-2">
                   <ExternalLink className="w-5 h-5" />
-                  Start Onboarding
+                  {t('farmer.stripe.startOnboarding')}
                 </span>
               )}
             </Button>
@@ -139,22 +140,22 @@ export const StripeConnect = () => {
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-yellow-900 font-medium">Onboarding Incomplete</p>
+                <p className="text-yellow-900 font-medium">{t('farmer.stripe.incomplete')}</p>
                 <p className="text-sm text-yellow-800 mt-1">
-                  Your Stripe Connect account is created but you need to complete the onboarding process.
+                  {t('farmer.stripe.incompleteDesc')}
                 </p>
               </div>
             </div>
             
             <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
               <div>
-                <p className="text-sm text-gray-600">Charges Enabled</p>
+                <p className="text-sm text-gray-600">{t('farmer.stripe.chargesEnabled')}</p>
                 <p className="font-medium text-gray-900">
                   {status.chargesEnabled ? '✅ Yes' : '❌ No'}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Payouts Enabled</p>
+                <p className="text-sm text-gray-600">{t('farmer.stripe.payoutsEnabled')}</p>
                 <p className="font-medium text-gray-900">
                   {status.payoutsEnabled ? '✅ Yes' : '❌ No'}
                 </p>
@@ -169,12 +170,12 @@ export const StripeConnect = () => {
               {creating ? (
                 <span className="flex items-center justify-center gap-2">
                   <Loader className="w-5 h-5 animate-spin" />
-                  Loading...
+                  {t('farmer.stripe.loading')}
                 </span>
               ) : (
                 <span className="flex items-center justify-center gap-2">
                   <ExternalLink className="w-5 h-5" />
-                  Continue Onboarding
+                  {t('farmer.stripe.continueOnboarding')}
                 </span>
               )}
             </Button>
@@ -184,9 +185,9 @@ export const StripeConnect = () => {
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
               <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0" />
               <div>
-                <p className="text-green-900 font-medium">Account Active</p>
+                <p className="text-green-900 font-medium">{t('farmer.stripe.active')}</p>
                 <p className="text-sm text-green-800">
-                  Your payment account is fully setup and ready to receive earnings.
+                  {t('farmer.stripe.activeDesc')}
                 </p>
               </div>
             </div>
@@ -196,7 +197,7 @@ export const StripeConnect = () => {
                 onClick={() => navigate(`/${user.role}/earnings`)}
                 variant="outline"
               >
-                View Earnings
+                {t('farmer.stripe.viewEarnings')}
               </Button>
               <Button
                 onClick={async () => {
@@ -213,7 +214,7 @@ export const StripeConnect = () => {
               >
                 <span className="flex items-center gap-2">
                   <ExternalLink className="w-4 h-4" />
-                  Stripe Dashboard
+                  {t('farmer.stripe.stripeDashboard')}
                 </span>
               </Button>
             </div>
@@ -223,24 +224,14 @@ export const StripeConnect = () => {
       
       {/* What is Stripe Connect? */}
       <div className="bg-gray-50 rounded-xl p-6">
-        <h3 className="font-semibold text-gray-900 mb-3">What is Stripe Connect?</h3>
+        <h3 className="font-semibold text-gray-900 mb-3">{t('farmer.stripe.whatIs')}</h3>
         <ul className="space-y-2 text-sm text-gray-700">
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>Secure payment processing by Stripe, trusted by millions</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>Automatic transfers to your bank account after delivery</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>Track your earnings and payout history</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>No upfront fees - only pay when you receive payments</span>
-          </li>
+          {t('farmer.stripe.benefits').map((item, i) => (
+            <li key={i} className="flex items-start gap-2">
+              <span className="text-green-600 font-bold">✓</span>
+              <span>{item}</span>
+            </li>
+          ))}
         </ul>
       </div>
     </div>

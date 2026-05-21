@@ -2,14 +2,16 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { Plus, Trash2, Edit2, TrendingUp, Calendar } from 'lucide-react';
 import { getCurrentPrices, addOrUpdatePrice, getMarketStats } from '../../services/marketPriceService';
-import { BANGLADESH_DISTRICTS, STANDARD_CROPS, formatPrice, formatDate, getDaysSinceUpdate } from '../../utils/bangladeshData';
+import { BANGLADESH_DISTRICTS, STANDARD_CROPS, CROP_CATEGORIES, formatPrice, formatDate, getDaysSinceUpdate, getLocalizedCrop, getLocalizedDistrict, getLocalizedCategory } from '../../utils/bangladeshData';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
 import Select from '../../components/Select';
 import Loading from '../../components/Loading';
+import { useLanguage } from '../../context/LanguageContext';
 
 const MarketPriceManagement = () => {
+  const { t, lang } = useLanguage();
   const [prices, setPrices] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -40,7 +42,7 @@ const MarketPriceManagement = () => {
       setStats(statsData);
     } catch (error) {
       console.error('Error fetching data:', error);
-      toast.error('Failed to load market prices');
+      toast.error(t('admin.marketPrices.loadFail'));
     } finally {
       setLoading(false);
     }
@@ -64,7 +66,7 @@ const MarketPriceManagement = () => {
 
   const validateForm = () => {
     if (!formData.cropName || !formData.district || !formData.wholesale || !formData.retail) {
-      toast.error('Please fill all required fields');
+      toast.error(t('admin.marketPrices.missingFields'));
       return false;
     }
 
@@ -72,22 +74,22 @@ const MarketPriceManagement = () => {
     const retail = parseFloat(formData.retail);
 
     if (isNaN(wholesale) || isNaN(retail)) {
-      toast.error('Prices must be valid numbers');
+      toast.error(t('admin.marketPrices.invalidPrices'));
       return false;
     }
 
     if (wholesale <= 0 || retail <= 0) {
-      toast.error('Prices must be greater than zero');
+      toast.error(t('admin.marketPrices.zeroPrices'));
       return false;
     }
 
     if (retail <= wholesale) {
-      toast.error('Retail price must be greater than wholesale price');
+      toast.error(t('admin.marketPrices.retailTooLow'));
       return false;
     }
 
     if (wholesale > 10000 || retail > 10000) {
-      toast.error('Prices seem unrealistic (max: ৳10,000)');
+      toast.error(t('admin.marketPrices.priceUnrealistic'));
       return false;
     }
 
@@ -110,7 +112,7 @@ const MarketPriceManagement = () => {
         source: formData.source
       });
 
-      toast.success(response.message || 'Price updated successfully');
+      toast.success(response.message || t('admin.marketPrices.saveSuccess'));
       
       // Reset form
       setFormData({
@@ -126,7 +128,7 @@ const MarketPriceManagement = () => {
       fetchData();
     } catch (error) {
       console.error('Error adding price:', error);
-      toast.error(error.response?.data?.message || 'Failed to add price');
+      toast.error(error.response?.data?.message || t('admin.marketPrices.addFail'));
     } finally {
       setSubmitting(false);
     }
@@ -153,8 +155,8 @@ const MarketPriceManagement = () => {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Market Price Management</h1>
-          <p className="text-gray-600 mt-1">Add and update wholesale and retail prices</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('admin.marketPrices.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('admin.marketPrices.subtitle')}</p>
         </div>
 
       {/* Stats Cards */}
@@ -163,7 +165,7 @@ const MarketPriceManagement = () => {
           <Card>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Crops Tracked</p>
+                <p className="text-sm text-gray-600">{t('admin.marketPrices.totalCrops')}</p>
                 <p className="text-2xl font-bold text-primary-600">{stats.totalCrops}</p>
               </div>
               <TrendingUp className="w-10 h-10 text-primary-400" />
@@ -173,7 +175,7 @@ const MarketPriceManagement = () => {
           <Card>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Active Districts</p>
+                <p className="text-sm text-gray-600">{t('admin.marketPrices.activeDistricts')}</p>
                 <p className="text-2xl font-bold text-green-600">{stats.totalDistricts}</p>
               </div>
               <Calendar className="w-10 h-10 text-green-400" />
@@ -183,9 +185,9 @@ const MarketPriceManagement = () => {
           <Card>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Last Updated</p>
+                <p className="text-sm text-gray-600">{t('admin.marketPrices.lastUpdated')}</p>
                 <p className="text-lg font-semibold text-gray-700">
-                  {stats.lastUpdated ? getDaysSinceUpdate(stats.lastUpdated) : 'Never'}
+                  {stats.lastUpdated ? getDaysSinceUpdate(stats.lastUpdated, lang) : t('admin.marketPrices.never')}
                 </p>
               </div>
               <Calendar className="w-10 h-10 text-gray-400" />
@@ -196,17 +198,17 @@ const MarketPriceManagement = () => {
 
       {/* Add/Update Price Form */}
       <Card>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Add or Update Price</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.marketPrices.addOrUpdate')}</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Select
-              label="Crop Name"
+              label={t('admin.marketPrices.cropName')}
               name="cropName"
               value={formData.cropName}
               onChange={handleCropChange}
               required
             >
-              <option value="">Select Crop</option>
+              <option value="">{t('admin.marketPrices.selectCrop')}</option>
               {STANDARD_CROPS.map(crop => (
                 <option key={crop.name} value={crop.name}>
                   {crop.name} ({crop.bengali})
@@ -215,49 +217,49 @@ const MarketPriceManagement = () => {
             </Select>
 
             <Select
-              label="District"
+              label={t('admin.marketPrices.district')}
               name="district"
               value={formData.district}
               onChange={handleInputChange}
               required
             >
-              <option value="">Select District</option>
+              <option value="">{t('admin.marketPrices.selectDistrict')}</option>
               {BANGLADESH_DISTRICTS.map(district => (
-                <option key={district} value={district}>{district}</option>
+                <option key={district} value={district}>{getLocalizedDistrict(district, lang)}</option>
               ))}
             </Select>
 
             <Input
-              label="Wholesale Price (৳/kg)"
+              label={t('admin.marketPrices.wholesalePrice')}
               type="number"
               name="wholesale"
               value={formData.wholesale}
               onChange={handleInputChange}
-              placeholder="Enter wholesale price"
+              placeholder={t('admin.marketPrices.enterWholesale')}
               min="0"
               step="0.01"
               required
             />
 
             <Input
-              label="Retail Price (৳/kg)"
+              label={t('admin.marketPrices.retailPrice')}
               type="number"
               name="retail"
               value={formData.retail}
               onChange={handleInputChange}
-              placeholder="Enter retail price"
+              placeholder={t('admin.marketPrices.enterRetail')}
               min="0"
               step="0.01"
               required
             />
 
             <Input
-              label="Source"
+              label={t('admin.marketPrices.source')}
               type="text"
               name="source"
               value={formData.source}
               onChange={handleInputChange}
-              placeholder="e.g., DAM - Dhaka"
+              placeholder={t('admin.marketPrices.sourcePlaceholder')}
             />
 
             <div className="flex items-end">
@@ -266,10 +268,10 @@ const MarketPriceManagement = () => {
                 disabled={submitting}
                 className="w-full"
               >
-                {submitting ? 'Saving...' : (
+                {submitting ? t('admin.marketPrices.saving') : (
                   <>
                     <Plus className="w-5 h-5 mr-2" />
-                    {formData.cropName && formData.district ? 'Update Price' : 'Add Price'}
+                    {formData.cropName && formData.district ? t('admin.marketPrices.updatePrice') : t('admin.marketPrices.addPrice')}
                   </>
                 )}
               </Button>
@@ -279,7 +281,7 @@ const MarketPriceManagement = () => {
           {formData.wholesale && formData.retail && parseFloat(formData.retail) > parseFloat(formData.wholesale) && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
               <p className="text-sm text-blue-800">
-                <span className="font-semibold">Margin:</span> ৳{(parseFloat(formData.retail) - parseFloat(formData.wholesale)).toFixed(2)} 
+                <span className="font-semibold">{t('admin.marketPrices.marginLabel')}</span> ৳{(parseFloat(formData.retail) - parseFloat(formData.wholesale)).toFixed(2)} 
                 ({(((parseFloat(formData.retail) - parseFloat(formData.wholesale)) / parseFloat(formData.wholesale)) * 100).toFixed(1)}%)
               </p>
             </div>
@@ -289,30 +291,28 @@ const MarketPriceManagement = () => {
 
       {/* Filters */}
       <Card>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Filter Prices</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('admin.marketPrices.filterPrices')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Select
-            label="District"
+            label={t('admin.marketPrices.district')}
             value={filters.district}
             onChange={(e) => setFilters(prev => ({ ...prev, district: e.target.value }))}
           >
-            <option value="">All Districts</option>
+            <option value="">{t('admin.marketPrices.allDistricts')}</option>
             {BANGLADESH_DISTRICTS.map(district => (
-              <option key={district} value={district}>{district}</option>
+              <option key={district} value={district}>{getLocalizedDistrict(district, lang)}</option>
             ))}
           </Select>
 
           <Select
-            label="Category"
+            label={t('admin.marketPrices.category')}
             value={filters.category}
             onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
           >
-            <option value="">All Categories</option>
-            <option value="Grains">Grains</option>
-            <option value="Vegetables">Vegetables</option>
-            <option value="Fruits">Fruits</option>
-            <option value="Spices">Spices</option>
-            <option value="Cash Crops">Cash Crops</option>
+            <option value="">{t('admin.marketPrices.allCategories')}</option>
+            {CROP_CATEGORIES.filter(c => c !== 'All').map(category => (
+              <option key={category} value={category}>{getLocalizedCategory(category, lang)}</option>
+            ))}
           </Select>
         </div>
       </Card>
@@ -320,24 +320,24 @@ const MarketPriceManagement = () => {
       {/* Recent Entries */}
       <Card>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Recent Entries ({prices.length})</h2>
+          <h2 className="text-lg font-semibold text-gray-900">{t('admin.marketPrices.recentEntries', { count: prices.length })}</h2>
         </div>
 
         {prices.length === 0 ? (
-          <p className="text-center text-gray-500 py-8">No prices found</p>
+          <p className="text-center text-gray-500 py-8">{t('admin.marketPrices.noPrices')}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Crop</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">District</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Wholesale</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Retail</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Margin</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Updated</th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.marketPrices.cropCol')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.marketPrices.districtCol')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.marketPrices.categoryCol')}</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">{t('admin.marketPrices.wholesaleCol')}</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">{t('admin.marketPrices.retailCol')}</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">{t('admin.marketPrices.marginCol')}</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{t('admin.marketPrices.updatedCol')}</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">{t('admin.marketPrices.actionsCol')}</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -347,11 +347,11 @@ const MarketPriceManagement = () => {
                   
                   return (
                     <tr key={price._id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm font-medium text-gray-900">{price.cropName}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{price.district}</td>
+                      <td className="px-4 py-3 text-sm font-medium text-gray-900">{getLocalizedCrop(price.cropName, lang)}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{getLocalizedDistrict(price.district, lang)}</td>
                       <td className="px-4 py-3 text-sm">
                         <span className="px-2 py-1 text-xs font-medium bg-primary-100 text-primary-800 rounded-full">
-                          {price.category}
+                          {getLocalizedCategory(price.category, lang)}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm text-right font-medium text-blue-600">
@@ -364,7 +364,7 @@ const MarketPriceManagement = () => {
                         ৳{margin.toFixed(0)} ({marginPercent}%)
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-500">
-                        {getDaysSinceUpdate(price.lastUpdated)}
+                        {getDaysSinceUpdate(price.lastUpdated, lang)}
                       </td>
                       <td className="px-4 py-3 text-center">
                         <button

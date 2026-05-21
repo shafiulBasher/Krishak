@@ -3,8 +3,12 @@ import { Bell, Check, CheckCheck, Trash2, X, Package, Truck, CheckCircle, AlertC
 import { notificationService } from '../services/notificationService';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 const NotificationDropdown = () => {
+  const { t, lang } = useLanguage();
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -123,7 +127,16 @@ const NotificationDropdown = () => {
 
     // Navigate based on notification type
     if (notification.relatedOrder) {
-      navigate(`/buyer/orders/${notification.relatedOrder}`);
+      const orderId = typeof notification.relatedOrder === 'object' ? notification.relatedOrder._id : notification.relatedOrder;
+      
+      if (user?.role === 'farmer') {
+        navigate(`/farmer/orders/${orderId}`);
+      } else if (user?.role === 'transporter') {
+        // Transporters usually go to my-deliveries or active jobs
+        navigate(`/transporter/my-deliveries`); 
+      } else {
+        navigate(`/buyer/orders/${orderId}`);
+      }
     } else if (notification.relatedProduct) {
       navigate(`/browse-products`);
     }
@@ -139,9 +152,9 @@ const NotificationDropdown = () => {
         prev.map(n => ({ ...n, isRead: true }))
       );
       setUnreadCount(0);
-      toast.success('All notifications marked as read');
+      toast.success(t('notifications.markedAllRead'));
     } catch (error) {
-      toast.error('Failed to mark all as read');
+      toast.error(t('notifications.markAllFailed'));
       console.error('Error marking all as read:', error);
     }
   };
@@ -156,9 +169,9 @@ const NotificationDropdown = () => {
       if (!notification?.isRead) {
         setUnreadCount(prev => Math.max(0, prev - 1));
       }
-      toast.success('Notification deleted');
+      toast.success(t('notifications.deleted'));
     } catch (error) {
-      toast.error('Failed to delete notification');
+      toast.error(t('notifications.deleteFailed'));
       console.error('Error deleting notification:', error);
     }
   };
@@ -184,6 +197,59 @@ const NotificationDropdown = () => {
     }
   };
 
+  // Map notification type to locale key for translated titles
+  const getLocalizedTitle = (notification) => {
+    const typeMap = {
+      order_placed: 'notifications.orderPlaced',
+      order_confirmed: 'notifications.orderConfirmed',
+      order_completed: 'notifications.orderCompleted',
+      order_delivered: 'notifications.orderDelivered',
+      order_cancelled: 'notifications.orderCancelled',
+      delivery_assigned: 'notifications.deliveryAssigned',
+      delivery_picked: 'notifications.deliveryPicked',
+      delivery_in_transit: 'notifications.deliveryInTransit',
+      payment_received: 'notifications.paymentReceived',
+      delivery_payment: 'notifications.deliveryPayment',
+    };
+    const key = typeMap[notification.type];
+    return key ? t(key) : notification.title;
+  };
+
+  // Generate localized message body from notification type and metadata
+  const getLocalizedMessage = (notification) => {
+    const { type, message, metadata } = notification;
+    const { orderNumber, quantity, deliveryFee } = metadata || {};
+    const fee = Number(deliveryFee || 0).toLocaleString();
+    switch (type) {
+      case 'order_placed':
+        return t('notifications.msgOrderPlaced', { orderNumber, quantity });
+      case 'order_confirmed':
+        return t('notifications.msgOrderConfirmed', { orderNumber });
+      case 'order_cancelled':
+        return t('notifications.msgOrderCancelled', { orderNumber });
+      case 'order_completed':
+        return message?.includes('Your order')
+          ? t('notifications.msgOrderCompletedBuyer', { orderNumber })
+          : t('notifications.msgOrderCompletedFarmer', { orderNumber });
+      case 'delivery_assigned':
+        return message?.includes('You have been assigned')
+          ? t('notifications.msgDeliveryAssignedTransporter', { orderNumber })
+          : t('notifications.msgDeliveryAssignedBuyer', { orderNumber });
+      case 'delivery_picked':
+        return t('notifications.msgDeliveryPicked', { orderNumber });
+      case 'delivery_in_transit':
+        return t('notifications.msgDeliveryInTransit', { orderNumber });
+      case 'order_delivered':
+        return message?.includes('Your order')
+          ? t('notifications.msgOrderDeliveredBuyer', { orderNumber })
+          : t('notifications.msgOrderDeliveredFarmer', { orderNumber });
+      case 'delivery_payment':
+        return t('notifications.msgDeliveryPayment', { orderNumber, deliveryFee: fee });
+      default:
+        return message;
+    }
+  };
+
   // Format date
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -193,10 +259,10 @@ const NotificationDropdown = () => {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
+    if (diffMins < 1) return t('notifications.justNow');
+    if (diffMins < 60) return t('notifications.minsAgo', { n: diffMins });
+    if (diffHours < 24) return t('notifications.hoursAgo', { n: diffHours });
+    if (diffDays < 7) return t('notifications.daysAgo', { n: diffDays });
     return date.toLocaleDateString();
   };
 
@@ -222,10 +288,10 @@ const NotificationDropdown = () => {
           {/* Header */}
           <div className="p-4 border-b border-gray-200 flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900">
-              Notifications
+              {t('notifications.title')}
               {unreadCount > 0 && (
                 <span className="ml-2 text-sm font-normal text-gray-500">
-                  ({unreadCount} unread)
+                  {t('notifications.unread', { count: unreadCount })}
                 </span>
               )}
             </h3>
@@ -253,12 +319,12 @@ const NotificationDropdown = () => {
             {loading ? (
               <div className="p-8 text-center text-gray-500">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-                <p className="mt-2">Loading notifications...</p>
-              </div>
+              <p className="mt-2">{t('notifications.loading')}</p>
+            </div>
             ) : notifications.length === 0 ? (
               <div className="p-8 text-center text-gray-500">
                 <Bell className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                <p>No notifications yet</p>
+                <p>{t('notifications.empty')}</p>
               </div>
             ) : (
               <div className="divide-y divide-gray-100">
@@ -280,10 +346,10 @@ const NotificationDropdown = () => {
                             <p className={`text-sm font-medium ${
                               !notification.isRead ? 'text-gray-900' : 'text-gray-700'
                             }`}>
-                              {notification.title}
+                              {getLocalizedTitle(notification)}
                             </p>
                             <p className="text-sm text-gray-600 mt-1">
-                              {notification.message}
+                              {getLocalizedMessage(notification)}
                             </p>
                             <p className="text-xs text-gray-400 mt-1">
                               {formatDate(notification.createdAt)}
@@ -320,7 +386,7 @@ const NotificationDropdown = () => {
                 }}
                 className="text-sm text-primary-600 hover:text-primary-700 font-medium"
               >
-                View all notifications
+                {t('notifications.viewAll')}
               </button>
             </div>
           )}

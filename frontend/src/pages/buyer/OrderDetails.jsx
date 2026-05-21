@@ -5,6 +5,8 @@ import {
   Truck, CheckCircle, Clock, CreditCard, FileText, Camera, Image, Star
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
+import { getLocalizedCrop } from '../../utils/bangladeshData';
 import { orderService } from '../../services/orderService';
 import { reviewService } from '../../services/reviewService';
 import Loading from '../../components/Loading';
@@ -18,6 +20,7 @@ const OrderDetails = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t, lang } = useLanguage();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -151,7 +154,7 @@ const OrderDetails = () => {
             <p className="text-lg">{error}</p>
           </div>
           <Button onClick={() => navigate('/buyer/orders')}>
-            Back to Orders
+            {t('buyer.orderDetails.backToOrders')}
           </Button>
         </Card>
       </div>
@@ -171,7 +174,7 @@ const OrderDetails = () => {
           className="mb-4"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
+          {t('buyer.orderDetails.back')}
         </Button>
         
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -180,17 +183,17 @@ const OrderDetails = () => {
               Order #{order.orderNumber}
             </h1>
             <p className="text-gray-600">
-              Placed on {formatDate(order.createdAt)}
+              {t('buyer.orderDetails.placedOn', { date: formatDate(order.createdAt) })}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(order.orderStatus)}`}>
               <Package className="w-4 h-4 mr-2" />
-              {order.orderStatus}
+              {t(`buyer.orders.${order.orderStatus}`) || order.orderStatus}
             </span>
             <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${getPaymentStatusColor(order.paymentStatus)}`}>
               <CreditCard className="w-4 h-4 mr-2" />
-              Payment: {order.paymentStatus}
+              {t('buyer.orderDetails.paymentLabel')}: {t(`status.${order.paymentStatus}`) || order.paymentStatus}
             </span>
           </div>
         </div>
@@ -204,10 +207,10 @@ const OrderDetails = () => {
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center gap-2 mb-2">
                 <Truck className="w-6 h-6 text-primary-600" />
-                <h2 className="text-xl font-semibold text-gray-900">Live Shipment Tracking</h2>
+                <h2 className="text-xl font-semibold text-gray-900">{t('buyer.orderDetails.liveTracking')}</h2>
               </div>
               <p className="text-sm text-gray-600">
-                Real-time updates on your order delivery status
+                {t('buyer.orderDetails.trackingDesc')}
               </p>
             </div>
             <div className="p-6">
@@ -227,10 +230,10 @@ const OrderDetails = () => {
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center gap-2 mb-2">
                   <Camera className="w-6 h-6 text-primary-600" />
-                  <h2 className="text-xl font-semibold text-gray-900">Verification Photos</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">{t('buyer.orderDetails.verificationPhotos')}</h2>
                 </div>
                 <p className="text-sm text-gray-600">
-                  Photos uploaded by the delivery partner for verification
+                  {t('buyer.orderDetails.photosDesc')}
                 </p>
               </div>
               <div className="p-6">
@@ -240,7 +243,7 @@ const OrderDetails = () => {
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
                         <Image className="w-4 h-4 text-green-600" />
-                        Pickup Verification
+                        {t('buyer.orderDetails.pickupVerification')}
                       </div>
                       <div className="relative group">
                         <img
@@ -265,25 +268,25 @@ const OrderDetails = () => {
                             rel="noopener noreferrer"
                             className="opacity-0 group-hover:opacity-100 bg-white text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-opacity"
                           >
-                            View Full Image
+                            {t('buyer.orderDetails.viewFullImage')}
                           </a>
                         </div>
                       </div>
                       <p className="text-xs text-gray-500">
-                        Uploaded: {order.deliveryInfo.pickupPhoto.uploadedAt ? new Date(order.deliveryInfo.pickupPhoto.uploadedAt).toLocaleString() : 'N/A'}
+                        {t('buyer.orderDetails.uploadedAt', { date: order.deliveryInfo.pickupPhoto.uploadedAt ? new Date(order.deliveryInfo.pickupPhoto.uploadedAt).toLocaleString() : 'N/A' })}
                       </p>
                     </div>
                   ) : order.deliveryStatus === 'picked' || order.deliveryStatus === 'in_transit' || order.deliveryStatus === 'delivered' ? (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
                         <Image className="w-4 h-4 text-gray-400" />
-                        Pickup Verification
+                        {t('buyer.orderDetails.pickupVerification')}
                       </div>
                       <div className="w-full h-48 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center">
                         <div className="text-center p-4">
                           <Camera className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                          <p className="text-sm text-gray-600">Photo not available</p>
-                          <p className="text-xs text-gray-400 mt-1">Transporter did not upload pickup photo</p>
+                          <p className="text-sm text-gray-600">{t('buyer.orderDetails.photoNotAvailable')}</p>
+                          <p className="text-xs text-gray-400 mt-1">{t('buyer.orderDetails.pickupNoPhoto')}</p>
                         </div>
                       </div>
                     </div>
@@ -294,7 +297,7 @@ const OrderDetails = () => {
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
                         <CheckCircle className="w-4 h-4 text-blue-600" />
-                        Delivery Proof
+                        {t('buyer.orderDetails.deliveryProof')}
                       </div>
                       <div className="relative group">
                         <img
@@ -312,25 +315,25 @@ const OrderDetails = () => {
                             rel="noopener noreferrer"
                             className="opacity-0 group-hover:opacity-100 bg-white text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-opacity"
                           >
-                            View Full Image
+                            {t('buyer.orderDetails.viewFullImage')}
                           </a>
                         </div>
                       </div>
                       <p className="text-xs text-gray-500">
-                        Uploaded: {order.deliveryInfo.deliveryProofPhoto.uploadedAt ? new Date(order.deliveryInfo.deliveryProofPhoto.uploadedAt).toLocaleString() : 'N/A'}
+                        {t('buyer.orderDetails.uploadedAt', { date: order.deliveryInfo.deliveryProofPhoto.uploadedAt ? new Date(order.deliveryInfo.deliveryProofPhoto.uploadedAt).toLocaleString() : 'N/A' })}
                       </p>
                     </div>
                   ) : order.deliveryStatus === 'delivered' ? (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
                         <CheckCircle className="w-4 h-4 text-gray-400" />
-                        Delivery Proof
+                        {t('buyer.orderDetails.deliveryProof')}
                       </div>
                       <div className="w-full h-48 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center">
                         <div className="text-center p-4">
                           <Camera className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                          <p className="text-sm text-gray-600">Photo not uploaded</p>
-                          <p className="text-xs text-gray-400 mt-1">Optional - Transporter chose not to upload</p>
+                          <p className="text-sm text-gray-600">{t('buyer.orderDetails.photoNotUploaded')}</p>
+                          <p className="text-xs text-gray-400 mt-1">{t('buyer.orderDetails.photoOptional')}</p>
                         </div>
                       </div>
                     </div>
@@ -343,7 +346,7 @@ const OrderDetails = () => {
           {/* Product Details */}
           <Card>
             <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">Product Details</h2>
+              <h2 className="text-xl font-semibold text-gray-900">{t('buyer.orderDetails.productDetails')}</h2>
             </div>
             <div className="p-6">
               {order.product && (
@@ -365,14 +368,14 @@ const OrderDetails = () => {
                   </div>
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {order.product.cropName}
+                      {getLocalizedCrop(order.product.cropName, lang)}
                     </h3>
                     <div className="space-y-1 text-sm">
-                      <p className="text-gray-600">Grade: <span className="font-medium">{order.product.grade}</span></p>
-                      <p className="text-gray-600">Quantity: <span className="font-medium">{order.quantity} {order.product.unit || 'kg'}</span></p>
-                      <p className="text-gray-600">Price per unit: <span className="font-medium">৳{order.pricePerUnit?.toLocaleString()}/{order.product.unit || 'kg'}</span></p>
+                      <p className="text-gray-600">{t('buyer.orderDetails.grade')} <span className="font-medium">{order.product.grade}</span></p>
+                      <p className="text-gray-600">{t('buyer.orderDetails.quantity')} <span className="font-medium">{order.quantity} {order.product.unit || 'kg'}</span></p>
+                      <p className="text-gray-600">{t('buyer.orderDetails.pricePerUnit')} <span className="font-medium">৳{order.pricePerUnit?.toLocaleString()}/{order.product.unit || 'kg'}</span></p>
                       <p className="text-lg font-semibold text-primary-600 mt-2">
-                        Total: ৳{order.totalPrice?.toLocaleString()}
+                        {t('buyer.orderDetails.total')} ৳{order.totalPrice?.toLocaleString()}
                       </p>
                     </div>
                   </div>
@@ -385,29 +388,29 @@ const OrderDetails = () => {
           {order.priceBreakdown && (
             <Card>
               <div className="p-6 border-b border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-900">Price Breakdown</h2>
-              </div>
-              <div className="p-6">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Subtotal</span>
+              <h2 className="text-xl font-semibold text-gray-900">{t('buyer.orderDetails.priceBreakdown')}</h2>
+            </div>
+            <div className="p-6">
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">{t('buyer.orderDetails.subtotal')}</span>
                     <span className="font-medium">৳{order.totalPrice?.toLocaleString()}</span>
                   </div>
                   {order.priceBreakdown.transportFee > 0 && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Transport Fee</span>
+                      <span className="text-gray-600">{t('buyer.orderDetails.transportFee')}</span>
                       <span className="font-medium">৳{order.priceBreakdown.transportFee?.toLocaleString()}</span>
                     </div>
                   )}
                   {order.priceBreakdown.platformFee > 0 && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Platform Fee</span>
+                      <span className="text-gray-600">{t('buyer.orderDetails.platformFee')}</span>
                       <span className="font-medium">৳{order.priceBreakdown.platformFee?.toLocaleString()}</span>
                     </div>
                   )}
                   <div className="border-t pt-2 mt-2">
                     <div className="flex justify-between">
-                      <span className="text-lg font-semibold">Total Amount</span>
+                      <span className="text-lg font-semibold">{t('buyer.orderDetails.totalAmount')}</span>
                       <span className="text-lg font-bold text-primary-600">
                         ৳{(
                           (order.totalPrice || 0) +
@@ -431,7 +434,7 @@ const OrderDetails = () => {
               <div className="p-4 border-b border-gray-200">
                 <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                   <MapPin className="w-5 h-5 text-gray-600" />
-                  Delivery Address
+                  {t('buyer.orderDetails.deliveryAddress')}
                 </h3>
               </div>
               <div className="p-4">
@@ -447,7 +450,7 @@ const OrderDetails = () => {
               <div className="p-4 border-b border-gray-200">
                 <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-gray-600" />
-                  Delivery Schedule
+                  {t('buyer.orderDetails.deliverySchedule')}
                 </h3>
               </div>
               <div className="p-4">
@@ -467,7 +470,7 @@ const OrderDetails = () => {
               <div className="p-4 border-b border-gray-200">
                 <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                   <User className="w-5 h-5 text-gray-600" />
-                  Farmer Details
+                  {t('buyer.orderDetails.farmerDetails')}
                 </h3>
               </div>
               <div className="p-4">
@@ -490,18 +493,18 @@ const OrderDetails = () => {
             <div className="p-4 border-b border-gray-200">
               <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                 <CreditCard className="w-5 h-5 text-gray-600" />
-                Payment Information
-              </h3>
-            </div>
-            <div className="p-4 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Method</span>
-                <span className="font-medium capitalize">{order.paymentMethod?.replace('_', ' ')}</span>
+                  {t('buyer.orderDetails.paymentInfo')}
+                </h3>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Status</span>
+              <div className="p-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">{t('buyer.orderDetails.paymentMethod')}</span>
+                  <span className="font-medium capitalize">{order.paymentMethod?.replace('_', ' ')}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">{t('buyer.orderDetails.paymentStatus')}</span>
                 <span className={`px-2 py-1 rounded text-xs ${getPaymentStatusColor(order.paymentStatus)}`}>
-                  {order.paymentStatus}
+                  {t(`status.${order.paymentStatus}`) || order.paymentStatus}
                 </span>
               </div>
             </div>
@@ -513,7 +516,7 @@ const OrderDetails = () => {
               <div className="p-4 border-b border-gray-200">
                 <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                   <FileText className="w-5 h-5 text-gray-600" />
-                  Order Notes
+                  {t('buyer.orderDetails.orderNotes')}
                 </h3>
               </div>
               <div className="p-4">
@@ -528,18 +531,18 @@ const OrderDetails = () => {
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center gap-2 mb-2">
                   <Star className="w-6 h-6 text-yellow-500" />
-                  <h2 className="text-xl font-semibold text-gray-900">Product Review</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">{t('buyer.orderDetails.productReview')}</h2>
                 </div>
                 <p className="text-sm text-gray-600">
-                  Share your experience with this product to help other buyers
+                  {t('buyer.orderDetails.reviewDesc')}
                 </p>
               </div>
               <div className="p-6">
                 {hasReviewed ? (
                   <div className="text-center py-4">
                     <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-2" />
-                    <p className="text-gray-700 font-medium">You have already reviewed this product</p>
-                    <p className="text-sm text-gray-500 mt-1">Thank you for your feedback!</p>
+                    <p className="text-gray-700 font-medium">{t('buyer.orderDetails.alreadyReviewed')}</p>
+                    <p className="text-sm text-gray-500 mt-1">{t('buyer.orderDetails.thanksForFeedback')}</p>
                   </div>
                 ) : canReview ? (
                   <div>
@@ -559,19 +562,16 @@ const OrderDetails = () => {
                       <div className="text-center py-4">
                         <Button onClick={() => setShowReviewForm(true)}>
                           <Star className="w-4 h-4 mr-2" />
-                          Write a Review
+                          {t('buyer.orderDetails.writeReview')}
                         </Button>
                       </div>
                     )}
                   </div>
                 ) : (
                   <div className="text-center py-4">
-                    <p className="text-gray-600">This order is not yet eligible for review</p>
-                    <p className="text-xs text-gray-500 mt-2">
-                      Order Status: {order.orderStatus} | Delivery Status: {order.deliveryStatus || 'N/A'}
-                    </p>
+                    <p className="text-gray-600">{t('buyer.orderDetails.notEligible')}</p>
                     <p className="text-xs text-gray-500">
-                      Orders can be reviewed when they are completed or delivered.
+                      {t('buyer.orderDetails.eligibleWhen')}
                     </p>
                   </div>
                 )}

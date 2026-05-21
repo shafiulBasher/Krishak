@@ -1,39 +1,40 @@
 import { CheckCircle, Package, Truck, MapPin, Clock } from 'lucide-react';
 import { getImageUrl } from '../utils/imageHelper';
+import { useLanguage } from '../context/LanguageContext';
 
-const STATUS_STEPS = [
+const getStatusSteps = (t) => [
   {
     status: 'not_assigned',
-    label: 'Order Placed',
-    description: 'Waiting for transporter assignment',
+    label: t('components.tracking.orderPlaced'),
+    description: t('components.tracking.waitingTransporter'),
     icon: Package,
     color: 'gray'
   },
   {
     status: 'assigned',
-    label: 'Transporter Assigned',
-    description: 'A transporter has been assigned to your order',
+    label: t('components.tracking.transporterAssigned'),
+    description: t('components.tracking.transporterAssignedDesc'),
     icon: Package,
     color: 'yellow'
   },
   {
     status: 'picked',
-    label: 'Picked Up',
-    description: 'Order has been picked up from the farmer',
+    label: t('components.tracking.pickedUp'),
+    description: t('components.tracking.pickedUpFromFarmer'),
     icon: CheckCircle,
     color: 'blue'
   },
   {
     status: 'in_transit',
-    label: 'In Transit',
-    description: 'Your order is on the way',
+    label: t('components.tracking.inTransit'),
+    description: t('components.tracking.onTheWay'),
     icon: Truck,
     color: 'purple'
   },
   {
     status: 'delivered',
-    label: 'Delivered',
-    description: 'Order has been delivered successfully',
+    label: t('components.tracking.delivered'),
+    description: t('components.tracking.deliveredSuccess'),
     icon: MapPin,
     color: 'green'
   }
@@ -79,6 +80,9 @@ const OrderTracking = ({
   showTransporter = true,
   compact = false 
 }) => {
+  const { t } = useLanguage();
+  const STATUS_STEPS = getStatusSteps(t);
+
   const getStatusIndex = (status) => {
     return STATUS_STEPS.findIndex(step => step.status === status);
   };
@@ -159,7 +163,7 @@ const OrderTracking = ({
               <Truck className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-blue-600 font-medium">Transporter</p>
+              <p className="text-sm text-blue-600 font-medium">{t('components.tracking.transporter')}</p>
               <p className="font-semibold text-gray-900">{transporterInfo.name}</p>
               {transporterInfo.phone && (
                 <a 
@@ -235,7 +239,7 @@ const OrderTracking = ({
                 {/* Photo if exists */}
                 {history?.photo && (
                   <div className="mt-2">
-                    <p className="text-xs text-gray-500 mb-1">📷 Product picked up from farmer - Photo verification</p>
+                    <p className="text-xs text-gray-500 mb-1">{t('components.tracking.pickupPhoto')}</p>
                     <img 
                       src={getImageUrl(history.photo)} 
                       alt={`${step.label} photo`}

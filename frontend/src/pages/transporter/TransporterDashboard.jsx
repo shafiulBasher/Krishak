@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Truck, Package, DollarSign, MapPin, Star, Clock } from 'lucide-react';
 import { Card } from '../../components/Card';
+import { useLanguage } from '../../context/LanguageContext';
 import { getTransporterStats } from '../../services/transporterService';
 import { toast } from 'react-toastify';
 
 const TransporterDashboard = () => {
+  const { t } = useLanguage();
   const [stats, setStats] = useState({
     activeDeliveries: 0,
     completedDeliveries: 0,
@@ -26,7 +28,7 @@ const TransporterDashboard = () => {
       setStats(response.data || stats);
     } catch (error) {
       console.error('Error fetching stats:', error);
-      toast.error('Failed to load dashboard stats');
+      toast.error(t('transporter.dashboard.loadFail'));
     } finally {
       setLoading(false);
     }
@@ -45,8 +47,8 @@ const TransporterDashboard = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Transporter Dashboard</h1>
-          <p className="text-gray-600 mt-1">Manage your deliveries and find new jobs</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t('transporter.dashboard.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('transporter.dashboard.subtitle')}</p>
         </div>
 
         {/* Stats Grid */}
@@ -54,7 +56,7 @@ const TransporterDashboard = () => {
           <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-100 text-sm font-medium">Active Deliveries</p>
+                <p className="text-blue-100 text-sm font-medium">{t('transporter.dashboard.activeDeliveries')}</p>
                 <p className="text-3xl font-bold mt-1">{stats.activeDeliveries}</p>
               </div>
               <div className="bg-blue-400/30 p-3 rounded-full">
@@ -66,7 +68,7 @@ const TransporterDashboard = () => {
           <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-100 text-sm font-medium">Completed</p>
+                <p className="text-green-100 text-sm font-medium">{t('transporter.dashboard.completed')}</p>
                 <p className="text-3xl font-bold mt-1">{stats.completedDeliveries}</p>
               </div>
               <div className="bg-green-400/30 p-3 rounded-full">
@@ -78,7 +80,7 @@ const TransporterDashboard = () => {
           <Card className="bg-gradient-to-br from-yellow-500 to-orange-500 text-white">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-yellow-100 text-sm font-medium">Total Earnings</p>
+                <p className="text-yellow-100 text-sm font-medium">{t('transporter.dashboard.totalEarnings')}</p>
                 <p className="text-3xl font-bold mt-1">৳{stats.totalEarnings}</p>
               </div>
               <div className="bg-yellow-400/30 p-3 rounded-full">
@@ -90,7 +92,7 @@ const TransporterDashboard = () => {
           <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-100 text-sm font-medium">Available Jobs</p>
+                <p className="text-purple-100 text-sm font-medium">{t('transporter.dashboard.availableJobs')}</p>
                 <p className="text-3xl font-bold mt-1">{stats.pendingJobs}</p>
               </div>
               <div className="bg-purple-400/30 p-3 rounded-full">
@@ -108,11 +110,11 @@ const TransporterDashboard = () => {
                 <Star className="w-8 h-8 text-yellow-500" />
               </div>
               <div>
-                <p className="text-gray-600 text-sm">Your Rating</p>
+                <p className="text-gray-600 text-sm">{t('transporter.dashboard.yourRating')}</p>
                 <div className="flex items-center gap-2">
                   <span className="text-3xl font-bold text-gray-900">{stats.averageRating}</span>
-                  <span className="text-gray-500">/ 5.0</span>
-                  <span className="text-sm text-gray-400">({stats.totalRatings} ratings)</span>
+                  <span className="text-gray-500">{t('transporter.dashboard.outOf')}</span>
+                  <span className="text-sm text-gray-400">{t('transporter.dashboard.ratings', { count: stats.totalRatings })}</span>
                 </div>
               </div>
             </div>
@@ -128,11 +130,11 @@ const TransporterDashboard = () => {
                   <MapPin className="w-8 h-8 text-primary-600" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900">Find Delivery Jobs</h3>
-                  <p className="text-gray-600 text-sm">Browse available jobs in your area</p>
+                  <h3 className="text-lg font-semibold text-gray-900">{t('transporter.dashboard.findJobs')}</h3>
+                  <p className="text-gray-600 text-sm">{t('transporter.dashboard.findJobsDesc')}</p>
                   {stats.pendingJobs > 0 && (
                     <span className="inline-block mt-2 px-3 py-1 bg-green-100 text-green-700 text-sm rounded-full">
-                      {stats.pendingJobs} jobs available
+                      {t('transporter.dashboard.jobsAvailable', { count: stats.pendingJobs })}
                     </span>
                   )}
                 </div>
@@ -148,11 +150,11 @@ const TransporterDashboard = () => {
                   <Truck className="w-8 h-8 text-blue-600" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900">My Deliveries</h3>
-                  <p className="text-gray-600 text-sm">Manage your assigned deliveries</p>
+                  <h3 className="text-lg font-semibold text-gray-900">{t('transporter.dashboard.myDeliveries')}</h3>
+                  <p className="text-gray-600 text-sm">{t('transporter.dashboard.deliveriesDesc')}</p>
                   {stats.activeDeliveries > 0 && (
                     <span className="inline-block mt-2 px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full">
-                      {stats.activeDeliveries} active
+                      {t('transporter.dashboard.activeCount', { count: stats.activeDeliveries })}
                     </span>
                   )}
                 </div>
@@ -166,20 +168,20 @@ const TransporterDashboard = () => {
         <Card className="mt-8">
           <div className="flex items-center gap-2 mb-4">
             <Clock className="w-5 h-5 text-gray-500" />
-            <h2 className="text-lg font-semibold text-gray-900">Quick Tips</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{t('transporter.dashboard.tips')}</h2>
           </div>
           <div className="space-y-3">
             <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
               <span className="text-blue-500 font-bold">1.</span>
-              <p className="text-gray-700 text-sm">Check available jobs regularly to find deliveries near your location</p>
+              <p className="text-gray-700 text-sm">{t('transporter.dashboard.checkJobs')}</p>
             </div>
             <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
               <span className="text-green-500 font-bold">2.</span>
-              <p className="text-gray-700 text-sm">Always take a clear photo when picking up products for quality assurance</p>
+              <p className="text-gray-700 text-sm">{t('transporter.dashboard.tip1')}</p>
             </div>
             <div className="flex items-start gap-3 p-3 bg-yellow-50 rounded-lg">
               <span className="text-yellow-500 font-bold">3.</span>
-              <p className="text-gray-700 text-sm">Update delivery status promptly to keep buyers and farmers informed</p>
+              <p className="text-gray-700 text-sm">{t('transporter.dashboard.tip2')}</p>
             </div>
           </div>
         </Card>

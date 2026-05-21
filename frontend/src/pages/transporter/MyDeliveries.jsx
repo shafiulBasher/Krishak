@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
+import { useLanguage } from '../../context/LanguageContext';
+import { getLocalizedCrop } from '../../utils/bangladeshData';
 import { getMyDeliveries, updateDeliveryStatus, uploadDeliveryPhoto, confirmCashCollected } from '../../services/transporterService';
 import { toast } from 'react-toastify';
 import { getImageUrl } from '../../utils/imageHelper';
@@ -50,6 +52,20 @@ const MyDeliveries = () => {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(null);
   const [filter, setFilter] = useState('active'); // 'active' or 'completed'
+  const { t, lang } = useLanguage();
+
+  const getStatusLabel = (status) => ({
+    assigned: t('transporter.deliveries.assigned'),
+    picked: t('transporter.deliveries.pickedUp'),
+    in_transit: t('transporter.deliveries.inTransit'),
+    delivered: t('transporter.deliveries.delivered'),
+  }[status] || status);
+
+  const getNextLabel = (status) => ({
+    assigned: t('transporter.deliveries.markPickedUp'),
+    picked: t('transporter.deliveries.startDelivery'),
+    in_transit: t('transporter.deliveries.markDelivered'),
+  }[status] || '');
   
   // Photo upload modal state
   const [showPhotoModal, setShowPhotoModal] = useState(false);
@@ -71,7 +87,7 @@ const MyDeliveries = () => {
       setDeliveries(response.data || []);
     } catch (error) {
       console.error('Error fetching deliveries:', error);
-      toast.error('Failed to load deliveries');
+      toast.error(t('transporter.deliveries.loadFail'));
     } finally {
       setLoading(false);
     }
@@ -88,11 +104,11 @@ const MyDeliveries = () => {
       });
       
       if (!file.type.startsWith('image/')) {
-        toast.error('Please select an image file');
+        toast.error(t('transporter.deliveries.invalidFile'));
         return;
       }
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('Image size must be less than 5MB');
+        toast.error(t('transporter.deliveries.fileTooLarge'));
         return;
       }
       
@@ -103,7 +119,7 @@ const MyDeliveries = () => {
         setPhotoPreview(previewUrl);
       } catch (error) {
         console.error('Error creating preview URL:', error);
-        toast.error('Failed to create photo preview');
+        toast.error(t('transporter.deliveries.previewFail'));
       }
     }
   };
@@ -132,7 +148,7 @@ const MyDeliveries = () => {
     
     // Check if photo is required (for pickup) or optional (for delivery)
     if (statusConfig?.requiresPhoto && !photoFile) {
-      toast.error('Please upload a photo of the product');
+      toast.error(t('transporter.deliveries.photoRequired'));
       return;
     }
 
@@ -160,12 +176,12 @@ const MyDeliveries = () => {
           : `Product ${pendingStatus === 'delivered' ? 'delivered to buyer' : 'status updated'}`
       });
 
-      toast.success(`Status updated to ${STATUS_CONFIG[pendingStatus]?.label || pendingStatus}`);
+      toast.success(t('transporter.deliveries.statusUpdated'));
       closePhotoModal();
       fetchDeliveries();
     } catch (error) {
       console.error('Error:', error);
-      toast.error(error.response?.data?.message || error.message || 'Failed to update status');
+      toast.error(error.response?.data?.message || error.message || t('transporter.deliveries.statusFail'));
     } finally {
       setUploading(false);
     }
@@ -190,11 +206,11 @@ const MyDeliveries = () => {
     try {
       setUpdating(orderId);
       await updateDeliveryStatus(orderId, { status: newStatus, note });
-      toast.success(`Status updated to ${STATUS_CONFIG[newStatus]?.label || newStatus}`);
+      toast.success(t('transporter.deliveries.statusUpdated'));
       fetchDeliveries();
     } catch (error) {
       console.error('Error updating status:', error);
-      toast.error(error.response?.data?.message || 'Failed to update status');
+      toast.error(error.response?.data?.message || t('transporter.deliveries.statusFail'));
     } finally {
       setUpdating(null);
     }
@@ -230,8 +246,8 @@ const MyDeliveries = () => {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">My Deliveries</h1>
-          <p className="text-gray-600 mt-1">Manage and track your assigned deliveries</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t('transporter.deliveries.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('transporter.deliveries.subtitle')}</p>
         </div>
 
         {/* Filter Tabs */}
@@ -244,7 +260,7 @@ const MyDeliveries = () => {
                 : 'bg-white text-gray-600 hover:bg-gray-100'
             }`}
           >
-            Active ({deliveries.filter(d => d.deliveryStatus !== 'delivered').length})
+            {t('transporter.deliveries.active')} ({deliveries.filter(d => d.deliveryStatus !== 'delivered').length})
           </button>
           <button
             onClick={() => setFilter('completed')}
@@ -254,7 +270,7 @@ const MyDeliveries = () => {
                 : 'bg-white text-gray-600 hover:bg-gray-100'
             }`}
           >
-            Completed ({deliveries.filter(d => d.deliveryStatus === 'delivered').length})
+            {t('transporter.deliveries.completed')} ({deliveries.filter(d => d.deliveryStatus === 'delivered').length})
           </button>
         </div>
 
@@ -270,16 +286,16 @@ const MyDeliveries = () => {
                 )}
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                {filter === 'active' ? 'No Active Deliveries' : 'No Completed Deliveries'}
+                {filter === 'active' ? t('transporter.deliveries.noActive') : t('transporter.deliveries.noCompleted')}
               </h3>
               <p className="text-gray-600 max-w-md mb-4">
                 {filter === 'active' 
-                  ? 'You don\'t have any active deliveries. Check available jobs to accept new deliveries.'
-                  : 'You haven\'t completed any deliveries yet.'}
+                  ? t('transporter.deliveries.noActiveDesc')
+                  : t('transporter.deliveries.noCompletedDesc')}
               </p>
               {filter === 'active' && (
                 <Link to="/transporter/available-jobs">
-                  <Button>Browse Available Jobs</Button>
+                  <Button>{t('transporter.deliveries.browseJobs')}</Button>
                 </Link>
               )}
             </div>
@@ -297,7 +313,7 @@ const MyDeliveries = () => {
                     <div className="flex items-center gap-3">
                       <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${statusConfig.color}`}>
                         <StatusIcon className="w-4 h-4" />
-                        {statusConfig.label}
+                        {getStatusLabel(delivery.deliveryStatus)}
                       </span>
                       <span className="text-gray-500 text-sm">
                         Order #{delivery.orderNumber}
@@ -325,10 +341,10 @@ const MyDeliveries = () => {
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-900">
-                        {delivery.product?.cropName || 'Product'} - {delivery.quantity} kg
+                        {getLocalizedCrop(delivery.product?.cropName || 'Product', lang)} - {delivery.quantity} kg
                       </h3>
                       <p className="text-sm text-gray-500">
-                        Total: ৳{delivery.totalAmount}
+                        {t('transporter.deliveries.total', { amount: delivery.totalAmount })}
                       </p>
                     </div>
                   </div>
@@ -341,7 +357,7 @@ const MyDeliveries = () => {
                         <MapPin className="w-4 h-4" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs text-gray-500 uppercase font-medium">Pickup</p>
+                        <p className="text-xs text-gray-500 uppercase font-medium">{t('transporter.deliveries.pickup')}</p>
                         <p className="font-medium text-gray-900 truncate">{delivery.farmer?.name}</p>
                         <p className="text-sm text-gray-600 truncate">
                           {delivery.product?.location?.village}, {delivery.product?.location?.district}
@@ -350,7 +366,7 @@ const MyDeliveries = () => {
                           href={`tel:${delivery.farmer?.phone}`} 
                           className="inline-flex items-center gap-1 text-sm text-primary-600 mt-1"
                         >
-                          <Phone className="w-3 h-3" /> Call
+                          <Phone className="w-3 h-3" /> {t('transporter.deliveries.call')}
                         </a>
                       </div>
                     </div>
@@ -361,7 +377,7 @@ const MyDeliveries = () => {
                         <User className="w-4 h-4" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs text-gray-500 uppercase font-medium">Deliver To</p>
+                        <p className="text-xs text-gray-500 uppercase font-medium">{t('transporter.deliveries.deliverTo')}</p>
                         <p className="font-medium text-gray-900 truncate">{delivery.buyer?.name}</p>
                         <p className="text-sm text-gray-600 truncate">
                           {delivery.deliveryAddress?.thana}, {delivery.deliveryAddress?.district}
@@ -370,7 +386,7 @@ const MyDeliveries = () => {
                           href={`tel:${delivery.buyer?.phone}`} 
                           className="inline-flex items-center gap-1 text-sm text-primary-600 mt-1"
                         >
-                          <Phone className="w-3 h-3" /> Call
+                          <Phone className="w-3 h-3" /> {t('transporter.deliveries.call')}
                         </a>
                       </div>
                     </div>
@@ -420,12 +436,12 @@ const MyDeliveries = () => {
                         {updating === delivery._id ? (
                           <>
                             <span className="animate-spin">⏳</span>
-                            Updating...
+                            {t('transporter.deliveries.updating')}
                           </>
                         ) : (
                           <>
                             {statusConfig.requiresPhoto && <Camera className="w-4 h-4" />}
-                            {statusConfig.nextLabel}
+                            {getNextLabel(delivery.deliveryStatus)}
                           </>
                         )}
                       </Button>
@@ -438,34 +454,34 @@ const MyDeliveries = () => {
                       <div className="space-y-2">
                         <div className="flex items-center justify-center gap-2 py-3 bg-green-50 rounded-lg text-green-700">
                           <CheckCircle className="w-5 h-5" />
-                          <span className="font-medium">Delivery Completed</span>
+                          <span className="font-medium">{t('transporter.deliveries.deliveryCompleted')}</span>
                         </div>
                         <Button
                           className="w-full bg-yellow-500 hover:bg-yellow-600 text-white flex items-center justify-center gap-2"
                           onClick={async () => {
                             try {
                               await confirmCashCollected(delivery._id);
-                              toast.success('Cash payment confirmed!');
+                              toast.success(t('transporter.deliveries.cashConfirmed'));
                               fetchDeliveries();
                             } catch (err) {
-                              toast.error(err.message || 'Failed to confirm cash collection');
+                              toast.error(err.message || t('transporter.deliveries.cashFail'));
                             }
                           }}
                         >
                           <DollarSign className="w-4 h-4" />
-                          Confirm Cash Collected
+                          {t('transporter.deliveries.confirmCash')}
                         </Button>
                       </div>
                     ) : (
                       <div className="space-y-2">
                         <div className="flex items-center justify-center gap-2 py-3 bg-green-50 rounded-lg text-green-700">
                           <CheckCircle className="w-5 h-5" />
-                          <span className="font-medium">Delivery Completed</span>
+                          <span className="font-medium">{t('transporter.deliveries.deliveryCompleted')}</span>
                         </div>
                         {delivery.paymentMethod === 'cash_on_delivery' && (
                           <div className="flex items-center justify-center gap-2 py-2 bg-green-100 rounded-lg text-green-800 text-sm font-medium">
                             <DollarSign className="w-4 h-4" />
-                            Cash Collected ✔
+                            {t('transporter.deliveries.cashCollected')}
                           </div>
                         )}
                       </div>
@@ -476,14 +492,14 @@ const MyDeliveries = () => {
                   <div className="mt-4 pt-4 border-t flex items-center justify-between text-sm text-gray-500">
                     <div className="flex items-center gap-1">
                       <Calendar className="w-4 h-4" />
-                      <span>Ordered: {formatDate(delivery.createdAt)}</span>
+                      <span>{t('transporter.deliveries.ordered', { date: formatDate(delivery.createdAt) })}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
                       <span>
                         {delivery.statusHistory?.length > 0 
-                          ? `Last update: ${formatDate(delivery.statusHistory[delivery.statusHistory.length - 1]?.timestamp)}`
-                          : 'No updates yet'}
+                          ? t('transporter.deliveries.lastUpdate', { date: formatDate(delivery.statusHistory[delivery.statusHistory.length - 1]?.timestamp) })
+                          : t('transporter.deliveries.noUpdates')}
                       </span>
                     </div>
                   </div>
@@ -514,10 +530,10 @@ const MyDeliveries = () => {
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-bold text-gray-900">
-                    {pendingStatus === 'picked' ? 'Pickup Verification' : 'Delivery Proof'}
+                    {pendingStatus === 'picked' ? t('transporter.deliveries.pickupVerification') : t('transporter.deliveries.deliveryProof')}
                   </h3>
                   <p className="text-xs text-gray-500">
-                    {pendingStatus === 'picked' ? 'Photo required' : 'Photo optional'}
+                    {pendingStatus === 'picked' ? t('transporter.deliveries.photoRequired') : t('transporter.deliveries.photoOptional')}
                   </p>
                 </div>
               </div>
@@ -527,10 +543,10 @@ const MyDeliveries = () => {
               {/* Order Info */}
               <div className="bg-gray-50 rounded-lg p-3 mb-3">
                 <p className="text-sm text-gray-600">
-                  <span className="font-medium">Order:</span> #{selectedDelivery?.orderNumber}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Product:</span> {selectedDelivery?.product?.cropName} - {selectedDelivery?.quantity}kg
+                    <span className="font-medium">{t('transporter.deliveries.orderLabel')}</span> #{selectedDelivery?.orderNumber}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium">{t('transporter.deliveries.productLabel')}</span> {getLocalizedCrop(selectedDelivery?.product?.cropName || '', lang)} - {selectedDelivery?.quantity}kg
                 </p>
               </div>
 
@@ -571,7 +587,7 @@ const MyDeliveries = () => {
                     </button>
                     <div className="absolute bottom-2 left-2 right-2 bg-green-600 text-white text-xs py-1.5 px-2 rounded flex items-center justify-center gap-1.5">
                       <CheckCircle className="w-3.5 h-3.5" />
-                      Photo ready to upload
+                      {t('transporter.deliveries.photoReady')}
                     </div>
                   </div>
                 ) : (
@@ -583,8 +599,8 @@ const MyDeliveries = () => {
                       <Upload className="w-6 h-6 text-gray-400" />
                     </div>
                     <div className="text-center">
-                      <p className="text-sm font-medium text-gray-700">Take Photo</p>
-                      <p className="text-xs text-gray-500">Tap to capture or upload</p>
+                      <p className="text-sm font-medium text-gray-700">{t('transporter.deliveries.takePhoto')}</p>
+                      <p className="text-xs text-gray-500">{t('transporter.deliveries.tapToCapture')}</p>
                     </div>
                   </button>
                 )}
@@ -595,8 +611,8 @@ const MyDeliveries = () => {
                 <AlertCircle className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
                 <p className="text-xs text-yellow-800">
                   {pendingStatus === 'picked' 
-                    ? 'Pickup photo is mandatory for verification purposes.'
-                    : 'Adding a photo builds customer trust and provides proof of delivery.'}
+                    ? t('transporter.deliveries.photoMandatory')
+                    : t('transporter.deliveries.photoTrust')}
                 </p>
               </div>
             </div>
@@ -609,7 +625,7 @@ const MyDeliveries = () => {
                 disabled={uploading}
                 className="flex-1"
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
               {pendingStatus === 'delivered' && !photoFile && (
                 <Button
@@ -621,10 +637,10 @@ const MyDeliveries = () => {
                   {uploading ? (
                     <>
                       <span className="animate-spin">⏳</span>
-                      <span>Processing...</span>
+                      <span>{t('transporter.deliveries.processing')}</span>
                     </>
                   ) : (
-                    'Skip Photo'
+                    t('transporter.deliveries.skipPhoto')
                   )}
                 </Button>
               )}
@@ -636,12 +652,12 @@ const MyDeliveries = () => {
                 {uploading ? (
                   <>
                     <span className="animate-spin">⏳</span>
-                    <span>Uploading...</span>
+                    <span>{t('transporter.deliveries.uploading')}</span>
                   </>
                 ) : (
                   <>
                     <CheckCircle className="w-4 h-4" />
-                    <span>Confirm {pendingStatus === 'picked' ? 'Pickup' : 'Delivery'}</span>
+                    <span>{pendingStatus === 'picked' ? t('transporter.deliveries.confirmPickup') : t('transporter.deliveries.confirmDelivery')}</span>
                   </>
                 )}
               </Button>

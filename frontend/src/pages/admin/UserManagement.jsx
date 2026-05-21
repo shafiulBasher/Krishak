@@ -8,6 +8,7 @@ import Button from '../../components/Button';
 import Input from '../../components/Input';
 import Select from '../../components/Select';
 import UserBadge from '../../components/admin/UserBadge';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function UserManagement() {
   const [users, setUsers] = useState([]);
@@ -23,6 +24,7 @@ export default function UserManagement() {
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [summaryData, setSummaryData] = useState(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     fetchUsers();
@@ -31,14 +33,11 @@ export default function UserManagement() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      console.log('🔍 Fetching users with filters:', filters);
       const response = await getAllUsers(filters);
-      console.log('📦 Response received:', response);
-      console.log('👥 Users data:', response.data);
       setUsers(response.data);
     } catch (error) {
       console.error('❌ Error fetching users:', error);
-      toast.error(error.response?.data?.message || 'Failed to fetch users');
+      toast.error(error.response?.data?.message || t('admin.users.loadFail'));
     } finally {
       setLoading(false);
     }
@@ -47,32 +46,32 @@ export default function UserManagement() {
   const handleStatusToggle = async (userId, currentStatus) => {
     try {
       await updateUserStatus(userId, !currentStatus);
-      toast.success(`User ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
+      toast.success(!currentStatus ? t('admin.users.activateSuccess') : t('admin.users.deactivateSuccess'));
       fetchUsers();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to update user status');
+      toast.error(error.response?.data?.message || t('admin.users.loadFail'));
     }
   };
 
   const handleVerifyToggle = async (userId, currentStatus) => {
     try {
       await verifyUser(userId, !currentStatus);
-      toast.success(`User ${!currentStatus ? 'verified' : 'unverified'} successfully`);
+      toast.success(!currentStatus ? t('admin.users.verifySuccess') : t('admin.users.unverifySuccess'));
       fetchUsers();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to verify user');
+      toast.error(error.response?.data?.message || t('admin.users.loadFail'));
     }
   };
 
   const handleDeleteUser = async () => {
     try {
       await deleteUser(selectedUser._id);
-      toast.success('User deleted successfully');
+      toast.success(t('admin.users.deleteSuccess'));
       setShowDeleteModal(false);
       setSelectedUser(null);
       fetchUsers();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to delete user');
+      toast.error(error.response?.data?.message || t('admin.users.loadFail'));
     }
   };
 
@@ -84,7 +83,7 @@ export default function UserManagement() {
       const response = await getUserSummary(user._id);
       setSummaryData(response.data);
     } catch (error) {
-      toast.error('Failed to load user summary');
+      toast.error(t('admin.users.summaryFail'));
       setShowSummaryModal(false);
     } finally {
       setSummaryLoading(false);
@@ -104,16 +103,16 @@ export default function UserManagement() {
   };
 
   if (loading && users.length === 0) {
-    return <Loading message="Loading users..." />;
+    return <Loading message={t('admin.users.loadingUsers')} />;
   }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{t('admin.users.title')}</h1>
           <div className="text-sm text-gray-600">
-            Total Users: <span className="font-semibold text-primary-600">{users.length}</span>
+            {t('admin.users.totalUsers')} <span className="font-semibold text-primary-600">{users.length}</span>
           </div>
         </div>
 
@@ -121,14 +120,14 @@ export default function UserManagement() {
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <div className="flex items-center gap-2 mb-4">
           <Filter className="w-5 h-5 text-gray-600" />
-          <h2 className="text-lg font-semibold text-gray-800">Filters</h2>
+          <h2 className="text-lg font-semibold text-gray-800">{t('admin.users.filters')}</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <Input
               type="text"
-              placeholder="Search by name, email, phone..."
+              placeholder={t('admin.users.searchPlaceholder')}
               className="pl-10"
               onChange={handleSearchChange}
             />
@@ -137,27 +136,27 @@ export default function UserManagement() {
             value={filters.role}
             onChange={(e) => handleFilterChange('role', e.target.value)}
           >
-            <option value="">All Roles</option>
-            <option value="farmer">Farmer</option>
-            <option value="buyer">Buyer</option>
-            <option value="transporter">Transporter</option>
-            <option value="admin">Admin</option>
+            <option value="">{t('admin.users.allRoles')}</option>
+            <option value="farmer">{t('admin.users.farmer')}</option>
+            <option value="buyer">{t('admin.users.buyer')}</option>
+            <option value="transporter">{t('admin.users.transporter')}</option>
+            <option value="admin">{t('admin.users.adminRole')}</option>
           </Select>
           <Select
             value={filters.isActive}
             onChange={(e) => handleFilterChange('isActive', e.target.value)}
           >
-            <option value="">All Status</option>
-            <option value="true">Active</option>
-            <option value="false">Inactive</option>
+            <option value="">{t('admin.users.allStatus')}</option>
+            <option value="true">{t('admin.users.active')}</option>
+            <option value="false">{t('admin.users.inactive')}</option>
           </Select>
           <Select
             value={filters.isVerified}
             onChange={(e) => handleFilterChange('isVerified', e.target.value)}
           >
-            <option value="">All Verification</option>
-            <option value="true">Verified</option>
-            <option value="false">Unverified</option>
+            <option value="">{t('admin.users.allVerification')}</option>
+            <option value="true">{t('admin.users.verified')}</option>
+            <option value="false">{t('admin.users.unverified')}</option>
           </Select>
         </div>
       </div>
@@ -169,19 +168,19 @@ export default function UserManagement() {
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  User
+                  {t('admin.users.userCol')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Contact
+                  {t('admin.users.contactCol')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
+                  {t('admin.users.statusCol')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Joined
+                  {t('admin.users.joinedCol')}
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
+                  {t('admin.users.actionsCol')}
                 </th>
               </tr>
             </thead>
@@ -189,7 +188,7 @@ export default function UserManagement() {
               {users.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
-                    No users found
+                    {t('admin.users.noUsers')}
                   </td>
                 </tr>
               ) : (
@@ -216,10 +215,10 @@ export default function UserManagement() {
                             user.isActive ? 'text-green-600' : 'text-red-600'
                           }`}
                         >
-                          {user.isActive ? 'Active' : 'Inactive'}
+                          {user.isActive ? t('admin.users.activeStatus') : t('admin.users.inactiveStatus')}
                         </span>
                         {user.isVerified && (
-                          <span className="text-xs text-blue-600">Verified</span>
+                          <span className="text-xs text-blue-600">{t('admin.users.verifiedBadge')}</span>
                         )}
                       </div>
                     </td>
@@ -288,7 +287,7 @@ export default function UserManagement() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-semibold text-gray-900">User Summary</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t('admin.users.userSummary')}</h3>
               <button
                 onClick={() => { setShowSummaryModal(false); setSummaryData(null); }}
                 className="p-1 hover:bg-gray-100 rounded-lg text-gray-500"
@@ -298,7 +297,7 @@ export default function UserManagement() {
             </div>
 
             {summaryLoading ? (
-              <div className="text-center py-8 text-gray-500">Loading...</div>
+              <div className="text-center py-8 text-gray-500">{t('admin.users.loading')}</div>
             ) : summaryData ? (
               <div className="space-y-4">
                 {/* Identity */}
@@ -315,32 +314,32 @@ export default function UserManagement() {
                 {/* Status flags */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 rounded-lg bg-gray-50 text-center">
-                    <p className="text-xs text-gray-500 mb-1">Account</p>
+                    <p className="text-xs text-gray-500 mb-1">{t('admin.users.accountLabel')}</p>
                     <span className={`text-sm font-semibold ${ summaryData.isActive ? 'text-green-600' : 'text-red-600' }`}>
                       {summaryData.isActive ? '✅ Active' : '🚫 Inactive'}
                     </span>
                   </div>
                   <div className="p-3 rounded-lg bg-gray-50 text-center">
-                    <p className="text-xs text-gray-500 mb-1">Verification</p>
+                    <p className="text-xs text-gray-500 mb-1">{t('admin.users.verificationLabel')}</p>
                     <span className={`text-sm font-semibold ${ summaryData.isVerified ? 'text-blue-600' : 'text-gray-500' }`}>
                       {summaryData.isVerified ? '🔵 Verified' : '⚪ Unverified'}
                     </span>
                   </div>
                   <div className="p-3 rounded-lg bg-gray-50 text-center">
-                    <p className="text-xs text-gray-500 mb-1">Joined</p>
+                    <p className="text-xs text-gray-500 mb-1">{t('admin.users.joinedLabel')}</p>
                     <span className="text-sm font-medium text-gray-700">
                       {new Date(summaryData.joinedAt).toLocaleDateString()}
                     </span>
                   </div>
                   {summaryData.location && (
                     <div className="p-3 rounded-lg bg-gray-50 text-center">
-                      <p className="text-xs text-gray-500 mb-1">District</p>
+                      <p className="text-xs text-gray-500 mb-1">{t('admin.users.districtLabel')}</p>
                       <span className="text-sm font-medium text-gray-700">{summaryData.location}</span>
                     </div>
                   )}
                   {summaryData.vehicleType && (
                     <div className="p-3 rounded-lg bg-gray-50 text-center col-span-2">
-                      <p className="text-xs text-gray-500 mb-1">Vehicle</p>
+                      <p className="text-xs text-gray-500 mb-1">{t('admin.users.vehicleLabel')}</p>
                       <span className="text-sm font-medium text-gray-700 capitalize">{summaryData.vehicleType}</span>
                     </div>
                   )}
@@ -348,18 +347,18 @@ export default function UserManagement() {
 
                 {/* Role-specific activity counts */}
                 <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Activity (Counts Only)</p>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{t('admin.users.activityCounts')}</p>
                   <div className="space-y-1">
                     {summaryData.role === 'farmer' && (
                       <>
                         {summaryData.activitySummary.listings?.map(l => (
                           <div key={l._id} className="flex justify-between text-sm px-3 py-1.5 bg-gray-50 rounded">
-                            <span className="text-gray-600 capitalize">{l._id} listings</span>
+                            <span className="text-gray-600 capitalize">{t('admin.users.listingsActivity', { status: l._id })}</span>
                             <span className="font-semibold text-gray-800">{l.count}</span>
                           </div>
                         ))}
                         <div className="flex justify-between text-sm px-3 py-1.5 bg-gray-50 rounded">
-                          <span className="text-gray-600">Orders received</span>
+                          <span className="text-gray-600">{t('admin.users.ordersReceived')}</span>
                           <span className="font-semibold text-gray-800">{summaryData.activitySummary.orderCount ?? 0}</span>
                         </div>
                       </>
@@ -368,30 +367,30 @@ export default function UserManagement() {
                       summaryData.activitySummary.orders?.length > 0
                         ? summaryData.activitySummary.orders.map(o => (
                             <div key={o._id} className="flex justify-between text-sm px-3 py-1.5 bg-gray-50 rounded">
-                              <span className="text-gray-600 capitalize">{o._id} orders</span>
+                              <span className="text-gray-600 capitalize">{t('admin.users.ordersActivity', { status: o._id })}</span>
                               <span className="font-semibold text-gray-800">{o.count}</span>
                             </div>
                           ))
-                        : <p className="text-sm text-gray-400 px-3">No orders placed yet</p>
+                        : <p className="text-sm text-gray-400 px-3">{t('admin.users.noOrders')}</p>
                     )}
                     {summaryData.role === 'transporter' && (
                       summaryData.activitySummary.deliveries?.length > 0
                         ? summaryData.activitySummary.deliveries.map(d => (
                             <div key={d._id} className="flex justify-between text-sm px-3 py-1.5 bg-gray-50 rounded">
-                              <span className="text-gray-600 capitalize">{d._id.replace('_', ' ')} deliveries</span>
+                              <span className="text-gray-600 capitalize">{t('admin.users.deliveriesActivity', { status: d._id.replace('_', ' ') })}</span>
                               <span className="font-semibold text-gray-800">{d.count}</span>
                             </div>
                           ))
-                        : <p className="text-sm text-gray-400 px-3">No deliveries yet</p>
+                        : <p className="text-sm text-gray-400 px-3">{t('admin.users.noDeliveries')}</p>
                     )}
                     {summaryData.role === 'admin' && (
-                      <p className="text-sm text-gray-400 px-3">Admin account — no activity counts applicable</p>
+                      <p className="text-sm text-gray-400 px-3">{t('admin.users.adminActivity')}</p>
                     )}
                   </div>
                 </div>
 
                 <p className="text-xs text-gray-400 text-center pt-2">
-                  Showing activity counts only — personal details are not exposed for privacy.
+                  {t('admin.users.privacyNote')}
                 </p>
               </div>
             ) : null}
@@ -403,9 +402,9 @@ export default function UserManagement() {
       {showDeleteModal && selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Confirm Deletion</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('admin.users.confirmDelete')}</h3>
             <p className="text-gray-600 mb-6">
-              Are you sure you want to delete user <span className="font-semibold">{selectedUser.name}</span>? This action cannot be undone.
+              {t('admin.users.confirmDeleteDesc', { name: selectedUser.name })}
             </p>
             <div className="flex gap-3 justify-end">
               <Button
@@ -415,10 +414,10 @@ export default function UserManagement() {
                   setSelectedUser(null);
                 }}
               >
-                Cancel
+                {t('admin.users.cancel')}
               </Button>
               <Button variant="danger" onClick={handleDeleteUser}>
-                Delete User
+                {t('admin.users.deleteUser')}
               </Button>
             </div>
           </div>

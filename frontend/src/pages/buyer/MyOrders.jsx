@@ -7,20 +7,22 @@ import { Package, Clock, CheckCircle, XCircle, ArrowRight, Calendar, MapPin, Tru
 import { getMyOrders } from '../../services/orderService';
 import { toast } from 'react-toastify';
 import { getImageUrl } from '../../utils/imageHelper';
+import { useLanguage } from '../../context/LanguageContext';
+import { getLocalizedCrop } from '../../utils/bangladeshData';
 
 export const MyOrders = () => {
   const navigate = useNavigate();
+  const { t, lang } = useLanguage();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all'); // all, pending, confirmed, completed, cancelled
+  const [filter, setFilter] = useState('all');
   const [connectionError, setConnectionError] = useState(false);
 
   useEffect(() => {
     fetchOrders();
-    // Auto-refresh every 10 seconds for real-time updates (only if no connection errors)
     const interval = setInterval(() => {
       if (!connectionError) {
-        fetchOrders(true); // silent fetch
+        fetchOrders(true);
       }
     }, 10000);
     return () => clearInterval(interval);
@@ -30,18 +32,15 @@ export const MyOrders = () => {
     try {
       if (!silent) setLoading(true);
       const response = await getMyOrders();
-      // Filter to show only buyer's orders
       const buyerOrders = (response.data || []).filter(order => 
         order.buyer && (typeof order.buyer === 'object' ? order.buyer._id : order.buyer)
       );
       setOrders(buyerOrders);
-      setConnectionError(false); // Reset connection error on success
+      setConnectionError(false);
     } catch (error) {
-      // Only show error toast on initial load, not during polling
       if (!silent) {
-        toast.error('Failed to load orders');
+        toast.error(t('buyer.orders.loadFail'));
       }
-      // Stop polling on network errors
       if (error.message?.includes('Network Error') || error.code === 'ERR_CONNECTION_REFUSED') {
         setConnectionError(true);
       }
@@ -77,14 +76,14 @@ export const MyOrders = () => {
   };
 
   const getDeliveryStatusText = (status) => {
-    const texts = {
-      not_assigned: 'Awaiting Delivery Partner',
-      assigned: 'Delivery Partner Assigned',
-      picked: 'Picked Up',
-      in_transit: 'In Transit',
-      delivered: 'Delivered'
+    const keyMap = {
+      not_assigned: t('buyer.orders.deliveryAwait'),
+      assigned: t('buyer.orders.deliveryAssigned'),
+      picked: t('buyer.orders.deliveryPicked'),
+      in_transit: t('buyer.orders.deliveryInTransit'),
+      delivered: t('buyer.orders.deliveryDelivered'),
     };
-    return texts[status] || status;
+    return keyMap[status] || status;
   };
 
   const getStatusColor = (status) => {
@@ -136,18 +135,18 @@ export const MyOrders = () => {
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">My Orders</h1>
-          <p className="text-gray-600 mt-1">View and track all your orders</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t('buyer.orders.title')}</h1>
+          <p className="text-gray-600 mt-1">{t('buyer.orders.subtitle')}</p>
         </div>
 
         {/* Filter Tabs */}
         <div className="mb-6 flex space-x-2 overflow-x-auto">
           {[
-            { value: 'all', label: 'All Orders' },
-            { value: 'pending', label: 'Pending' },
-            { value: 'confirmed', label: 'Confirmed' },
-            { value: 'completed', label: 'Completed' },
-            { value: 'cancelled', label: 'Cancelled' }
+            { value: 'all', label: t('buyer.orders.allOrders') },
+            { value: 'pending', label: t('buyer.orders.pending') },
+            { value: 'confirmed', label: t('buyer.orders.confirmed') },
+            { value: 'completed', label: t('buyer.orders.completed') },
+            { value: 'cancelled', label: t('buyer.orders.cancelled') }
           ].map((tab) => (
             <button
               key={tab.value}
@@ -167,15 +166,15 @@ export const MyOrders = () => {
         {filteredOrders.length === 0 ? (
           <Card className="text-center py-12">
             <Package className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Orders Found</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('buyer.orders.noOrders')}</h3>
             <p className="text-gray-600 mb-6">
               {filter === 'all' 
-                ? "You haven't placed any orders yet"
-                : `No ${filter} orders found`}
+                ? t('buyer.orders.noOrdersYet')
+                : t('buyer.orders.noFilterOrders', { filter })}
             </p>
             {filter === 'all' && (
               <Link to="/dashboard">
-                <Button>Browse Products</Button>
+                <Button>{t('buyer.orders.browseProducts')}</Button>
               </Link>
             )}
           </Card>
@@ -194,11 +193,11 @@ export const MyOrders = () => {
                           </h3>
                           <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.orderStatus)}`}>
                             {getStatusIcon(order.orderStatus)}
-                            <span className="ml-1 capitalize">{order.orderStatus}</span>
+                            <span className="ml-1">{t(`buyer.orders.${order.orderStatus}`) || order.orderStatus}</span>
                           </span>
                         </div>
                         <p className="text-sm text-gray-600 mb-2">
-                          Placed on {formatDate(order.createdAt)}
+                          {t('buyer.orders.placedOn', { date: formatDate(order.createdAt) })}
                         </p>
                         {/* Delivery Status Badge */}
                         {order.deliveryInfo?.status && (
@@ -236,10 +235,10 @@ export const MyOrders = () => {
                             <span className="text-3xl">🌾</span>
                           </div>
                           <div className="flex-1">
-                            <h4 className="font-semibold text-gray-900">{order.product.cropName}</h4>
-                            <p className="text-sm text-gray-600">Grade {order.product.grade}</p>
+                            <h4 className="font-semibold text-gray-900">{getLocalizedCrop(order.product.cropName, lang)}</h4>
+                            <p className="text-sm text-gray-600">{t('common.grade', { g: order.product.grade })}</p>
                             <p className="text-sm text-gray-600 mt-1">
-                              Quantity: {order.quantity} {order.product.unit || 'kg'}
+                              {t('buyer.orders.quantity', { qty: order.quantity, unit: order.product.unit || 'kg' })}
                             </p>
                             <p className="text-sm font-medium text-primary-600 mt-1">
                               ৳{order.pricePerUnit?.toLocaleString()}/{order.product.unit || 'kg'} × {order.quantity} = ৳{order.totalPrice?.toLocaleString()}
@@ -255,7 +254,7 @@ export const MyOrders = () => {
                         <div className="flex items-start space-x-2">
                           <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
                           <div>
-                            <p className="text-sm font-medium text-gray-700">Delivery Address</p>
+                            <p className="text-sm font-medium text-gray-700">{t('buyer.orders.deliveryAddress')}</p>
                             <p className="text-sm text-gray-600">
                               {order.deliveryAddress.addressLine}
                             </p>
@@ -270,7 +269,7 @@ export const MyOrders = () => {
                         <div className="flex items-start space-x-2">
                           <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
                           <div>
-                            <p className="text-sm font-medium text-gray-700">Delivery Slot</p>
+                            <p className="text-sm font-medium text-gray-700">{t('buyer.orders.deliverySlot')}</p>
                             <p className="text-sm text-gray-600">
                               {formatDate(order.deliverySlot.date)}
                             </p>
@@ -287,7 +286,7 @@ export const MyOrders = () => {
                     {/* Payment Info */}
                     <div className="flex items-center space-x-4 text-sm">
                       <span className="text-gray-600">
-                        Payment: <span className="font-medium capitalize">{order.paymentMethod?.replace('_', ' ') || 'N/A'}</span>
+                        {t('buyer.orders.payment')} <span className="font-medium capitalize">{order.paymentMethod?.replace('_', ' ') || 'N/A'}</span>
                       </span>
                       <span className={`px-2 py-1 rounded ${
                         order.paymentStatus === 'paid' 
@@ -309,14 +308,14 @@ export const MyOrders = () => {
                           (order.priceBreakdown?.platformFee || 0)
                         ).toLocaleString()}
                       </p>
-                      <p className="text-sm text-gray-600">Total Amount</p>
+                      <p className="text-sm text-gray-600">{t('buyer.orders.totalAmount')}</p>
                     </div>
                     <Button
                       variant="secondary"
                       size="sm"
                       onClick={() => navigate(`/buyer/orders/${order._id}`)}
                     >
-                      View Details
+                      {t('buyer.orders.viewDetails')}
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </div>

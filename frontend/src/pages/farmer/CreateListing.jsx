@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { useLanguage } from '../../context/LanguageContext';
+import { BANGLADESH_DISTRICTS, getLocalizedDistrict } from '../../utils/bangladeshData';
 import { Camera, MapPin, Calendar, Package, DollarSign } from 'lucide-react';
 import { createProduct } from '../../services/productService';
 import { getProfile } from '../../services/userService';
@@ -14,6 +16,7 @@ import FairPriceCalculator from '../../components/FairPriceCalculator';
 export default function CreateListing() {
   const navigate = useNavigate();
   const { user, updateUser } = useAuth();
+  const { t, lang } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -43,10 +46,14 @@ export default function CreateListing() {
   });
 
   const gradeOptions = [
-    { value: '', label: 'Select Grade' },
-    { value: 'A', label: 'Grade A (Premium Quality)' },
-    { value: 'B', label: 'Grade B (Good Quality)' },
-    { value: 'C', label: 'Grade C (Standard Quality)' },
+    { value: 'A', label: t('farmer.createListing.gradeA') },
+    { value: 'B', label: t('farmer.createListing.gradeB') },
+    { value: 'C', label: t('farmer.createListing.gradeC') },
+  ];
+
+  const unitOptions = [
+    { value: 'kg', label: t('farmer.createListing.kg') },
+    { value: 'ton', label: t('farmer.createListing.tons') },
   ];
 
   // Fetch fresh profile on mount to get farmLocation and autofill
@@ -71,13 +78,6 @@ export default function CreateListing() {
     };
     loadFarmLocation();
   }, []);
-
-  const unitOptions = [
-    { value: 'kg', label: 'Kilograms (kg)' },
-    { value: 'ton', label: 'Tons' },
-  ];
-
-
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -109,7 +109,7 @@ export default function CreateListing() {
     const files = Array.from(e.target.files);
     
     if (formData.photoFiles.length + files.length > 5) {
-      toast.error('Maximum 5 photos allowed');
+      toast.error(t('farmer.createListing.maxPhotos'));
       return;
     }
 
@@ -137,7 +137,7 @@ export default function CreateListing() {
       photoPreviews: [...prev.photoPreviews, ...newPreviews],
     }));
 
-    toast.success(`${validFiles.length} photo(s) added!`);
+    toast.success(t('farmer.createListing.photosAdded', { count: validFiles.length }));
     e.target.value = ''; // Reset input
   };
 
@@ -156,28 +156,28 @@ export default function CreateListing() {
     switch (step) {
       case 1:
         if (!formData.cropName || !formData.grade || !formData.quantity || !formData.moq) {
-          toast.error('Please fill in all required fields');
+          toast.error(t('farmer.createListing.fillRequired'));
           return false;
         }
         if (parseFloat(formData.quantity) <= 0 || parseFloat(formData.moq) <= 0) {
-          toast.error('Quantity and MOQ must be greater than 0');
+          toast.error(t('farmer.createListing.qtyMoqError'));
           return false;
         }
 
         if (formData.isPreOrder && !formData.expectedHarvestDate) {
-          toast.error('Please select expected harvest date for pre-order');
+          toast.error(t('farmer.createListing.preOrderHarvestError'));
           return false;
         }
         break;
       case 2:
         if (!formData.village || !formData.thana || !formData.district || !formData.harvestDate) {
-          toast.error('Please fill in all location and harvest date fields');
+          toast.error(t('farmer.createListing.fillLocation'));
           return false;
         }
         break;
       case 3:
         if (!formData.sellingPrice || parseFloat(formData.sellingPrice) <= 0) {
-          toast.error('Please enter a valid selling price');
+          toast.error(t('farmer.createListing.invalidPrice'));
           return false;
         }
         break;
@@ -235,7 +235,7 @@ export default function CreateListing() {
       });
 
       await createProduct(formDataToSend);
-      toast.success('Listing created successfully! Awaiting admin approval.');
+      toast.success(t('farmer.createListing.successMsg'));
       navigate('/farmer/my-listings');
     } catch (error) {
       console.error('Error creating listing:', error);
@@ -274,40 +274,41 @@ export default function CreateListing() {
     <div className="space-y-6 animate-fadeIn">
       <div className="flex items-center gap-3 mb-4">
         <Package className="w-6 h-6 text-primary-600" />
-        <h3 className="text-xl font-semibold text-gray-900">Crop Details</h3>
+        <h3 className="text-xl font-semibold text-gray-900">{t('farmer.createListing.step1')}</h3>
       </div>
 
       <Input
-        label="Crop Name *"
+        label={t('farmer.createListing.cropName')}
         name="cropName"
         value={formData.cropName}
         onChange={handleChange}
-        placeholder="e.g., Rice, Wheat, Potato"
+        placeholder={t('farmer.createListing.cropPlaceholder')}
         required
       />
 
       <Select
-        label="Quality Grade *"
+        label={t('farmer.createListing.grade')}
         name="grade"
         value={formData.grade}
         onChange={handleChange}
         options={gradeOptions}
+        placeholder={t('farmer.createListing.selectGrade')}
         required
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
-          label="Available Quantity *"
+          label={t('farmer.createListing.quantity')}
           type="number"
           name="quantity"
           value={formData.quantity}
           onChange={handleChange}
-          placeholder="Enter quantity"
+          placeholder={t('farmer.createListing.qtyPlaceholder')}
           min="1"
           required
         />
         <Select
-          label="Unit *"
+          label={t('farmer.createListing.unit')}
           name="unit"
           value={formData.unit}
           onChange={handleChange}
@@ -327,13 +328,13 @@ export default function CreateListing() {
           className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500"
         />
         <label htmlFor="isPreOrder" className="text-sm font-medium text-gray-700">
-          This is a pre-order for seasonal crop
+          {t('farmer.createListing.isPreOrder')}
         </label>
       </div>
 
       {formData.isPreOrder && (
         <Input
-          label="Expected Harvest Date"
+          label={t('farmer.createListing.expectedHarvestDate')}
           type="date"
           name="expectedHarvestDate"
           value={formData.expectedHarvestDate}
@@ -343,12 +344,12 @@ export default function CreateListing() {
       )}
 
       <Input
-        label="Minimum Order Quantity (MOQ) *"
+        label={t('farmer.createListing.moq')}
         type="number"
         name="moq"
         value={formData.moq}
         onChange={handleChange}
-        placeholder="Minimum quantity buyers must order"
+        placeholder={t('farmer.createListing.moqPlaceholder')}
         min="1"
         required
       />
@@ -363,13 +364,13 @@ export default function CreateListing() {
           className="w-5 h-5 text-primary-600 rounded focus:ring-2 focus:ring-primary-500"
         />
         <label htmlFor="isPreOrder" className="text-sm font-medium text-gray-700">
-          This is a pre-order (crop not yet harvested)
+          {t('farmer.createListing.preOrderLabel')}
         </label>
       </div>
 
       {formData.isPreOrder && (
         <Input
-          label="Expected Harvest Date *"
+          label={t('farmer.createListing.expectedHarvestDate')}
           type="date"
           name="expectedHarvestDate"
           value={formData.expectedHarvestDate}
@@ -384,38 +385,43 @@ export default function CreateListing() {
     <div className="space-y-6 animate-fadeIn">
       <div className="flex items-center gap-3 mb-4">
         <MapPin className="w-6 h-6 text-primary-600" />
-        <h3 className="text-xl font-semibold text-gray-900">Location & Harvest Date</h3>
+        <h3 className="text-xl font-semibold text-gray-900">{t('farmer.createListing.step2')}</h3>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Input
-          label="Village *"
+          label={t('farmer.createListing.village')}
           name="village"
           value={formData.village}
           onChange={handleChange}
-          placeholder="Enter village name"
+          placeholder={t('farmer.createListing.villagePlaceholder')}
           required
         />
         <Input
-          label="Thana/Upazila *"
+          label={t('farmer.createListing.thana')}
           name="thana"
           value={formData.thana}
           onChange={handleChange}
-          placeholder="Enter thana name"
+          placeholder={t('farmer.createListing.thanaPlaceholder')}
           required
         />
-        <Input
-          label="District *"
+        <Select
+          label={t('farmer.createListing.district')}
           name="district"
           value={formData.district}
           onChange={handleChange}
-          placeholder="Enter district name"
+          placeholder={t('farmer.createListing.districtPlaceholder')}
           required
-        />
+        >
+          <option value="">{t('farmer.createListing.districtPlaceholder')}</option>
+          {BANGLADESH_DISTRICTS.map(d => (
+            <option key={d} value={d}>{getLocalizedDistrict(d, lang)}</option>
+          ))}
+        </Select>
       </div>
 
       <Input
-        label="Harvest Date *"
+        label={t('farmer.createListing.harvestDate')}
         type="date"
         name="harvestDate"
         value={formData.harvestDate}
@@ -426,10 +432,10 @@ export default function CreateListing() {
       <div className="pt-6 border-t">
         <div className="flex items-center gap-3 mb-4">
           <Camera className="w-6 h-6 text-primary-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Quality Photos (Optional)</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('farmer.createListing.photos')}</h3>
         </div>
         <p className="text-sm text-gray-600 mb-4">
-          Add photos to showcase your crop quality. Better photos increase buyer trust! (Max 5 photos, 5MB each)
+          {t('farmer.createListing.photoNote')}
         </p>
 
         <div className="mb-4">
@@ -446,10 +452,10 @@ export default function CreateListing() {
             className="inline-flex items-center gap-2 px-4 py-2 bg-white border-2 border-primary-600 text-primary-600 rounded-lg hover:bg-primary-50 transition cursor-pointer font-medium"
           >
             <Camera className="w-5 h-5" />
-            Choose Photos from Gallery
+            {t('farmer.createListing.choosePhotos')}
           </label>
           <p className="text-xs text-gray-500 mt-2">
-            {formData.photoFiles.length}/5 photos selected
+            {t('farmer.createListing.photoCount', { count: formData.photoFiles.length })}
           </p>
         </div>
 
@@ -481,7 +487,7 @@ export default function CreateListing() {
     <div className="space-y-6 animate-fadeIn">
       <div className="flex items-center gap-3 mb-4">
         <DollarSign className="w-6 h-6 text-primary-600" />
-        <h3 className="text-xl font-semibold text-gray-900">Set Your Price</h3>
+        <h3 className="text-xl font-semibold text-gray-900">{t('farmer.createListing.step3')}</h3>
       </div>
 
       {/* Fair Price Calculator */}
@@ -504,17 +510,17 @@ export default function CreateListing() {
 
       <div className="bg-blue-50 p-4 rounded-lg mb-6">
         <p className="text-sm text-blue-800">
-          💡 Use the calculator above to determine a fair price based on your costs, or set your own price below.
+          {t('farmer.createListing.priceHint')}
         </p>
       </div>
 
       <Input
-        label="Selling Price (per kg/ton) *"
+        label={t('farmer.createListing.sellingPrice')}
         type="number"
         name="sellingPrice"
         value={formData.sellingPrice}
         onChange={handleChange}
-        placeholder="Enter your selling price"
+        placeholder={t('farmer.createListing.enterPrice')}
         min="0"
         step="0.01"
         required
@@ -522,7 +528,7 @@ export default function CreateListing() {
 
       <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-xl border-2 border-green-200 shadow-sm">
         <div className="text-center">
-          <p className="text-sm text-gray-600 mb-2">Your Selling Price</p>
+          <p className="text-sm text-gray-600 mb-2">{t('farmer.createListing.yourSellingPrice')}</p>
           <p className="text-4xl font-bold text-green-600">
             ৳{formData.sellingPrice || '0.00'}
           </p>
@@ -532,7 +538,7 @@ export default function CreateListing() {
 
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
         <p className="text-sm text-yellow-800">
-          <strong>Tip:</strong> Research local market prices to ensure your listing is competitive and attractive to buyers.
+          <strong>Tip:</strong> {t('farmer.createListing.priceTip')}
         </p>
       </div>
     </div>
@@ -542,8 +548,8 @@ export default function CreateListing() {
     <div className="min-h-screen bg-gradient-to-b from-primary-50 to-white py-8">
       <div className="max-w-4xl mx-auto px-4">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create New Listing</h1>
-          <p className="text-gray-600">List your crops and connect with buyers</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('farmer.createListing.title')}</h1>
+          <p className="text-gray-600">{t('farmer.createListing.listSubtitle')}</p>
         </div>
 
         <Card className="shadow-xl">
@@ -563,17 +569,17 @@ export default function CreateListing() {
                 onClick={prevStep}
                 disabled={currentStep === 1}
               >
-                Previous
+                {t('farmer.createListing.previous')}
               </Button>
 
               <div className="flex gap-3">
                 {currentStep < 3 ? (
                   <Button type="button" onClick={nextStep}>
-                    Next Step
+                    {t('farmer.createListing.nextStep')}
                   </Button>
                 ) : (
                   <Button type="submit" disabled={loading}>
-                    {loading ? 'Submitting...' : 'Submit Listing'}
+                    {loading ? t('farmer.createListing.submitting') : t('farmer.createListing.submitListing')}
                   </Button>
                 )}
               </div>

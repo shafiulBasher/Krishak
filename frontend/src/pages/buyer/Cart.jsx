@@ -7,15 +7,17 @@ import { Loading } from '../../components/Loading';
 import { ShoppingCart, Trash2, Plus, Minus, ArrowRight } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { getImageUrl } from '../../utils/imageHelper';
+import { useLanguage } from '../../context/LanguageContext';
 
 export const Cart = () => {
   const { cartItems, removeFromCart, updateQuantity, getCartTotal, clearCart, getCartTotalQuantity } = useCart();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
 
   const handleCheckout = () => {
     if (cartItems.length === 0) {
-      toast.error('Your cart is empty');
+      toast.error(t('buyer.cart.emptyCart'));
       return;
     }
     
@@ -26,7 +28,7 @@ export const Cart = () => {
     
     if (itemsBelowMOQ.length > 0) {
       const firstItem = itemsBelowMOQ[0];
-      toast.error(`${firstItem.product.cropName} requires a minimum order of ${firstItem.product.moq} ${firstItem.product.unit}`);
+      toast.error(t('buyer.cart.moqError', { name: firstItem.product.cropName, moq: firstItem.product.moq, unit: firstItem.product.unit }));
       return;
     }
     
@@ -35,24 +37,21 @@ export const Cart = () => {
 
   const handleRemove = (productId) => {
     removeFromCart(productId);
-    toast.success('Item removed from cart');
+    toast.success(t('buyer.cart.removeItem'));
   };
 
   const handleQuantityChange = (productId, newQuantity) => {
     const item = cartItems.find((item) => item.product._id === productId);
     if (item) {
-      // Ensure minimum quantity is 1
       if (newQuantity < 1) {
         return;
       }
       
-      // Check if quantity exceeds available stock
       if (newQuantity > item.product.quantity) {
-        toast.error(`Only ${item.product.quantity} ${item.product.unit} available`);
+        toast.error(t('buyer.cart.onlyAvailable', { count: item.product.quantity, unit: item.product.unit }));
         return;
       }
       
-      // Allow the update
       updateQuantity(productId, newQuantity);
     }
   };
@@ -67,11 +66,11 @@ export const Cart = () => {
         <div className="max-w-4xl mx-auto">
           <Card className="text-center py-12">
             <ShoppingCart className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Your Cart is Empty</h2>
-            <p className="text-gray-600 mb-6">Add some products to your cart to get started</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('buyer.cart.empty')}</h2>
+            <p className="text-gray-600 mb-6">{t('buyer.cart.emptyDesc')}</p>
             <div className="flex justify-center">
               <Button onClick={() => navigate('/dashboard')}>
-                Browse Products
+                {t('buyer.cart.browseProducts')}
               </Button>
             </div>
           </Card>
@@ -86,8 +85,8 @@ export const Cart = () => {
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Shopping Cart</h1>
-          <p className="text-gray-600 mt-1">{cartItems.length} item(s) in your cart</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t('buyer.cart.shoppingCart')}</h1>
+          <p className="text-gray-600 mt-1">{t('buyer.cart.itemCount', { count: cartItems.length })}</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -121,11 +120,11 @@ export const Cart = () => {
                           {item.product.cropName}
                         </h3>
                         <p className="text-sm text-gray-600">
-                          Grade {item.product.grade} • {item.product.location?.district || 'N/A'}
+                          {t('common.grade', { g: item.product.grade })} • {item.product.location?.district || 'N/A'}
                         </p>
                         {item.product.moq && (
                           <p className="text-xs text-blue-600 mt-1">
-                            Min. Order: {item.product.moq} {item.product.unit}
+                            {t('buyer.cart.minOrder', { moq: item.product.moq, unit: item.product.unit })}
                           </p>
                         )}
                       </div>
@@ -171,12 +170,12 @@ export const Cart = () => {
 
                     {item.quantity >= item.product.quantity && (
                       <p className="text-sm text-amber-600 mt-2">
-                        Maximum available quantity reached
+                        {t('buyer.cart.maxReached')}
                       </p>
                     )}
                     {item.product.moq && item.quantity < item.product.moq && (
                       <p className="text-sm text-orange-600 mt-2 font-medium">
-                        ⚠️ Below minimum order: {item.product.moq} {item.product.unit} required
+                        {t('buyer.cart.belowMoq', { moq: item.product.moq, unit: item.product.unit })}
                       </p>
                     )}
                   </div>
@@ -188,19 +187,19 @@ export const Cart = () => {
           {/* Order Summary */}
           <div className="lg:col-span-1">
             <Card className="sticky top-4">
-              <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+              <h2 className="text-xl font-semibold mb-4">{t('buyer.cart.orderSummary')}</h2>
               
               <div className="space-y-3 mb-4">
                 <div className="flex justify-between text-gray-600">
-                  <span>Subtotal ({getCartTotalQuantity()} items)</span>
+                  <span>{t('buyer.cart.subtotal', { count: getCartTotalQuantity() })}</span>
                   <span>৳{total.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-xs text-gray-400 italic">
-                  <span>Delivery fee calculated at checkout</span>
+                  <span>{t('buyer.cart.deliveryFee')}</span>
                 </div>
                 <div className="border-t pt-3">
                   <div className="flex justify-between text-lg font-semibold">
-                    <span>Total</span>
+                    <span>{t('buyer.cart.total')}</span>
                     <span className="text-primary-600">
                       ৳{total.toLocaleString()}
                     </span>
@@ -213,7 +212,7 @@ export const Cart = () => {
                 className="w-full mb-3"
                 size="lg"
               >
-                Proceed to Checkout
+                {t('buyer.cart.checkout')}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
 
@@ -221,7 +220,7 @@ export const Cart = () => {
                 onClick={() => navigate('/dashboard')}
                 className="w-full text-center text-primary-600 hover:text-primary-700 text-sm font-medium"
               >
-                Continue Shopping
+                {t('buyer.cart.continueShopping')}
               </button>
             </Card>
           </div>

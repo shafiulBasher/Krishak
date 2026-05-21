@@ -1,4 +1,4 @@
-export default function Select({ label, name, value, onChange, options, required = false, error, disabled = false, className = '', children }) {
+export default function Select({ label, name, value, onChange, options, required = false, error, disabled = false, className = '', children, placeholder }) {
   return (
     <div className="mb-4">
       {label && (
@@ -19,7 +19,7 @@ export default function Select({ label, name, value, onChange, options, required
       >
         {children || (
           <>
-            <option value="">Select {label}</option>
+            <option value="">{placeholder || `Select ${label}`}</option>
             {options?.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}

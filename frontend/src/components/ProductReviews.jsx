@@ -3,8 +3,10 @@ import { Star, User, ChevronDown, ChevronUp } from 'lucide-react';
 import { reviewService } from '../services/reviewService';
 import { Loading } from './Loading';
 import Card from './Card';
+import { useLanguage } from '../context/LanguageContext';
 
 const ProductReviews = ({ productId }) => {
+  const { t, n } = useLanguage();
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
@@ -73,8 +75,8 @@ const ProductReviews = ({ productId }) => {
   if (!stats || stats.totalReviews === 0) {
     return (
       <Card className="p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Reviews</h3>
-        <p className="text-gray-500 text-center py-4">No reviews yet. Be the first to review!</p>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('components.reviews.title')}</h3>
+        <p className="text-gray-500 text-center py-4">{t('components.reviews.noReviewsFirst')}</p>
       </Card>
     );
   }
@@ -84,7 +86,7 @@ const ProductReviews = ({ productId }) => {
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Reviews</h3>
+        <h3 className="text-lg font-semibold text-gray-900">{t('components.reviews.title')}</h3>
         {stats.totalReviews > 0 && (
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
@@ -94,7 +96,9 @@ const ProductReviews = ({ productId }) => {
               </span>
             </div>
             <span className="text-gray-600 text-sm">
-              ({stats.totalReviews} {stats.totalReviews === 1 ? 'review' : 'reviews'})
+              {stats.totalReviews === 1
+                ? t('components.reviews.reviewCount', { count: n(stats.totalReviews) })
+                : t('components.reviews.reviewsCount', { count: n(stats.totalReviews) })}
             </span>
           </div>
         )}
@@ -132,10 +136,10 @@ const ProductReviews = ({ productId }) => {
             onChange={(e) => setSortBy(e.target.value)}
             className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
           >
-            <option value="newest">Newest First</option>
-            <option value="oldest">Oldest First</option>
-            <option value="highest">Highest Rating</option>
-            <option value="lowest">Lowest Rating</option>
+            <option value="newest">{t('components.reviews.newestFirst')}</option>
+            <option value="oldest">{t('components.reviews.oldestFirst')}</option>
+            <option value="highest">{t('components.reviews.highestRating')}</option>
+            <option value="lowest">{t('components.reviews.lowestRating')}</option>
           </select>
         </div>
       )}
@@ -164,7 +168,7 @@ const ProductReviews = ({ productId }) => {
                   <p className="text-xs text-gray-500">
                     {formatDate(review.createdAt)}
                     {review.isVerified && (
-                      <span className="ml-2 text-green-600">✓ Verified Purchase</span>
+                      <span className="ml-2 text-green-600">{t('components.reviews.verifiedPurchase')}</span>
                     )}
                   </p>
                 </div>
@@ -179,25 +183,25 @@ const ProductReviews = ({ productId }) => {
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   {review.aspects.quality > 0 && (
                     <div className="flex items-center gap-1">
-                      <span className="text-gray-600">Quality:</span>
+                      <span className="text-gray-600">{t('components.reviews.quality')}</span>
                       {renderStars(review.aspects.quality)}
                     </div>
                   )}
                   {review.aspects.freshness > 0 && (
                     <div className="flex items-center gap-1">
-                      <span className="text-gray-600">Freshness:</span>
+                      <span className="text-gray-600">{t('components.reviews.freshness')}</span>
                       {renderStars(review.aspects.freshness)}
                     </div>
                   )}
                   {review.aspects.packaging > 0 && (
                     <div className="flex items-center gap-1">
-                      <span className="text-gray-600">Packaging:</span>
+                      <span className="text-gray-600">{t('components.reviews.packaging')}</span>
                       {renderStars(review.aspects.packaging)}
                     </div>
                   )}
                   {review.aspects.value > 0 && (
                     <div className="flex items-center gap-1">
-                      <span className="text-gray-600">Value:</span>
+                      <span className="text-gray-600">{t('components.reviews.value')}</span>
                       {renderStars(review.aspects.value)}
                     </div>
                   )}
@@ -217,12 +221,12 @@ const ProductReviews = ({ productId }) => {
           {showAll ? (
             <>
               <ChevronUp className="w-4 h-4" />
-              Show Less
+              {t('components.reviews.showLess')}
             </>
           ) : (
             <>
               <ChevronDown className="w-4 h-4" />
-              Show All Reviews ({reviews.length})
+              {t('components.reviews.showAllReviews', { count: n(reviews.length) })}
             </>
           )}
         </button>
