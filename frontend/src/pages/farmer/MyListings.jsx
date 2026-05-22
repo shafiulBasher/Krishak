@@ -22,6 +22,7 @@ import Loading from '../../components/Loading';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import Select from '../../components/Select';
+import { getImageUrl } from '../../utils/imageHelper';
 
 export default function MyListings() {
   const [listings, setListings] = useState([]);
@@ -132,7 +133,7 @@ export default function MyListings() {
           <div className="relative h-48 bg-gradient-to-br from-primary-100 to-primary-50 rounded-t-lg overflow-hidden">
             {listing.photos && listing.photos.length > 0 ? (
               <img
-                src={`http://localhost:5000${listing.photos[0]}`}
+                src={getImageUrl(listing.photos[0])}
                 alt={listing.cropName}
                 className="w-full h-full object-cover"
                 onError={(e) => {
@@ -228,7 +229,7 @@ export default function MyListings() {
             <div className="w-full md:w-48 h-32 bg-gradient-to-br from-primary-100 to-primary-50 rounded-lg overflow-hidden flex-shrink-0">
               {listing.photos && listing.photos.length > 0 ? (
                 <img
-                  src={`http://localhost:5001${listing.photos[0]}`}
+                  src={getImageUrl(listing.photos[0])}
                   alt={listing.cropName}
                   className="w-full h-full object-cover"
                   onError={(e) => {

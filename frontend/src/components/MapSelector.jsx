@@ -43,6 +43,7 @@ function FlyToLocation({ center, zoom, triggerKey }) {
 
 const MapSelector = ({ onSelect, onClose }) => {
   const { t } = useLanguage();
+  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
   // Center of Bangladesh (approximate center point)
   const [coordinates, setCoordinates] = useState({ lat: 23.6850, lng: 90.3563 }); // Center of Bangladesh
   const [address, setAddress] = useState('');
@@ -98,7 +99,6 @@ const MapSelector = ({ onSelect, onClose }) => {
   const reverseGeocode = async (lat, lng) => {
     try {
       setLoading(true);
-      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
       const response = await fetch(`${API_BASE}/geocode/reverse?lat=${lat}&lng=${lng}`);
       const data = await response.json();
       
@@ -142,7 +142,6 @@ const MapSelector = ({ onSelect, onClose }) => {
     try {
       setSearching(true);
       const searchQuery = query.trim();
-      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
       const response = await fetch(`${API_BASE}/geocode/search?q=${encodeURIComponent(searchQuery)}`);
       const data = await response.json();

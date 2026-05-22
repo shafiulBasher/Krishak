@@ -1,9 +1,7 @@
 import axios from 'axios';
 
-// Use relative path in production (works when frontend and backend are on same domain/Vercel)
-// Use explicit URL in development or if VITE_API_URL is set
-const API_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.PROD ? '/api' : 'http://localhost:5000/api');
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = API_URL.replace(/\/api\/?$/, '');
 
 
 // Create axios instance
@@ -55,7 +53,7 @@ api.interceptors.response.use(
 export const getImageUrl = (path) => {
   if (!path) return null;
   if (path.startsWith('http')) return path;
-  return `${api.defaults.baseURL}${path.startsWith('/') ? path : `/${path}`}`;
+  return `${API_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
 };
 
 export default api;

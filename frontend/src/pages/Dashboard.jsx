@@ -12,6 +12,7 @@ import { getBuyerStats, getTransporterStats } from '../services/orderService';
 import { toast } from 'react-toastify';
 import PreOrderModal from '../components/PreOrderModal';
 import { getLocalizedCrop, getLocalizedDistrict } from '../utils/bangladeshData';
+import { getImageUrl } from '../utils/imageHelper';
 
 export const Dashboard = () => {
   const { user } = useAuth();
@@ -297,7 +298,7 @@ export const Dashboard = () => {
                       {product.photos && product.photos.length > 0 ? (
                         <div className="w-full h-48 overflow-hidden group">
                           <img
-                            src={`http://localhost:5000${product.photos[0]}`}
+                            src={getImageUrl(product.photos[0])}
                             alt={product.cropName}
                             className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-110"
                             onError={(e) => {

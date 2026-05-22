@@ -12,6 +12,7 @@ import { Search, Filter, ShoppingCart, MapPin, Package, Star, User, MessageSquar
 import { getProducts } from '../services/productService';
 import { toast } from 'react-toastify';
 import { BANGLADESH_DISTRICTS, getLocalizedDistrict, getLocalizedCrop } from '../utils/bangladeshData';
+import { getImageUrl } from '../utils/imageHelper';
 import ProductReviews from '../components/ProductReviews';
 import MapSelector from '../components/MapSelector';
 
@@ -356,7 +357,7 @@ export const BrowseProducts = () => {
                 <div className="w-full h-56 relative overflow-hidden group">
                   {product.photos && product.photos.length > 0 ? (
                     <img
-                      src={`http://localhost:5000${product.photos[0]}`}
+                      src={getImageUrl(product.photos[0])}
                       alt={product.cropName}
                       className="w-full h-56 object-cover transition-transform duration-300 group-hover:scale-110"
                       onError={(e) => {

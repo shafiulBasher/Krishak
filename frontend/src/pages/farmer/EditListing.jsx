@@ -10,6 +10,7 @@ import Input from '../../components/Input';
 import Select from '../../components/Select';
 import Button from '../../components/Button';
 import Loading from '../../components/Loading';
+import { getImageUrl } from '../../utils/imageHelper';
 
 export default function EditListing() {
   const { id } = useParams();
@@ -413,7 +414,7 @@ export default function EditListing() {
                     {formData.existingPhotos.map((photo, index) => (
                       <div key={`existing-${index}`} className="relative group">
                         <img
-                          src={`http://localhost:5000${photo}`}
+                          src={getImageUrl(photo)}
                           alt={`Crop ${index + 1}`}
                           className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
                           onError={(e) => {

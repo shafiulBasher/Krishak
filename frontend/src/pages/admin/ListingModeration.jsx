@@ -8,6 +8,7 @@ import Card from '../../components/Card';
 import Input from '../../components/Input';
 import Select from '../../components/Select';
 import { getLocalizedCrop } from '../../utils/bangladeshData';
+import { getImageUrl } from '../../utils/imageHelper';
 import { useLanguage } from '../../context/LanguageContext';
 
 export default function ListingModeration() {
@@ -186,14 +187,14 @@ export default function ListingModeration() {
                 {product.photos && product.photos.length > 0 && (
                   <div className="grid grid-cols-2 gap-2">
                     <img
-                      src={`http://localhost:5000${product.photos[0]}`}
+                      src={getImageUrl(product.photos[0])}
                       alt="Main crop"
                       className="w-full h-32 object-cover rounded-lg border"
                     />
                     {product.photos.slice(1, 3).map((photo, idx) => (
                       <img
                         key={idx}
-                        src={`http://localhost:5000${photo}`}
+                        src={getImageUrl(photo)}
                         alt={`Detail ${idx + 1}`}
                         className="w-full h-16 object-cover rounded-lg border"
                       />

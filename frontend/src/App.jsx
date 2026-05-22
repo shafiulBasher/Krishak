@@ -39,16 +39,11 @@ import AvailableJobs from './pages/transporter/AvailableJobs';
 import MyDeliveries from './pages/transporter/MyDeliveries';
 
 function App() {
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
-  
-  // Only enable Google OAuth if valid Client ID is configured
-  const isGoogleConfigured = googleClientId && 
-    googleClientId !== 'your-google-client-id-here.apps.googleusercontent.com' &&
-    googleClientId.includes('.apps.googleusercontent.com');
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   
   return (
     <LanguageProvider>
-    <GoogleOAuthProvider clientId={isGoogleConfigured ? googleClientId : ''}>
+    <GoogleOAuthProvider clientId={googleClientId}>
       <AuthProvider>
         <CartProvider>
           <Router>
