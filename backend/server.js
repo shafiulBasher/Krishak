@@ -45,6 +45,9 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
   'http://localhost:5174',
+  'https://krishak-app.vercel.app',
+  'https://krishak-h8kx0gvhj-shafiulbashers-projects.vercel.app'
+
 ];
 
 // Add production frontend URL if provided via environment variable
