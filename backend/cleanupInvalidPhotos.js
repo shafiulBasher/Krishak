@@ -1,6 +1,4 @@
 const mongoose = require('mongoose');
-const fs = require('fs');
-const path = require('path');
 require('dotenv').config();
 
 // Connect to MongoDB
@@ -12,6 +10,8 @@ mongoose.connect(process.env.MONGO_URI)
   });
 
 const Order = require('./models/Order');
+
+const isCloudOrHttpUrl = (value) => typeof value === 'string' && /^https?:\/\//i.test(value);
 
 const cleanupInvalidPhotos = async () => {
   try {
@@ -34,10 +34,9 @@ const cleanupInvalidPhotos = async () => {
     for (const order of orders) {
       let updated = false;
 
-      // Check pickup photo
+      // Cloudinary migration cleanup: keep only full URLs for photo fields
       if (order.pickupPhoto?.url) {
-        const filePath = path.join(__dirname, order.pickupPhoto.url);
-        if (!fs.existsSync(filePath)) {
+        if (!isCloudOrHttpUrl(order.pickupPhoto.url)) {
           console.log(`❌ Invalid pickup photo: ${order.pickupPhoto.url} (Order: ${order.orderNumber})`);
           order.pickupPhoto = undefined;
           updated = true;
@@ -47,10 +46,9 @@ const cleanupInvalidPhotos = async () => {
         }
       }
 
-      // Check delivery proof photo
+      // Cloudinary migration cleanup: keep only full URLs for photo fields
       if (order.deliveryProofPhoto?.url) {
-        const filePath = path.join(__dirname, order.deliveryProofPhoto.url);
-        if (!fs.existsSync(filePath)) {
+        if (!isCloudOrHttpUrl(order.deliveryProofPhoto.url)) {
           console.log(`❌ Invalid delivery photo: ${order.deliveryProofPhoto.url} (Order: ${order.orderNumber})`);
           order.deliveryProofPhoto = undefined;
           updated = true;
@@ -64,8 +62,7 @@ const cleanupInvalidPhotos = async () => {
       if (order.statusHistory && order.statusHistory.length > 0) {
         order.statusHistory.forEach((entry, index) => {
           if (entry.photo) {
-            const filePath = path.join(__dirname, entry.photo);
-            if (!fs.existsSync(filePath)) {
+            if (!isCloudOrHttpUrl(entry.photo)) {
               console.log(`❌ Invalid status history photo: ${entry.photo} (Order: ${order.orderNumber})`);
               order.statusHistory[index].photo = null;
               updated = true;

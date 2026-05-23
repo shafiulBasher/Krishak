@@ -45,12 +45,12 @@ router.post('/jobs/:orderId/photo', upload.single('photo'), async (req, res) => 
     console.log('📸 Photo uploaded:', {
       originalname: req.file.originalname,
       mimetype: req.file.mimetype,
-      filename: req.file.filename,
+      path: req.file.path,
       size: req.file.size
     });
 
-    // Return the photo URL using the actual saved filename
-    const photoUrl = `/uploads/deliveries/${req.file.filename}`;
+    // Return the Cloudinary secure URL
+    const photoUrl = req.file.path;
     
     res.json({
       success: true,

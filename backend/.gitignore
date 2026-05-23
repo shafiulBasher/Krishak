@@ -4,3 +4,8 @@ uploads/
 *.log
 .DS_Store
 VERCEL_DEPLOYMENT_GUIDE.md
+
+# Migration artifacts
+migration-report-*.json
+legacy-photo-backup-*.json
+users_full_dump.json

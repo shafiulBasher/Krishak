@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "migrate:photos:dry": "node scripts/migrateLocalUploadsToCloudinary.js",
+    "migrate:photos:apply": "node scripts/migrateLocalUploadsToCloudinary.js --apply"
   },
   "keywords": [
     "agriculture",
@@ -17,6 +19,7 @@
   "dependencies": {
     "axios": "^1.13.2",
     "bcryptjs": "^2.4.3",
+    "cloudinary": "^1.41.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
@@ -25,6 +28,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^7.6.3",
     "multer": "^1.4.5-lts.1",
+    "multer-storage-cloudinary": "^4.0.0",
     "passport": "^0.6.0",
     "passport-google-oauth20": "^2.0.0",
     "stripe": "^20.1.0"

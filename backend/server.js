@@ -88,17 +88,6 @@ app.use(cors({
 // Handle preflight requests
 app.options('*', cors());
 
-// Serve static files (uploaded images)
-app.use('/uploads', (req, res, next) => {
-  // Add CORS headers for image requests
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET');
-  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-  next();
-}, express.static(path.join(__dirname, 'uploads')));
-
-console.log('📁 Static files directory:', path.join(__dirname, 'uploads'));
-
 // Routes
 app.get('/', (req, res) => {
   res.json({ 

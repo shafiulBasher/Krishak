@@ -6,20 +6,9 @@
       "destination": "/api/index"
     }
   ],
-  
-  "routes": [
-    {
-      "src": "/uploads/(.*)",
-      "dest": "/server.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/server.js"
-
   "functions": {
     "api/index.js": {
       "maxDuration": 30
-
     }
   },
   "env": {

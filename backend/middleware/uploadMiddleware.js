@@ -1,31 +1,36 @@
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-// Create uploads directories if they don't exist
-const uploadsProductsDir = path.join(__dirname, '../uploads/products');
-const uploadsDeliveriesDir = path.join(__dirname, '../uploads/deliveries');
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
-if (!fs.existsSync(uploadsProductsDir)) {
-  fs.mkdirSync(uploadsProductsDir, { recursive: true });
-}
-if (!fs.existsSync(uploadsDeliveriesDir)) {
-  fs.mkdirSync(uploadsDeliveriesDir, { recursive: true });
-}
+const allowedMimeTypes = [
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'image/bmp',
+  'image/svg+xml'
+];
 
-// Dynamic storage based on route
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    // Determine destination based on the route
-    if (req.baseUrl.includes('transporter') || req.path.includes('delivery')) {
-      cb(null, uploadsDeliveriesDir);
-    } else {
-      cb(null, uploadsProductsDir);
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'krishak_uploads',
+    resource_type: 'image',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'],
+    transformation: [
+      { width: 1600, height: 1600, crop: 'limit', quality: 'auto' }
+    ],
+    public_id: (req, file) => {
+      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+      return `${file.fieldname}-${uniqueSuffix}`;
     }
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
   }
 });
 
@@ -38,17 +43,6 @@ const fileFilter = (req, file, cb) => {
     size: file.size
   });
   
-  // Accept all common image formats
-  const allowedMimeTypes = [
-    'image/jpeg',
-    'image/jpg',
-    'image/png',
-    'image/gif',
-    'image/webp',
-    'image/bmp',
-    'image/svg+xml'
-  ];
-  
   if (file.mimetype.startsWith('image/') || allowedMimeTypes.includes(file.mimetype)) {
     console.log('✅ File accepted:', file.originalname);
     cb(null, true);
@@ -58,7 +52,6 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Create multer instance
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
